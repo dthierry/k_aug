@@ -7,8 +7,8 @@ all1 = testin
 
 all: $(all1)
 
-testin: kmatrix.c
-	$(CC) -g  -Wall kmatrix.c -o tst $A $L -I$S/ASL/solvers/
+testin: whatevs.c
+	$(CC) -g  -Wall whatevs.c -o tst $A $L -I$S/ASL/solvers/
 clean:
 	rm -rf $(all) 
 
