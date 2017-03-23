@@ -18,8 +18,8 @@ int main(int argc, char **argv)
         ASL *asl;
         FILE *f, *f_jac, *f_hess;
         /* SufDesc *some_suffix; */
-        int i, ii, iii, j;
-        int nh, nn; // let's try this
+        int i, ii, iii, j, k;
+        int nnzw, nn; // let's try this
         cgrad *cg, **cgx;
         real *x, *y;
         real *g, *g1;
@@ -30,7 +30,13 @@ int main(int argc, char **argv)
         SufDecl *tptr;
         // Pointer to file name
         int *hcolstrt, *hrown;
-        
+        fint *Acol, *Arow;
+        double *Aij;
+        fint *Wcol, *Wrow;
+        double *Wij;
+        // The objective weight
+        real ow;
+
         // The memory allocation
         asl = ASL_alloc(ASL_read_pfgh);
 
@@ -97,39 +103,63 @@ int main(int argc, char **argv)
         pfgh_read(f, ASL_findgroups);
 
         y = pi0;
+        if(n_rhs > 0){
+                var_f = suf_get("var_flag", ASL_Sufkind_var);
+                con_f = suf_get("con_flag", ASL_Sufkind_con);
 
-        var_f = suf_get("var_flag", ASL_Sufkind_var);
-        con_f = suf_get("con_flag", ASL_Sufkind_con);
+                //for(i=0; i < n_var; i++){
+                //if(var_f->u.i[i] != 0){
+                        //printf("suffix value for i = %d, %d\n",i, var_f->u.i[i]);
+                //}
+        //}
+        //printf("Pointer address current \t%p\n", var_f);
+        //printf("Pointer address next \t%p\n", var_f->next);
 
+        //for(i=0; i < n_con; i++){
+                //if(con_f->u.i[i] != 0){
+                        //printf("suffix value for i = %d, %d\n",i, con_f->u.i[i]);
+                //}
+        //}
+        //printf("Pointer address current \t%p\n", con_f);
+        //printf("Pointer address next \t%p\n", con_f->next);
 
+        };
+        
 
-        for(i=0; i < n_var; i++){
-                if(var_f->u.i[i] != 0){
-                        printf("suffix value for i = %d, %d\n",i, var_f->u.i[i]);
-                }
-        }
-        printf("Pointer address current \t%p\n", var_f);
-        printf("Pointer address next \t%p\n", var_f->next);
-
-        for(i=0; i < n_con; i++){
-        if(con_f->u.i[i] != 0){
-        printf("suffix value for i = %d, %d\n",i, con_f->u.i[i]);
-        }
-        }
-        printf("Pointer address current \t%p\n", con_f);
-        printf("Pointer address next \t%p\n", con_f->next);
-
-
-        nh = sphsetup(0, 0, 1, 0);
         // setup the sparse hessian with multipliers
+        if (n_obj == 0){
+                ow = 0; // set the objective weight to zero
+                nnzw = sphsetup(0, ow, 1, 1);
+                printf("No objective declared \n");
+        }
+        else{
+                ow = 1; // set the objective weight to one
+                nnzw = sphsetup(-1, ow, 1, 1);
+                printf("Objective found set ow = 1\n");
+        }
+
+        if (n_obj > 0){
+                if(objtype[0]){
+                        printf("Maximization problem detected\n");
+                        // set weight to -1
+                        ow = -1;
+                }
+                else{
+                        printf("Minimization problem detected\n");
+                        ow = 1;
+                }
+                //objtype is an int?
+                //printf("Number of objectives %d\n", n_obj);
+                //printf("%d\n", objtype[0]);
+        }
 
         f_jac = fopen("jacobi_debug.in", "w");
-        // Little file for the dummy results    
+        // Little file for the dummy results
 
         // Assert allocation factor for gradient of the objective
         nn = 2*n_var;
-        if (nn < nh)
-                nn = nh;
+        if (nn < nnzw)
+                nn = nnzw;
         if (nn < nzc)
                 nn = nzc;
 
@@ -140,44 +170,70 @@ int main(int argc, char **argv)
                 // one objective
                 objgrd(0, x, g1 = g, 0);
         }
-        //    Skip the rest of the useless stuff that I don't need
-        //    Column wise accordingly
+        
+        // Row and colum for the triplet format A matrix
+        // size of the number of nonzeroes in the constraint jacobian
+        Acol = (fint *)malloc(sizeof(fint)*nzc);
+        Arow = (fint *)malloc(sizeof(fint)*nzc);
+        Aij = (real *)malloc(sizeof(long)*nzc);
+        j = 0;
+        // Jacobian
+        // Start row in the triplet matrix at 0, Actual matrix is in Fortran format
         if (nzc > 0) {
                 jacval(x, g, 0);
-                cgx = Cgrad; // pointer magic; assuming there is no zero colmn
+                cgx = Cgrad; // pointer magic; assuming there is no zero column
                 for(i = 1; i <= n_con; i++) {
+                        // moves by constraint
                         if ((cg = *cgx++)) {
-                                do 
+                                // iterates for a given constraint
+                                do{
+                                        // moves by nz in the constraint
                                         fprintf(f_jac, "%d\t%d\t%.g\n",i , cg->varno+1, g[cg->goff]);
+                                        Arow[j] = i;
+                                        Acol[j] = cg->varno+1;
+                                        Aij[j] = g[cg->goff];
+                                        j++;
+                                        }
                                 while ((cg = cg->next)) ;
                         }
                 }
         };
+
         fclose(f_jac);
 
         f_hess = fopen("hess_debug.in", "w");
 
-        if (nh) {
-                sphes(g, 0, NULL, y);
+        
+        Wij = (real *)malloc(sizeof(long)*nnzw);
+        Wcol = (fint *)malloc(sizeof(fint)*nnzw);
+        Wrow = (fint *)malloc(sizeof(fint)*nnzw);
+        // Hessian of the Lagrange function matrix
+        if (nnzw) {
+                if (n_obj > 0){
+                        sphes(g, -1, &ow, y);
+                }
+                else{
+                        sphes(g, 0, &ow, y);
+                }
                 hcolstrt = sputinfo->hcolstarts;
                 hrown = sputinfo->hrownos;
                 // pretty much compressed column format
-
+                k = 0;
                 // position the counter at 0
-                ii = 0;
-                iii = 0;      
-                for(j=1; j<=n_var; j++){
-                        iii = hcolstrt[j];
-                        if (ii < iii) {
-                                do
-                                        fprintf(f_hess, "\t%ld\t%ld\t%.g\n", hrown[ii] + 1, g[ii]);
-                                while(++ii < iii);
+                for(i = 0; i < n_var; i++){
+                        for (j = sputinfo->hcolstarts[i]; j< sputinfo->hcolstarts[i+1]; j++){
+                                Wij[j] = g[j];
+                                Wcol[j] = i + 1;
+                                Wrow[j] = sputinfo->hrownos[j] + 1;
+                                fprintf(f_hess, "\t%ld\t%ld\t%.g\n", sputinfo->hrownos[j] + 1, i+1, g[j]);
+                                k++;
                         }
                 }
+
         }
         fclose(f_hess);
 
-        printf("nonzeroes in the sparse hessian %d\n", nh);
+        printf("nonzeroes in the sparse hessian %d\n", nnzw);
         printf("print dummy %d\n", dumm);
         if (dumm == 2){
                 printf("Cheers mate, the cavalry is here!");
