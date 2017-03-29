@@ -1,0 +1,20 @@
+CC = gcc
+FC = gfortran
+S = ..
+L = -lm -ldl
+A = $S/ASL/solvers/amplsolver.a
+
+all1 = testin
+MATRIXDIR = ../matrix
+LMATRIX = kassemble.f
+
+
+all: $(all1)
+KMATRIX = kmatrix0.c
+testin: mlibs
+	$(CC) -g  -Wall $(KMATRIX) -o test1  $A $L -I$S/ASL/solvers/ kassemble.o -lgfortran
+mlibs:
+	$(FC) -g -c -Wall $(MATRIXDIR)/$(LMATRIX)
+clean:
+	rm -rf $(all) 
+

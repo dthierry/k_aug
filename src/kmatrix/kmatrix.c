@@ -1,4 +1,5 @@
 #include "getstub.h"
+#include <assert.h>
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
@@ -18,22 +19,23 @@ int main(int argc, char **argv)
         ASL *asl;
         FILE *f, *f_jac, *f_hess;
         /* SufDesc *some_suffix; */
-        int i, ii, iii, j, k;
+        int i, j, k;
         int nnzw, nn; // let's try this
         cgrad *cg, **cgx;
         real *x, *y;
         real *g, *g1;
         char *s;
         static char sword[] = "rhs_";
-        SufDesc *var_f;
-        SufDesc *con_f;
+        SufDesc *var_f = NULL;
+        SufDesc *con_f = NULL;
+        SufDesc *rhs_ptr = NULL;
         SufDecl *tptr;
         // Pointer to file name
-        int *hcolstrt, *hrown;
         fint *Acol, *Arow;
         double *Aij;
         fint *Wcol, *Wrow;
         double *Wij;
+
         // The objective weight
         real ow;
 
@@ -59,7 +61,7 @@ int main(int argc, char **argv)
         printf("Number of Right hand sides %d\n", n_rhs);
 
         // Declare suffix array pointer
-        tptr = (SufDecl *)malloc(sizeof(SufDecl)*(2 + n_rhs));
+        tptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
 
         // First two suffixes
         tptr->name = "var_flag";
@@ -72,24 +74,52 @@ int main(int argc, char **argv)
         (tptr + 1)->kind = ASL_Sufkind_con;
         (tptr + 1)->nextra = 0;
 
+        // (tptr + 2)->name = "rhs_0";
+        // (tptr + 2)->table = 0; 
+        // (tptr + 2)->kind = ASL_Sufkind_con;
+        // (tptr + 2)->nextra = 0;
+
+        // (tptr + 3)->name = "rhs_1";
+        // (tptr + 3)->table = 0; 
+        // (tptr + 3)->kind = ASL_Sufkind_con;
+        // (tptr + 3)->nextra = 0;
+
         // Suffix for the right hand side creation
+        
+        //char *suffix_name[] = {"rhs_0", "rhs_1"};
+        char **suf_name;
+        suf_name = (char **)malloc(sizeof(char *)*n_rhs);
+       
         for(i=0; i < n_rhs; i++){
-                char numeric_rhs[10];
-                char suf_name[16];
-                suf_name[0] = '\0';
+                char numeric_rhs[5];
+                numeric_rhs[0] = '\0'; 
+                //*(suf_name[i]) = '\0';
                 sprintf(numeric_rhs, "%d", i);
-                printf("Conversion to string %s\n", numeric_rhs);
-                strcat(suf_name, sword);
-                strcat(suf_name, numeric_rhs);
-                printf("Suffix name string %s\n", suf_name);
-                (tptr + i + 2)->name = suf_name;
+                suf_name[i] = (char *)malloc(sizeof(char)*10);
+                *(suf_name[i]) = '\0';
+
+                strcat(suf_name[i], sword);
+                strcat(suf_name[i], numeric_rhs);
+                printf("The name of the suffix %s\n", suf_name[i]); 
+        }       
+        
+        for(i=0; i<n_rhs; i++){
+        printf("NAME %s\n", suf_name[i]);
+        }
+
+        for(i=0; i<n_rhs; i++){
+                (tptr + i + 2)->name = suf_name[i];
                 (tptr + i + 2)->table = 0; 
                 (tptr + i + 2)->kind = ASL_Sufkind_con;
                 (tptr + i + 2)->nextra = 0;
+                //free(suf_name);
         }
 
+        //rhs_ptr = (SufDesc **)malloc(sizeof(SufDesc *)*2);
+
         // Declare suffixes
-        suf_declare(tptr, 2 + n_rhs);
+        suf_declare(tptr, (n_rhs + 2));
+        
 
         f = jac0dim(s, 0);
 
@@ -103,15 +133,35 @@ int main(int argc, char **argv)
         pfgh_read(f, ASL_findgroups);
 
         y = pi0;
-        if(n_rhs > 0){
-                var_f = suf_get("var_flag", ASL_Sufkind_var);
-                con_f = suf_get("con_flag", ASL_Sufkind_con);
+        
+        con_f = suf_get("con_flag", ASL_Sufkind_con);
+        var_f = suf_get("var_flag", ASL_Sufkind_var);
 
-                //for(i=0; i < n_var; i++){
-                //if(var_f->u.i[i] != 0){
-                        //printf("suffix value for i = %d, %d\n",i, var_f->u.i[i]);
-                //}
-        //}
+        if(var_f->u.i == NULL){
+                fprintf(stderr, "u.i empty, no var_flag declared.\n");
+                return -1;
+        }
+        if(con_f->u.i == NULL){
+                fprintf(stderr, "u.i empty, no con_flag declared.\n");
+                return -1;
+        }
+
+        //SufDesc *smptr0, *smptr1;
+        
+        // smptr0 = suf_get("rhs_0", ASL_Sufkind_con);
+        // smptr1 = suf_get("rhs_1", ASL_Sufkind_con);
+
+        for(i=0; i < n_rhs; i++){
+                printf("The suffix name %s \n", suf_name[i]);
+                rhs_ptr = suf_get(suf_name[i], ASL_Sufkind_con);
+                //if(rhs_ptr[i]->u.r == NULL){
+                        //fprintf(stderr, "u.r empty, no rhs values declared for rhs_%d.\n", i);
+                //return -1;
+                }
+        // }
+
+
+        
         //printf("Pointer address current \t%p\n", var_f);
         //printf("Pointer address next \t%p\n", var_f->next);
 
@@ -123,7 +173,7 @@ int main(int argc, char **argv)
         //printf("Pointer address current \t%p\n", con_f);
         //printf("Pointer address next \t%p\n", con_f->next);
 
-        };
+        //};
         
 
         // setup the sparse hessian with multipliers
@@ -215,8 +265,6 @@ int main(int argc, char **argv)
                 else{
                         sphes(g, 0, &ow, y);
                 }
-                hcolstrt = sputinfo->hcolstarts;
-                hrown = sputinfo->hrownos;
                 // pretty much compressed column format
                 k = 0;
                 // position the counter at 0
@@ -240,9 +288,21 @@ int main(int argc, char **argv)
         }
         printf("size of s %d\n", sizeof(f));
         printf("Number of Right hand sides %d\n", n_rhs);
+   
+        for(i=0; i<n_rhs; i++){
+        free(suf_name[i]);
+        }
+        free(suf_name);
+ 
         ASL_free(&asl);
         free(tptr);
-
+        free(Arow);
+        free(Acol);
+        free(Aij);
+        free(Wrow);
+        free(Wcol);
+        free(Wij);
+        //free(rhs_ptr);
         return 0;
 
-}
+};
