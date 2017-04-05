@@ -11,10 +11,15 @@ LMATRIX = kassemble.f
 
 all: $(all1)
 KMATRIX = kmatrix0.c
-testin: mlibs
-	$(CC) -g  -Wall $(KMATRIX) -o test1  $A $L -I$S/ASL/solvers/ kassemble.o -lgfortran
-mlibs:
-	$(FC) -g -c -Wall $(MATRIXDIR)/$(LMATRIX)
+testin: 
+	$(CC) -g  -Wall $(KMATRIX) -o test1  $A $L -I$S/ASL/solvers/ csortv2.o wapnz.o wcreord.o
+#mlibs:
+#	$(FC) -g -c -Wall $(MATRIXDIR)/$(LMATRIX)
 clean:
 	rm -rf $(all) 
-
+sortcol:
+	$(CC) -g -Wall -c csortv2.c -I$S/ASL/solvers/
+wzndiag: 
+	$(CC) -g -Wall -c wapnz.c -I$S/ASL/solvers/
+wcreord:
+	$(CC) -g -Wall -c wcreord.c -I$S/ASL/solvers/
