@@ -10,16 +10,21 @@ LMATRIX = kassemble.f
 
 
 all: $(all1)
-KMATRIX = kmatrix0.c
+KMATRIX = kmatrix2.c
 testin: 
-	$(CC) -g  -Wall $(KMATRIX) -o test1  $A $L -I$S/ASL/solvers/ csortv2.o wapnz.o wcreord.o
-#mlibs:
-#	$(FC) -g -c -Wall $(MATRIXDIR)/$(LMATRIX)
+	$(CC) -g  -Wall $(KMATRIX) -o test1  $A $L -I$S/ASL/solvers/ csortv2.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o /home/dav0/Apps/mc30-1.0.0/build/src/libmc30.a -lgfortran -lm -lquadmath -I$(S)/HSL/
+
+
 clean:
 	rm -rf $(all) 
 sortcol:
 	$(CC) -g -Wall -c csortv2.c -I$S/ASL/solvers/
 wzndiag: 
-	$(CC) -g -Wall -c wapnz.c -I$S/ASL/solvers/
-wcreord:
-	$(CC) -g -Wall -c wcreord.c -I$S/ASL/solvers/
+	$(CC) -g -Wall -c w_append_nz.c -I$S/ASL/solvers/
+k_assemble:
+	$(CC) -g -Wall -c k_assemble_cc.c -I$S/ASL/solvers/ $L
+kmalloc:
+	$(CC) -g -Wall -c kmalloc.c -I$S/ASL/solvers/
+      
+mc30:
+	$(CC) -g -Wall -c ../HSL/mc30_driver.c -I$(S)/HSL/ -I$S/ASL/solvers/

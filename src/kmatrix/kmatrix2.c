@@ -1,9 +1,26 @@
+/* @source kmatrix1.c
+**
+** April 5th, 2017
+** @author: David Thierry (dmolinat@andrew.cmu) dav0@lb2016-1
+
+******************************************************************************
+
+@main ********************************************
+**
+** Reads nl file, allocates data structures, calls assembling funcs
+**
+** @param [r] stub
+** @param [r] KWs
+** @@
+*******************************************************************************/
+
 #include "getstub.h"
 #include <assert.h>
 #include "csortv2.h"
-#include "wapnzv2.h"
-#include "wcreord.h"
-
+#include "w_append_nz.h"
+#include "k_assemble_cc.h"
+#include "kmalloc.h"
+#include "mc30_driver.h"
 
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
@@ -41,7 +58,17 @@ int main(int argc, char **argv)
         real *Aij;
         fint *Wcol, *Wrow;
         real *Wij;
-
+        fint *Kcol, *Krow;
+        real *Kij;
+        fint *Kr_strt;
+        fint K_nrows;
+        real *S_scale;
+        fint k_space;
+        //fint *Kcol, *Krow;
+        //real *Kij;
+        fint *Wc_t, *Wr_t;
+        real *Wi_t;
+        fint wa_tsp;
         // The objective weight
         real ow;
 
@@ -226,7 +253,7 @@ int main(int argc, char **argv)
                 // one objective
                 objgrd(0, x, g1 = g, 0);
         }
-        
+      
         // Row and colum for the triplet format A matrix
         // size of the number of nonzeroes in the constraint jacobian
         Acol = (fint *)malloc(sizeof(fint)*nzc);
@@ -297,17 +324,61 @@ int main(int argc, char **argv)
         printf("Number of variables %d\n", n_var);
         printf("Number of constraints %d\n", n_con);
         fint nzA = nzc;
-        /*
+        // Reorder the jacobian
         sortcol(Arow, Acol, Aij, nzA, n_var);
         f_debug = fopen("somefile.txt", "w");
         for(i=0; i < nzA; i++){
                 fprintf(f_debug, "%d\t%d\t%.g\n", Arow[i], Acol[i], Aij[i]);
         }
         fclose(f_debug);
-        */
+        
 
-        wnzappnd(Wrow, Wcol, Wij, nnzw, n_var);
+        //wnzappnd(Wrow, Wcol, Wij, nnzw, n_var);
         //w_col_sort(Wrow, Wcol, Wij, nnzw, n_var);
+        // calculate the space required for the KKT_matrix
+        k_space = k_malloc(Wrow, Wcol, Wij, nnzw, n_var, n_con, nzA);
+        
+        // temporal space for w_appended
+        wa_tsp = k_space - n_con - nzA;
+        Krow = (fint *)malloc(sizeof(fint) * k_space);
+        Kcol = (fint *)malloc(sizeof(fint) * k_space);
+        Kij  = (real *)malloc(sizeof(real) * k_space);
+        // wnzappnd(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar,
+        // fint *Wr_new, fint *Wc_new, real *Wi_new, fint Wnz_new)
+
+        Wr_t = (fint *)malloc(sizeof(fint) * wa_tsp);
+        Wc_t = (fint *)malloc(sizeof(fint) * wa_tsp);
+        Wi_t = (real *)malloc(sizeof(real) * wa_tsp);
+
+        // append 0's to the main diagonal as necessary
+        wnzappnd(Wrow, Wcol, Wij, nnzw, n_var, Wr_t, Wc_t, Wi_t, wa_tsp);
+        // fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
+        // fint *Arow, fint *Acol, real *Aij, fint Anz
+        f_debug = fopen("appended_hessian.txt", "w");
+        for(i=0; i<wa_tsp; i++){
+                fprintf(f_debug, "\t%ld\t%ld\t%.g\n", Wr_t[i], Wc_t[i], Wi_t[i]);
+        }
+        fclose(f_debug);
+
+
+        // the question is if we do not append nz to the W matrix, can k_assemble still do its work?
+        // appearently, yes it will
+
+        // row starts
+        K_nrows = n_var + n_con;
+        Kr_strt = (fint *)malloc(sizeof(fint) * (K_nrows + 1));
+        S_scale = (real *)malloc(sizeof(real) * K_nrows);
+
+
+        k_assemble_cc(Wr_t, Wc_t, Wi_t, wa_tsp, n_var, n_con, Arow, Acol, Aij, nzA, Krow, Kcol, Kij, k_space, 
+                Kr_strt);
+        
+        mc30driver(K_nrows, k_space, Kij, Krow, Kcol, S_scale);
+        //for(i=0; i<K_nrows; i++){
+        //        printf("K[%d]=%f\n", i, S_scale[i]);
+        //}
+        free(S_scale);
+        // deallocate temporal hessian matrix
 
         for(i=0; i<n_rhs; i++){
         free(suf_name[i]);
@@ -322,8 +393,14 @@ int main(int argc, char **argv)
         free(Wrow);
         free(Wcol);
         free(Wij);
+        free(Wr_t);
+        free(Wc_t);
+        free(Wi_t);
+        free(Krow);
+        free(Kcol);
+        free(Kij);
+        free(Kr_strt);
         //free(rhs_ptr);
         return 0;
 
 };
-;
