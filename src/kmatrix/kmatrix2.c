@@ -1,4 +1,4 @@
-/* @source kmatrix1.c
+/* @source kmatrix2.c
 **
 ** April 5th, 2017
 ** @author: David Thierry (dmolinat@andrew.cmu) dav0@lb2016-1
@@ -21,7 +21,7 @@
 #include "k_assemble_cc.h"
 #include "kmalloc.h"
 #include "mc30_driver.h"
-
+#include "pardiso_driver.h"
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
@@ -71,6 +71,8 @@ int main(int argc, char **argv)
         fint wa_tsp;
         // The objective weight
         real ow;
+
+        real *b_, *x_;
 
         // The memory allocation
         asl = ASL_alloc(ASL_read_pfgh);
@@ -366,6 +368,9 @@ int main(int argc, char **argv)
 
         // row starts
         K_nrows = n_var + n_con;
+        // number of rows of the KKT matrix
+        printf("K_nrows %d\n", K_nrows);
+
         Kr_strt = (fint *)malloc(sizeof(fint) * (K_nrows + 1));
         S_scale = (real *)malloc(sizeof(real) * K_nrows);
 
@@ -378,7 +383,18 @@ int main(int argc, char **argv)
         //        printf("K[%d]=%f\n", i, S_scale[i]);
         //}
         free(S_scale);
-        // deallocate temporal hessian matrix
+        b_ = (real *)malloc(sizeof(real) * K_nrows);
+        x_ = (real *)malloc(sizeof(real) * K_nrows);
+
+        for(i=0; i<K_nrows; i++){
+                b_[i] = 1;
+        }
+
+        // factorize the matrix
+        pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, k_space, 1, b_, x_);
+
+        free(b_);
+        free(x_);
 
         for(i=0; i<n_rhs; i++){
         free(suf_name[i]);

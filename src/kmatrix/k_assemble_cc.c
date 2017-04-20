@@ -146,8 +146,9 @@ void k_assemble_cc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint 
 
 	}
 	somefile = fopen("KKT.txt", "w");
-	for(j=0; j<Knz; j++){fprintf(somefile, "\t%ld\t%ld\t%.g\n",
-	Krow[j], Kcol[j], Kij[j]);}
+	for(j=0; j<Knz; j++){
+		fprintf(somefile, "\t%ld\t%ld\t%.g\n", 
+			Krow[j], Kcol[j], Kij[j]);}
 	fclose(somefile);
 	
 	row_strt = fopen("KKT_rowsrt.txt", "w");

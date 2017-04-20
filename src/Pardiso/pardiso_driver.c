@@ -1,21 +1,32 @@
+/* @source pardiso_driver.c
+**
+** April 18th, 2017
+** @author: David Thierry (dmolinat@andrew.cmu) dav0@lb2016-1
+
+******************************************************************************
+
+@pardiso_driver ********************************************
+**
+** calls pardiso, solves linear system
+**
+** @param [r] ia, row starts
+** @param [r] ja, sparse column
+** @param [r] a, sparse matrix element
+** @param [r] n, number of rows
+** @param [r] nza, number of nz of a
+** @param [r] nrhs, number of right hand sides
+** @param [r] b, right hand side vector(matrix)
+** @param [r] x, solution vector
+
+** @@ This comes mostly from the example file at their website
+*******************************************************************************/
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "asl.h"
-
-// Prototypes
-void pardisoinit (void   *, int    *,   int *, int *, double *, int *);
-void pardiso     (void   *, int    *,   int *, int *,    int *, int *, 
-                  double *, int    *,    int *, int *,   int *, int *,
-                     int *, double *, double *, int *, double *);
-void pardiso_chkmatrix  (int *, int *, double *, int *, int *, int *);
-void pardiso_chkvec     (int *, int *, double *, int *);
-void pardiso_printstats (int *, int *, double *, int *, int *, int *,
-                           double *, int *);
-
-int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
- fint nrhs, real *b, real *x);
+#include "pardiso_driver.h"
 
 int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza, 
 	fint nrhs, real *b, real *x){
@@ -30,14 +41,13 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 	int num_proc;
 
 	char *var;
-	int i, k;
 
 	double	ddum;
 	int			idum;
 
 	error = 0;
 	solver = 0;
-
+	// license check
 	pardisoinit(pt, &mtype, &solver, iparm, dparm, &error);
 
 	if(error != 0){
@@ -45,7 +55,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 			printf("No license file found \n");
 		else if (error == -11)
 			printf("License is expired \n");
-		else if (error = -12)
+		else if (error == -12)
 			printf("Wrong username or hostname \n");
 		return 1;
 	}
@@ -69,13 +79,14 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 	msglvl = 1;
 	error = 0;
 
+	// check Matrix
 	pardiso_chkmatrix(&mtype, &n, a, ia, ja, &error);
 	if(error != 0){
 		printf("Error in...\t[MATRIX] %d\n", error);
 		exit(1);
 	}
 
-
+	// check RHS
 	pardiso_chkvec(&n, &nrhs, b, &error);
 
 	if(error != 0){
@@ -89,7 +100,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 		exit(1);
 	}
 
-	phase = 11;
+	phase = 11; // Symbolic factorization
 
 	pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,
 		iparm, &msglvl, &ddum, &ddum, &error, dparm);
@@ -103,7 +114,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
   printf("Number of nonzeros in factors  = %d\n", iparm[17]);
   printf("\nNumber of factorization MFLOPS = %d\n", iparm[18]);
 
-  phase = 22;
+  phase = 22; // Numerical factorization
   pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum,	&nrhs,
   	iparm, &msglvl, &ddum, &ddum, &error, dparm);
 
@@ -114,7 +125,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 
   printf("\nFactorization successful!\n");
 
-	phase = -1;                 /* Release internal memory. */
+	phase = -1; // Internal memory release
     
   pardiso (pt, &maxfct, &mnum, &mtype, &phase, &n, &ddum, ia, ja, 
   	&idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error,  dparm);
