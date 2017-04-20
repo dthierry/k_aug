@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "get_jac_asl.h"
+#include <assert.h>
 
 
 void get_jac_asl(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
@@ -8,8 +9,12 @@ void get_jac_asl(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 	int j;
 	cgrad *cg, **cgx;
 	FILE *f_jac;
-	real Jcont[nzc_]; // container for Jac
+	real *Jcont; // container for Jac
 	int i;
+
+	Jcont = (real *)malloc(sizeof(real) * nzc_);
+	assert(Jcont != NULL);
+
 	j = 0;
 	// Jacobian
 	// check if there are non-zeroes in the Jacobian
@@ -47,5 +52,5 @@ void get_jac_asl(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
   }
 
 	fclose(f_jac);
-
+	free(Jcont);
 }

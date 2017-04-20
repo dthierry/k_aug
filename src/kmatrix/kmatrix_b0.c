@@ -16,13 +16,16 @@
 #include "getstub.h"
 #include <assert.h>
 
-#include "csortv2.h"
+#include "sort_by_column.h"
 #include "w_append_nz.h"
 #include "k_assemble_cc.h"
 #include "kmalloc.h"
 #include "mc30_driver.h"
 //#include "pardiso_driver.h"
+
 #include "get_jac_asl.h"
+#include "get_hess_asl.h"
+
 #include "find_inequalities.h"
 
 static int dumm = 1;
@@ -42,14 +45,12 @@ static Option_Info Oinfo =
 
 int main(int argc, char **argv){
 	ASL *asl;
-	FILE *f, *f_jac, *f_hess;
+	FILE *f;
 	FILE *f_debug;
 	/* SufDesc *some_suffix; */
 	int i, j, k;
 	int nnzw, nn; // let's try this
-	cgrad *cg, **cgx;
 	real *x, *y;
-	real *g, *g1;
 	char *s;
 	static char sword[] = "rhs_";
 	SufDesc *var_f = NULL;
@@ -59,8 +60,8 @@ int main(int argc, char **argv){
 
 	fint *Acol, *Arow;
 	real *Aij;
-	fint *Wcol, *Wrow;
-	real *Wij;
+	fint *Wcol=NULL, *Wrow=NULL;
+	real *Wij=NULL;
 	fint *Kcol, *Krow;
 	real *Kij;
 	fint *Kr_strt;
@@ -196,64 +197,6 @@ int main(int argc, char **argv){
 	}
 	// }
 
-	//printf("Pointer address current \t%p\n", var_f);
-	//printf("Pointer address next \t%p\n", var_f->next);
-
-	//for(i=0; i < n_con; i++){
-	        //if(con_f->u.i[i] != 0){
-	                //printf("suffix value for i = %d, %d\n",i, con_f->u.i[i]);
-	        //}
-	//}
-	//printf("Pointer address current \t%p\n", con_f);
-	//printf("Pointer address next \t%p\n", con_f->next);
-
-	//};
-
-
-	// setup the sparse hessian with multipliers
-	if (n_obj == 0){
-		ow = 0; // set the objective weight to zero
-		nnzw = sphsetup(0, ow, 1, 1);
-		printf("No objective declared \n");
-	}
-	else{
-		ow = 1; // set the objective weight to one
-		nnzw = sphsetup(-1, ow, 1, 1);
-		printf("Objective found set ow = 1\n");
-	}
-
-	if (n_obj > 0){
-		if(objtype[0]){
-			printf("Maximization problem detected\n");
-			// set weight to -1
-			ow = -1;
-	}
-	else{
-  	printf("Minimization problem detected\n");
-		ow = 1;
-	}
-	        //objtype is an int?
-	        //printf("Number of objectives %d\n", n_obj);
-	        //printf("%d\n", objtype[0]);
-	}
-
-	//f_jac = fopen("jacobi_debug.in", "w");
-	// Little file for the dummy results
-
-	// Assert allocation factor for gradient of the objective
-	nn = 2*n_var;
-	if (nn < nnzw)
-		nn = nnzw;
-	if (nn < nzc)
-	  nn = nzc;
-
-	g = (real *)M1alloc(nn*sizeof(real));
-	g1 = 0;
-	if (n_obj > 0){
-		// Unless somebody does something wrong there should be only
-		// one objective
-		objgrd(0, x, g1 = g, 0);
-	}
 
 	// Row and colum for the triplet format A matrix
 	// size of the number of nonzeroes in the constraint jacobian
@@ -266,36 +209,8 @@ int main(int argc, char **argv){
 	
 	// get_jac_asl function
 	get_jac_asl(asl,x,Acol,Arow,Aij,nzc,&nerror);
-
-	f_hess = fopen("hess_debug.in", "w");
-
-
-	Wij = (real *)malloc(sizeof(real)*nnzw);
-	Wcol = (fint *)malloc(sizeof(fint)*nnzw);
-	Wrow = (fint *)malloc(sizeof(fint)*nnzw);
-	// Hessian of the Lagrange function matrix
-	if (nnzw) {
-  if (n_obj > 0){
-    sphes(g, -1, &ow, y);
-  }
-  else{
-    sphes(g, 0, &ow, y);
-  }
-  // pretty much compressed column format
-  k = 0;
-  // position the counter at 0
-  for(i = 0; i < n_var; i++){
-    for (j = sputinfo->hcolstarts[i]; j< sputinfo->hcolstarts[i+1]; j++){
-      Wij[j] = g[j];
-      Wcol[j] = i + 1;
-      Wrow[j] = sputinfo->hrownos[j] + 1;
-      fprintf(f_hess, "\t%ld\t%ld\t%.g\n", sputinfo->hrownos[j] + 1, i+1, g[j]);
-      k++;
-    }
-  }
-
-	}
-	fclose(f_hess);
+	get_hess_asl(asl,x,&Wcol,&Wrow,&Wij, n_var, n_con, n_obj, &nnzw, y, &nerror);
+	//
 
 	printf("nonzeroes in the sparse hessian %d\n", nnzw);
 	printf("print dummy %d\n", dumm);

@@ -26,13 +26,17 @@ void k_assemble_cc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint 
 	fint i;
 	int j, k, l, m, ptr;
 	// column starts
-	int cs_w[nvar];
-	int cs_a[ncon];
-	
-	FILE *somefile, *cprint, *row_strt;
+	int *cs_w;
+	int *cs_a;
 
+	FILE *somefile, *cprint, *row_strt;
 	// A row and col transposes
 	fint *Ar_t, *Ac_t;
+
+	cs_w = (int *)malloc(sizeof(int) * nvar);
+	assert(cs_w != NULL);
+	cs_a = (int *)malloc(sizeof(int) * ncon);
+	assert(cs_a != NULL);
 
 	// We want A but ASL gives us J, so we have to transpose;
 	Ar_t = Acol;
@@ -155,4 +159,6 @@ void k_assemble_cc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint 
 	for(j=0; j<(nvar + ncon + 1); j++){
 		fprintf(row_strt, "\t%ld\n",Kr_strt[j]);}
 	fclose(row_strt);
+	free(cs_w);
+	free(cs_a);
 }

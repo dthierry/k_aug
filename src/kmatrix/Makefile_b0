@@ -8,7 +8,9 @@ all1 = testin
 MATRIXDIR = ../matrix
 LMATRIX = kassemble.f
 
-LMKLIB= -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -lgfortran -lgomp -lpthread -lm -ldl -m64 -I${MKLROOT}/include
+LMKLIB= -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_gf_lp64 \
+ -lmkl_gnu_thread -lmkl_core -lgfortran -lgomp -lpthread -lm -ldl -m64 \
+ -I${MKLROOT}/include
 LIBPARDISO = -L/usr/local/lib/ -lpardiso500-GNU481-X86-64
 
 all: $(all1)
@@ -16,15 +18,17 @@ KMATRIX = kmatrix_b0.c
 testin: 
 	$(CC) -g  -Wall $(KMATRIX) -o test1  $A $L \
 	-I$S/ASL/solvers/ \
-	csortv2.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o get_jac_asl.o  find_inequalities.o \
-	/home/dav0/Apps/mc30-1.0.0/build/src/libmc30.a -lgfortran -lm -lquadmath -I$(S)/HSL/ #\
+	sort_by_column.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
+	get_jac_asl.o get_hess_asl.o find_inequalities.o \
+	/home/dav0/Apps/mc30-1.0.0/build/src/libmc30.a -lgfortran -lm -lquadmath \
+	 -I$(S)/HSL/
 	#$(LIBPARDISO) $(LMKLIB)
 
 
 clean:
 	rm -rf $(all) 
-sortcol:
-	$(CC) -g -Wall -c csortv2.c -I$S/ASL/solvers/
+sort_by_column:
+	$(CC) -g -Wall -c sort_by_column.c -I$S/ASL/solvers/
 wzndiag: 
 	$(CC) -g -Wall -c w_append_nz.c -I$S/ASL/solvers/
 k_assemble:
@@ -37,6 +41,9 @@ mc30:
 
 get_jac_asl:
 	$(CC) -g -Wall -c get_jac_asl.c -I$S/ASL/solvers/
+
+get_hess_asl:
+	$(CC) -g -Wall -c get_hess_asl.c -I$S/ASL/solvers/
 
 find_ineq:
 	$(CC) -g -Wall -c find_inequalities.c -I$S/ASL/solvers/
