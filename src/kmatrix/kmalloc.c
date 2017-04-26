@@ -27,11 +27,11 @@ fint k_malloc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
 	fint ptr0;
 	ptr0 = 0;
 	int miss_nz, miss_row;
-	
+	newNZ = 0;
 	miss_row = 0;
 	miss_nz = 0;
 	fint Knz;
-
+	//should skip this if Wnz == 0
 	// count the number of missing nz
 	// first loop on vector elements (starts 1)
 	for(i=1; i <= nvar; i++){
@@ -67,16 +67,35 @@ fint k_malloc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
 		}
 	}
 
-	printf("Number of elements missing in the main diag W%d\n", miss_nz);
-	printf("Number of rows missing W %d\n", miss_row);
-	newNZ = miss_row + miss_nz + Wnz;
+	printf("I[KMATRIX]...\t[KMALLOC]"
+			"Number of elements missing in the main diag W%d\n", miss_nz);
+	//printf("Number of elements missing in the main diag W%d\n", miss_nz);
+	
+	printf("I[KMATRIX]...\t[KMALLOC]"
+			"Number of rows missing W %d\n", miss_row);
 
-	if(Wcol[Wnz-1] < nvar){
-		printf("Last element provided is less the square matrix nCols W\n");
-		printf("Offset of %ld\n", nvar - Wcol[Wnz-1]);
-		newNZ += nvar - Wcol[Wnz-1];
+	newNZ = miss_row + miss_nz + Wnz;
+	
+	//assert(Wcol == NULL);
+	if(Wnz != 0){
+		if(Wcol[Wnz-1] < nvar){
+			printf("I[KMATRIX]...\t[KMALLOC]"
+				"Last element provided is less the square matrix[n_var] for W\n");
+			printf("I[KMATRIX]...\t[KMALLOC]"
+				"Offset of %ld\n", nvar - Wcol[Wnz-1]);
+			newNZ += nvar - Wcol[Wnz-1];
+		}
 	}
+	else{
+		printf("I[KMATRIX]...\t[KMALLOC]"
+				"No NZ in the hessian detected, set up (n_var) %ld\n", nvar);
+		newNZ += nvar;
+	}
+
+
+
 	Knz = newNZ + Anz + ncon;
-	printf("Amount of space required %ld\n", Knz);
+	printf("I[KMATRIX]...\t[KMALLOC]"
+		"Amount of space required %ld\n", Knz);
 	return Knz;
 }

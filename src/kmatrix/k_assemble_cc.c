@@ -114,7 +114,7 @@ void k_assemble_cc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint 
 			}
 		}
 
-		// having traversed the whole W matrix(row), proceed to traverse the A matrix by row;
+		// having traversed the whole W matrix(row), proceed to traverse the A matrix by col;
 		for(j=1; j<=ncon; j++){
 			k = cs_a[j-1];
 			// if there is no column

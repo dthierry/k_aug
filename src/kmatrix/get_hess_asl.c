@@ -23,14 +23,14 @@ void get_hess_asl(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
 		ow = 1; // set the objective weight to one
 		*n_nz_w = sphsetup(-1, ow, 1, 1);
 		printf("I[KMATRIX]...\t[GET_HESS_ASL]"
-			"Objective found set ow = 1\n");
+			"Objective found\n");
 	}
 
 	// determine the kind of problem (min/max)
 	if (nobj > 0){
 		if (nobj > 1){
 			printf("W[KMATRIX]...\t[GET_HESS_ASL]"
-			"The problem contains multiple obj_fun\n");
+			"The problem contains multiple obj_fun, will use the 1st one\n");
 		}
 		if(objtype[0]){
 			printf("I[KMATRIX]...\t[GET_HESS_ASL]"
@@ -55,6 +55,9 @@ void get_hess_asl(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
 	(*Wrow) = (fint *)malloc(sizeof(fint)*(*n_nz_w));
 
 	Hcont = (real *)malloc(sizeof(real)*(*n_nz_w));
+
+  f_hess = fopen("hess_debug.in", "w");
+
 	// Hessian of the Lagrange function matrix
 	if (*n_nz_w) {
 	  if (n_obj > 0){
@@ -64,7 +67,6 @@ void get_hess_asl(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
 	    sphes(Hcont, 0, &ow, y);
   }
 
-  f_hess = fopen("hess_debug.in", "w");
 
   // pretty much compressed column format
   k = 0;

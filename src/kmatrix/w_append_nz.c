@@ -28,6 +28,8 @@ void wnzappnd(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar,
 
 	l = 0;
 	ptr0 = 0;
+
+	//should skip this if Wnz == 0
 	for(i=1; i<=nvar; i++){
 		//assert(l<Wnz_new);
 		for(j=ptr0; j<Wnz; j++){
@@ -68,16 +70,27 @@ void wnzappnd(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar,
 			}
 		}
 	}
-
-if(Wcol[Wnz-1] < nvar){
-	for(i=(Wcol[Wnz-1]+1); i<=nvar; i++){
-		assert(l<Wnz_new);
-		Wr_new[l] = i;
-		Wc_new[l] = i;
-		Wi_new[l] = 0.0;
-		l++;
-	}
-}	
+// Last col is less than nvar, appending missing elements
+if(Wnz != 0){
+	if(Wcol[Wnz-1] < nvar){
+		for(i=(Wcol[Wnz-1]+1); i<=nvar; i++){
+			assert(l<Wnz_new);
+			Wr_new[l] = i;
+			Wc_new[l] = i;
+			Wi_new[l] = 0.0;
+			l++;
+		}
+	}	
+}
+else{
+	for(i=1; i<=nvar; i++){
+			assert(l<Wnz_new);
+			Wr_new[l] = i;
+			Wc_new[l] = i;
+			Wi_new[l] = 0.0;
+			l++;
+		}
+}
 
 fdebug = fopen("debug_hessian_appended.txt", "w");
 for(l=0; l<Wnz_new; l++){

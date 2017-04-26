@@ -27,15 +27,20 @@
 #include "get_hess_asl.h"
 
 #include "find_inequalities.h"
+#include "assemble_corrector_rhs.h"
+#include "assemble_rhsds.h"
 
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
+static int l_over = 0;
+static I_Known l_over_kw = {1, &l_over};
 
 // keywords
 static keyword keywds[] = {
   KW("smth", IK_val, &dumm_kw, "Cheers mate the cavalry is here"),
-  KW("n_rhs", I_val, &n_rhs, "Number or right hand sides")
+  KW("n_rhs", I_val, &n_rhs, "Number or right hand sides"),	
+  KW("no_lambda", IK_val, &l_over_kw, "Override multiplier check(lambda)")
 };
 
 static Option_Info Oinfo = 
@@ -48,36 +53,40 @@ int main(int argc, char **argv){
 	FILE *f;
 	FILE *f_debug;
 	/* SufDesc *some_suffix; */
-	int i, j, k;
-	int nnzw, nn; // let's try this
-	real *x, *y;
-	char *s;
+	int i;
+	int nnzw; // let's try this
+	real *x=NULL, *lambda=NULL;
+	char *s=NULL;
 	static char sword[] = "rhs_";
-	SufDesc *var_f = NULL;
-	SufDesc *con_f = NULL;
-	SufDesc *rhs_ptr = NULL;
-	SufDecl *tptr;
+	SufDesc *var_f=NULL;
+	SufDesc *con_f=NULL;
+	SufDesc *rhs_ptr=NULL;
+	SufDecl *tptr=NULL;
 
-	fint *Acol, *Arow;
-	real *Aij;
+	fint *Acol=NULL, *Arow=NULL;
+	real *Aij=NULL;
 	fint *Wcol=NULL, *Wrow=NULL;
 	real *Wij=NULL;
-	fint *Kcol, *Krow;
-	real *Kij;
-	fint *Kr_strt;
+	fint *Kcol=NULL, *Krow=NULL;
+	real *Kij=NULL;
+	fint *Kr_strt=NULL;
 	fint K_nrows;
 
-	real *S_scale;
+	real *S_scale=NULL;
 	fint k_space;
 
-	fint *Wc_t, *Wr_t;
-	real *Wi_t;
+	fint *Wc_t=NULL, *Wr_t=NULL;
+	real *Wi_t=NULL;
 	fint wa_tsp;
 
-	// The objective weight
-	real ow;
+	real *b_=NULL, *x_=NULL;
+	//real *gf= NULL;
+	int *c_flag=NULL;
+	char **suf_name=NULL;
 
-	real *b_, *x_;
+	// the pointer to array that will contain
+	// the rhs
+	real **rhs_baksolve = NULL;
 
 	// The memory allocation
 	asl = ASL_alloc(ASL_read_pfgh);
@@ -89,16 +98,19 @@ int main(int argc, char **argv){
 		return 1;
 	}
 	else {
-		printf("File read succesful\n");
-	}
+		printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+			"File read succesfull\n");
+				}
 
 	if (n_rhs == 0){
-		fprintf(stderr, "No right hand sides declared\n");
+		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
+			"No n_rhs declared\n");
 		return -1;
 	}
 
-
-	printf("Number of Right hand sides %d\n", n_rhs);
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	"Number of Right hand sides %d\n", n_rhs);
+//	printf("Number of Right hand sides %d\n", n_rhs);
 
 	// Declare suffix array pointer
 	tptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
@@ -114,20 +126,7 @@ int main(int argc, char **argv){
 	(tptr + 1)->kind = ASL_Sufkind_con;
 	(tptr + 1)->nextra = 0;
 
-	// (tptr + 2)->name = "rhs_0";
-	// (tptr + 2)->table = 0;
-	// (tptr + 2)->kind = ASL_Sufkind_con;
-	// (tptr + 2)->nextra = 0;
-
-	// (tptr + 3)->name = "rhs_1";
-	// (tptr + 3)->table = 0;
-	// (tptr + 3)->kind = ASL_Sufkind_con;
-	// (tptr + 3)->nextra = 0;
-
 	// Suffix for the right hand side creation
-
-	//char *suffix_name[] = {"rhs_0", "rhs_1"};
-	char **suf_name;
 	suf_name = (char **)malloc(sizeof(char *)*n_rhs);
 
 	// this bit writes names of the rhs suffixes
@@ -139,7 +138,7 @@ int main(int argc, char **argv){
 	  *(suf_name[i]) = '\0';
 	  strcat(suf_name[i], sword);
 	  strcat(suf_name[i], numeric_rhs);
-	  printf("The name of the suffix %s\n", suf_name[i]);
+//	  printf("The name of the suffix %s\n", suf_name[i]);
 	}
 
 	for(i=0; i<n_rhs; i++){
@@ -149,7 +148,7 @@ int main(int argc, char **argv){
 	for(i=0; i<n_rhs; i++){
 		(tptr + i + 2)->name = suf_name[i];
 		(tptr + i + 2)->table = 0;
-		(tptr + i + 2)->kind = ASL_Sufkind_con;
+		(tptr + i + 2)->kind = ASL_Sufkind_con|ASL_Sufkind_real;
 		(tptr + i + 2)->nextra = 0;
 	}
 
@@ -161,7 +160,7 @@ int main(int argc, char **argv){
 
 	x = X0 = M1alloc(n_var*sizeof(real));
 
-	// Want initial guess
+	// Want initial guess lambda
 	want_xpi0 = 2;
 
 	// need to do part of changing sign for y
@@ -169,18 +168,35 @@ int main(int argc, char **argv){
 	pfgh_read(f, ASL_findgroups);
 	//printf("%d LBC %f\n",0, Urhsx[2*0]);
 	//find_bounds(n_con, LUv);
-	y = pi0;
+	
+	// change the name of the multipliers to lambda
+	lambda = pi0;
+
+	if(lambda==NULL && l_over == 0){
+		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
+	"Constraint Multipliers not declared(suffix dual), abort\n");
+		for(i=0; i<n_rhs; i++){
+			free(suf_name[i]);
+		}
+		free(suf_name);
+		ASL_free(&asl);
+		free(tptr);
+		return -1;
+	}
+
 
 	con_f = suf_get("con_flag", ASL_Sufkind_con);
 	var_f = suf_get("var_flag", ASL_Sufkind_var);
 
 	if(var_f->u.i == NULL){
-    fprintf(stderr, "u.i empty, no var_flag declared.\n");
-    return -1;
+    fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
+    	"u.i empty, no var_flag declared.\n");
+    //return -1;
 	}
 	if(con_f->u.i == NULL){
-		fprintf(stderr, "u.i empty, no con_flag declared.\n");
-		return -1;
+		fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
+			"u.i empty, no con_flag declared.\n");
+	//	return -1;
 	}
 
 	//SufDesc *smptr0, *smptr1;
@@ -188,39 +204,59 @@ int main(int argc, char **argv){
 	// smptr0 = suf_get("rhs_0", ASL_Sufkind_con);
 	// smptr1 = suf_get("rhs_1", ASL_Sufkind_con);
 
-	for(i=0; i < n_rhs; i++){
-	  printf("The suffix name %s \n", suf_name[i]);
-	  rhs_ptr = suf_get(suf_name[i], ASL_Sufkind_con);
-	  //if(rhs_ptr[i]->u.r == NULL){
-	          //fprintf(stderr, "u.r empty, no rhs values declared for rhs_%d.\n", i);
+	for(i=0; i < 1; i++){
+	  //printf("The suffix name %s \n", suf_name[i]);
+	  rhs_ptr = suf_get(suf_name[i], ASL_Sufkind_con|ASL_Sufkind_real);
+	  if((rhs_ptr)->u.r == NULL){
+	    fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
+	    	"u.r empty, no rhs values declared for rhs_%d.\n", i);
+	    return -1;
+	  }
         //return -1;
 	}
 	// }
+	for(i=0; i < n_con; i++){
+		printf("%d\t%d\n", i, rhs_ptr->u.r[i]);
+	}
 
+	c_flag = (int *)malloc(sizeof(int) * n_con);
+	
+	//constraints flags
+	find_ineq_con(n_con, LUrhs, c_flag);
 
 	// Row and colum for the triplet format A matrix
 	// size of the number of nonzeroes in the constraint jacobian
 	Acol = (fint *)malloc(sizeof(fint)*nzc);
 	Arow = (fint *)malloc(sizeof(fint)*nzc);
-	Aij = (real *)malloc(sizeof(real)*nzc);
+	Aij  = (real *)malloc(sizeof(real)*nzc);
 
 	fint nerror;
 	nerror = 0;
 	
 	// get_jac_asl function
+	// is it better to pass asl as a reference?
+	//get_grad_f(asl, x, n_var, n_obj, gf, &nerror);
 	get_jac_asl(asl,x,Acol,Arow,Aij,nzc,&nerror);
-	get_hess_asl(asl,x,&Wcol,&Wrow,&Wij, n_var, n_con, n_obj, &nnzw, y, &nerror);
+	get_hess_asl(asl,x,&Wcol,&Wrow,&Wij, n_var, n_con, n_obj, &nnzw, lambda, &nerror);
 	//
-
-	printf("nonzeroes in the sparse hessian %d\n", nnzw);
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	"Nonzeroes in the sparse hessian %d\n", nnzw);
+	//printf("nonzeroes in the sparse hessian %d\n", nnzw);
 	printf("print dummy %d\n", dumm);
+	
 	if (dumm == 2){
-    printf("Cheers mate, the cavalry is here!");
+    printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+    "Cheers mate, the cavalry is here!");
 	}
+
 	printf("size of s %d\n", sizeof(f));
-	printf("Number of Right hand sides %d\n", n_rhs);
-	printf("Number of variables %d\n", n_var);
-	printf("Number of constraints %d\n", n_con);
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Number of Right hand sides %d\n", n_rhs);
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Number of variables %d\n", n_var);
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Number of constraints %d\n", n_con);
+	
 	fint nzA = nzc;
 	// Reorder the jacobian
 	sortcol(Arow, Acol, Aij, nzA, n_var);
@@ -271,6 +307,9 @@ int main(int argc, char **argv){
 	Kr_strt = (fint *)malloc(sizeof(fint) * (K_nrows + 1));
 	S_scale = (real *)malloc(sizeof(real) * K_nrows);
 
+	real * Crhs=NULL;
+	assemble_corrector_rhs(asl, x, lambda, n_var, n_con, Arow, Acol, Aij, nzA, Crhs, &nerror, c_flag);
+	// ASL *asl, real *x, real *lambda,  fint nvar, fint ncon,	fint *Arow, fint *Acol, real *Aij, fint Anz,  real *Crhs, fint *nerror
 
 	k_assemble_cc(Wr_t, Wc_t, Wi_t, wa_tsp, n_var, n_con, 
 		Arow, Acol, Aij, nzA, 
@@ -286,17 +325,32 @@ int main(int argc, char **argv){
 	x_ = (real *)malloc(sizeof(real) * K_nrows);
 
 	for(i=0; i<K_nrows; i++){
-	        b_[i] = 1;
+	  b_[i] = 1;
 	}
 
 	// factorize the matrix
 	//	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, k_space, 1, b_, x_);
+	rhs_baksolve = (real **)malloc(sizeof(real *) * n_rhs);
+	for(i = 0; i < n_rhs; i++){
+		*(rhs_baksolve+i) = (real *)malloc(sizeof(real) * K_nrows);
+		//free(*(rhs_baksolve+i));
+	}
+	assemble_rhsds(n_rhs, 2, rhs_baksolve, n_var, n_con, rhs_ptr);
+//int n_rhs, fint rhs_len, 
+// real **rhsbksolv, fint nvar, fint ncon, SufDesc *rhs_ptr
+	for(i=0; i<n_rhs; i++){
+		free(*rhs_baksolve+i);
+	}
+	free(rhs_baksolve);
 
+	// suf_name = (char **)malloc(sizeof(char *)*n_rhs);
+
+	free(c_flag);
 	free(b_);
 	free(x_);
 
 	for(i=0; i<n_rhs; i++){
-	free(suf_name[i]);
+		free(suf_name[i]);
 	}
 	free(suf_name);
 
