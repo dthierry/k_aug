@@ -25,7 +25,7 @@
 void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
   fint nvar, fint ncon,
 	fint *Arow, fint *Acol, real *Aij, fint Anz,
-  real *Crhs, fint *nerror, int *c_flag){
+  real **Crhs, fint *nerror, int *c_flag){
 	
 	fint i;
 	int j, k, l, ptr;
@@ -117,8 +117,7 @@ void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
 	//for(i = 0; i<(ncon); i++){
 		//printf("irhs %d, val= %f \n",i , rhs_con[i]);
 	//}
-
-	rhs_full = (real *)malloc(sizeof(real) * (ncon + nvar));	
+	rhs_full = (real *)calloc((ncon + nvar), sizeof(real));	
 
 	for(i = 0; i<(nvar); i++){
 		rhs_full[i] = rhs[i];
@@ -148,5 +147,5 @@ void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
 	free(cs_a);
 	free(rhs);
 	free(rhs_con);
-	free(rhs_full);
+	*Crhs = rhs_full;
 }

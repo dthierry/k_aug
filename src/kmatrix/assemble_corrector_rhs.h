@@ -23,7 +23,7 @@
 void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
   fint nvar, fint ncon,
 	fint *Arow, fint *Acol, real *Aij, fint Anz,
-  real *Crhs, fint *nerror, int *c_flag);
+  real **Crhs, fint *nerror, int *c_flag);
 
 
 #endif
