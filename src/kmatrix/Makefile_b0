@@ -8,10 +8,9 @@ all1 = testin
 MATRIXDIR = ../matrix
 LMATRIX = kassemble.f
 
-LMKLIB= -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_gf_lp64 \
- -lmkl_gnu_thread -lmkl_core -lgfortran -lgomp -lpthread -lm -ldl -m64 \
- -I${MKLROOT}/include
-LIBPARDISO = -L/usr/local/lib/ -lpardiso500-GNU481-X86-64
+LMKLIB= -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl -m64 -I${MKLROOT}/include
+LIBPARDISO = -L/usr/local/lib/ -lpardiso500-GNU481-X86-64 -lgfortran -fopenmp
+
 
 all: $(all1)
 KMATRIX = kmatrix_b0.c
@@ -21,9 +20,19 @@ testin:
 	sort_by_column.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
 	get_jac_asl.o get_hess_asl.o find_inequalities.o get_grad_f.o \
 	assemble_corrector_rhs.o assemble_rhsds.o \
-	/home/dav0/Apps/mc30-1.0.0/build/src/libmc30.a -lgfortran -lm -lquadmath \
-	 -I$(S)/HSL/
-	#$(LIBPARDISO) $(LMKLIB)
+	/home/dav0/Apps/mc30-1.0.0/build/src/libmc30.a \
+      -lgfortran -lm -lquadmath \
+      -I$(S)/HSL/ -I$(S)/Pardiso/ $(LIBPARDISO) $(LMKLIB) $(S)/Pardiso/pardiso_driver.o 
+testin_wo_pard: 
+	$(CC) -g  -Wall $(KMATRIX) -o test1  $A $L \
+	-I$S/ASL/solvers/ \
+	sort_by_column.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
+	get_jac_asl.o get_hess_asl.o find_inequalities.o get_grad_f.o \
+	assemble_corrector_rhs.o assemble_rhsds.o \
+	/home/dav0/Apps/mc30-1.0.0/build/src/libmc30.a \
+      -lgfortran -lm -lquadmath \
+      -I$(S)/HSL/ -I$(S)/Pardiso/
+
 
 
 clean:
@@ -56,4 +65,8 @@ get_grad_f:
 assemble_corrector_rhs:
 	$(CC) -g -Wall -c assemble_corrector_rhs.c -I$S/ASL/solvers/
 assemble_rhsds:
-	$(CC) -g -Wall -c assemble_rhsds.c -I$(S)/ASL/solvers/
+	$(CC) -g -Wall -c assemble_rhsds.c -o assemble_rhsds.o -I$(S)/ASL/solvers/
+assemble_rhsds_v2:
+	$(CC) -g -Wall -c assemble_rhsdsv2.c -o assemble_rhsds.o -I$(S)/ASL/solvers/
+assemble_rhsds_v3:
+	$(CC) -g -Wall -c assemble_rhsdsv3.c -o assemble_rhsds.o -I$(S)/ASL/solvers/

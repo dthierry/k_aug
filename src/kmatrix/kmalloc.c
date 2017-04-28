@@ -95,7 +95,6 @@ fint k_malloc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
 
 
 	Knz = newNZ + Anz + ncon;
-	printf("I[KMATRIX]...\t[KMALLOC]"
-		"Amount of space required %ld\n", Knz);
+	printf("I[KMATRIX]...\t[KMALLOC]Amount of space required %ld\n", Knz);
 	return Knz;
 }

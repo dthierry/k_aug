@@ -71,7 +71,7 @@ void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
 
 	// get gradient of f
 	rhs = (real *)malloc(sizeof(real) * (nvar));
-	//memset(rhs, 0, nvar);
+	
 
 
 	objgrd(0, x, rhs, nerror);

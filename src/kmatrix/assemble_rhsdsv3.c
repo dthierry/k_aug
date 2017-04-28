@@ -1,9 +1,9 @@
-#include "assemble_rhsds.h"
+#include "assemble_rhsdsv3.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 void assemble_rhsds(int n_rhs, fint rhs_len, 
- real **rhsbksolv, fint nvar, fint ncon, SufDesc **rhs_ptr){
+ real *rhsbksolv, fint nvar, fint ncon, SufDesc **rhs_ptr){
  	int j, k, l;
  	real *temp;
  	FILE *somefile;
@@ -18,8 +18,8 @@ void assemble_rhsds(int n_rhs, fint rhs_len,
  	
  	for(j=0; j < n_rhs; j++){
  		for(k=nvar; k < (nvar+ncon); k++){
- 			temp = *(rhsbksolv + k);
- 			temp[j] = ((*(rhs_ptr+j))->u.r[k-nvar]);
+ 			temp = (rhsbksolv + k + rhs_len*j);
+ 			*temp = 0.0;// ((*(rhs_ptr+j))->u.r[k-nvar]);
  		}
  		
  	}
@@ -29,7 +29,7 @@ void assemble_rhsds(int n_rhs, fint rhs_len,
 
  	for(j=0; j < (nvar+ncon); j++){
  		for(k=0; k < n_rhs; k++){
- 			fprintf(somefile, "\t%f\t", *(*(rhsbksolv + j)+k) );
+ 			fprintf(somefile, "\t%f\t", *(rhsbksolv + j + rhs_len*k) );
  		}
  		fprintf(somefile, "\n");
  	}

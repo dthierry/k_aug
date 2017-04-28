@@ -25,17 +25,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "asl.h"
+
 #include "pardiso_driver.h"
 
 int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza, 
-	fint nrhs, real *b, real *x){
+	fint n_rhs, real *b, real *x){
 	// do something
+	int i, j;
+	int nrhs=n_rhs;
 	int mtype = -2;
 	void	*pt[64];
 
 	int			iparm[64];
 	double	dparm[64];
+	real *btemp, *xtemp;
 
 	int maxfct, mnum, phase, error, msglvl, solver;
 	int num_proc;
@@ -86,20 +89,25 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 		exit(1);
 	}
 
-	// check RHS
-	pardiso_chkvec(&n, &nrhs, b, &error);
 
-	if(error != 0){
-		printf("Error...\t[RHS] %d\n", error);
-		exit(1);
-	}
+		pardiso_chkvec(&n, &nrhs, b, &error);
+		if(error != 0){
+			printf("E[KMATRIX]...\t[PARDISO_DRIVER]"
+			"RHS CHECKING %d\n", error);
+			exit(1);
+		}
+
+		else{
+			printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+		"RHS CHECKING successful\n");}
+	
+	// check RHS
 
 	pardiso_printstats(&mtype, &n, a, ia, ja, &nrhs, b, &error);
 	if(error != 0){
 		printf("Error...\t[PRINT_STATS] %d\n", error);
 		exit(1);
 	}
-
 	phase = 11; // Symbolic factorization
 
 	pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,
@@ -123,7 +131,27 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
   	exit(2);
   }
 
-  printf("\nFactorization successful!\n");
+  printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+  	"Factorization successful.\n");
+
+  phase = 33;
+
+
+  iparm[7] = 1;       /* Max numbers of iterative refinement steps. */
+  //btemp = b;
+  //xtemp = *x;
+  //exit(1);
+	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+           &n, a, ia, ja, &idum, &nrhs,
+           iparm, &msglvl, b, x, &error,  dparm);
+ 
+  if (error != 0) {
+    printf("\nERROR during solution: %d", error);
+    exit(3);
+  }
+ 	printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+ 		"Solve completed x\n\n");
+	
 
 	phase = -1; // Internal memory release
     
