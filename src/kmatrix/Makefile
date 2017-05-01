@@ -45,9 +45,9 @@ k_matrix_openblas: sort_by_column wzndiag k_assemble kmalloc mc30_dri pard_dri \
 	-I$S/ASL/solvers/ \
 	sort_by_column.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
 	get_jac_asl.o get_hess_asl.o find_inequalities.o get_grad_f.o \
-	assemble_corrector_rhs.o assemble_rhsds.o \
+	assemble_corrector_rhs.o assemble_rhsds.o pardiso_driver.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ \
-	$(LIBPARDISO) $(LIBOPENBLAS) $(LIBMC30) pardiso_driver.o
+	$(LIBPARDISO) $(LIBOPENBLAS) $(LIBMC30) 
 
 
 clean:
@@ -65,7 +65,7 @@ mc30_dri:
 	$(CC) -g -Wall -c ../HSL/mc30_driver.c -I$(S)/HSL/ -I$S/ASL/solvers/
 
 pard_dri:
-	$(CC) $(CCFLAGS) -c $(S)/Pardiso/pardiso_driver.c -I$(PWD)/../ASL/solvers/ 
+	$(CC) -g -Wall -c $(S)/Pardiso/pardiso_driver.c -I$(PWD)/../ASL/solvers/ 
 
 
 get_jac_asl:
