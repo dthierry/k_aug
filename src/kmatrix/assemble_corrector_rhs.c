@@ -98,7 +98,7 @@ void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
 					// move the current pointer so we dont start from the beggining
 					// every time
 					cs_a[j-1] = l;
-					// add dC
+					// add dC  
 					rhs[i-1] += Aij[l] * lambda[j-1];
 					break;}
 				l++;
@@ -124,15 +124,19 @@ void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
 	}
 	j = 0;
 	for(i = nvar; i<(nvar + ncon); i++){
-		rhs_full[i] = rhs_con[j];
+		// rhs_full[i] = rhs_con[j];
+		rhs_full[i] = -rhs_con[j];
 		if(c_flag[j] == -3){
-			rhs_full[i] += -LUrhs[2*j];
+			// rhs_full[i] += -LUrhs[2*j]; original
+			rhs_full[i] += LUrhs[2*j];
 		}
 		else if(c_flag[j] == -1){
-			rhs_full[i] += -LUrhs[2*j+1];
+			// rhs_full[i] += -LUrhs[2*j+1];
+			rhs_full[i] += LUrhs[2*j+1];
 		}
 		else if(c_flag[j] == -2){
-			rhs_full[i] += -LUrhs[2*j];
+			// rhs_full[i] += -LUrhs[2*j];
+			rhs_full[i] += LUrhs[2*j];
 		}
 		
 		j++;
