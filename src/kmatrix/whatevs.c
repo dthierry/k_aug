@@ -1,6 +1,7 @@
 #include "getstub.h"
  static int dumm = 1;
  static I_Known dumm_kw = {2, &dumm};
+static int n_rhs = 0;
 
 
   // suffix
@@ -10,13 +11,31 @@
       { "con_flag", 0, ASL_Sufkind_con, 0},
   };
 
+SufDecl *Suftabdecl(int n_rhs){
+  //char rhs[] = "rhs_";
+  //int size = 2;
+  SufDecl *s;
+  if(n_rhs == 0){
+    printf("Warning: no rhs_n declared");
+  }
+  else{
+    printf("Number of rhs for suftab %d\n", n_rhs);
+  }
+  SufDecl suftabx[n_rhs + 2];
+  s = suftabx;
+  int k = sizeof(SufDecl);
+  printf("The size of sufdecl is %d\n", k);
+  return s;
+};
 
  // keywords
- static keyword keywds = 
-      KW("smth", IK_val, &dumm_kw, "Cheers mate the cavalry is here");
+static keyword keywds[] = {
+  KW("smth", IK_val, &dumm_kw, "Cheers mate the cavalry is here"),
+  KW("n_rhs", I_val, &n_rhs, "Number or right hand sides")
+  };
 
  static Option_Info Oinfo = 
-{"whatevs", "whatevs", "whatevs_options", &keywds, nkeywds};
+{"whatevs", "whatevs", "whatevs_options", keywds, nkeywds};
  /*Remember to set reference back*/
 
 int main(int argc, char **argv)
@@ -32,10 +51,11 @@ int main(int argc, char **argv)
       char *s;
       SufDesc *var_f;
       SufDesc *con_f;
+      SufDecl *tabx;
 //      real ow;
       /*Pointer to file name*/
       int *hcolstrt, *hrown;
-      
+  
 	asl = ASL_alloc(ASL_read_pfgh);
 	/* The memory allocation */
 
@@ -47,6 +67,7 @@ int main(int argc, char **argv)
       else {
             printf("File read succesful\n");
             }
+      tabx = Suftabdecl(n_rhs);
 
       suf_declare(suftab, sizeof(suftab)/sizeof(SufDecl));
 
@@ -163,6 +184,7 @@ int main(int argc, char **argv)
       printf("Cheers mate, the cavalry is here!");
       }
       printf("size of s %d\n", sizeof(f));
+  printf("Number of Right hand sides %d\n", n_rhs);
 	ASL_free(&asl);
 
 

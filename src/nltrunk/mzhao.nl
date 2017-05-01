@@ -8,12 +8,18 @@ g3 1 1 0	# problem unknown
  10180 1 	# nonzeros in Jacobian, obj. gradient
  19 16	# max name lengths: constraints, variables
  0 0 0 0 0	# common exprs: b,c,o,c1,o1
-S5 2 con_flag
-364 1
-371 1
 S4 2 var_flag
 77 1
 107 1
+S5 2 con_flag
+364 1
+371 1
+S5 1 rhs_1
+2360 0.44
+S5 1 rhs_0
+2361 1.22
+S7 1 dummy1
+0 299
 C0	#a1[1,1]
 o2	#*
 n227957.76397208142
