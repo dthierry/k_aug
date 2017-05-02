@@ -126,7 +126,8 @@ void k_assemble_cc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint 
 				if(Ar_t[l]==i){
 					cs_a[j-1] = l;
 					Krow[m]  = Ar_t[l];
-					Kcol[m]  = Ac_t[l] + ncon;
+					Kcol[m]  = Ac_t[l] + nvar;
+					//Kcol[m]  = Ac_t[l] + ncon;
 					Kij[m] = Aij[l];
 					m++;
 					break;}
