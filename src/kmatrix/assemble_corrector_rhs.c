@@ -120,7 +120,7 @@ void assemble_corrector_rhs(ASL *asl, real *x, real *lambda,
 	rhs_full = (real *)calloc((ncon + nvar), sizeof(real));	
 
 	for(i = 0; i<(nvar); i++){
-		rhs_full[i] = rhs[i];
+		rhs_full[i] = -rhs[i];
 	}
 	j = 0;
 	for(i = nvar; i<(nvar + ncon); i++){
