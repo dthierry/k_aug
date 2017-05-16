@@ -20,7 +20,7 @@
 #define KMALLOC_K
 
 #include "asl.h"
-// Calculates the amount of space for the whole KKT matrix
+/* Calculates the amount of space for the whole KKT matrix */
 fint k_malloc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
- fint Anz);
+ fint Anz); 
 #endif /* KMALLOC_C */

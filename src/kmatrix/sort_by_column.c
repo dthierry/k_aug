@@ -31,27 +31,27 @@ int sortcol(fint *row, fint *col, real *aij, fint nz, fint nrow){
     assert(abak != NULL);
 
 
-    // start the array at row[0]
+    /* start the array at row[0] */
     j = 0;
     k = 1;
 
-    // create array that contains copy of pointers
+    /* create array that contains copy of pointers */
     for(i=0; i<nz; i++){
     	ttemp[i].c = col+i;
     	ttemp[i].a = aij+i;
     }
-    // assign helper pointer to the array
+    /* assign helper pointer to the array */
     t = ttemp;
 
-    // do the actual reorder
+    /* do the actual reorder */
     for(i=0; i < (nz-1); i++){
     	if (row[i] < row[i+1]){
-            // offset greater than 1
+            /* offset greater than 1 */
             if(row[i] - row[i+1] >  1){
                 fwarn = 1;
                 printf("Warning missing row in A by: %drows\n",(row[i]-row[i+1]));
             }
-            // if k == 1 there is no reordering to be done
+            /* if k == 1 there is no reordering to be done */
             if(k > 1){qsort(t, k, sizeof(temp), compf);}
             t += k;
     		k = 1;
@@ -61,24 +61,24 @@ int sortcol(fint *row, fint *col, real *aij, fint nz, fint nrow){
             k++;
         }
     }
-    // sort the last row
+    /* sort the last row */
  	if(k > 1){qsort(t, k, sizeof(temp), compf);}
 
-    // move helper pointer to last position in the array
+    /* move helper pointer to last position in the array */
     t = t + k-1;
     printf("I[KMATRIX]...\t[SORTCOL]"
         "Rows in the A matrix: %d\n", nrow);
     printf("I[KMATRIX]...\t[SORTCOL]"
         "Rows processed: %d (plus 1) \n", j);
 
-    // set pointers to the desired value   
-    // move from last to first
+    /* set pointers to the desired value   */
+    /* move from last to first */
     for(i=0; i<nz; i++){
     	cbak[nz-1 - i] = (t-i)->c[0];
     	abak[nz-1 - i] = (t-i)->a[0];
-        //printf("column %ld\n", cbak[nz - i]);
+        /* printf("column %ld\n", cbak[nz - i]); */
       }
-    // update back the values of col and aij
+    /* update back the values of col and aij */
     for(i=0; i<nz; i++){
     col[i] = cbak[i];
     aij[i] = abak[i]; 

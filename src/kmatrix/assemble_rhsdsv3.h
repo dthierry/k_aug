@@ -4,6 +4,6 @@
 #include "asl.h"
 
 void assemble_rhsds(int n_rhs, fint rhs_len, 
- real *rhsbksolv, fint nvar, fint ncon, SufDesc **rhs_ptr);
+ real *rhsbksolv, real *dp, fint nvar, fint ncon, SufDesc **rhs_ptr);
 
 #endif /* ASSEMBLE_RHSDS */
