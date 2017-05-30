@@ -41,6 +41,7 @@ void assemble_rhsds(int n_rhs, fint rhs_len,
  	
  	for(j=0; j < n_rhs; j++){
  		i = 0;
+    /*incidentally storing the matrix by column, as fortran demands*/
  		for(k=nvar; k < (nvar+ncon); k++){
  			temp = (rhsbksolv + k + rhs_len*j);
  			/* *temp = 0.0; ((*(rhs_ptr+j))->u.r[k-nvar]); */ 

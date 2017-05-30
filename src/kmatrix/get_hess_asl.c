@@ -72,6 +72,7 @@ void get_hess_asl(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
   k = 0;
   /* position the counter at 0 */
   for(i = 0; i < nvar; i++){
+  	/*fprintf(stderr, "%d hcolstart %d\n",i, sputinfo->hcolstarts[i]);*/
     for (j = sputinfo->hcolstarts[i]; j< sputinfo->hcolstarts[i+1]; j++){
       (*Wij)[k] = Hcont[j];
       (*Wcol)[k] = i + 1;

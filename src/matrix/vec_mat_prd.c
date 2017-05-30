@@ -13,7 +13,7 @@ int main(void){
 	int i, n;
 	FILE *ptr_file;
 
-	char t = 'n';
+	char t = 'N';
 	int M = 10;
 	int N = 2;
 	double ALPHA = 1.0;
@@ -27,24 +27,34 @@ int main(void){
 	x = (double *)calloc(N, sizeof(double));
 	Y = (double *)calloc(M, sizeof(double));
 	A = (double *)calloc(N * M, sizeof(double));
+
+	for(i=0; i<M; i++){
+		Y[i] = 0.0;
+	}
+
 	ptr_file = fopen("x.txt", "r");
+
 	for(i=0; i<n; i++){
 		fscanf(ptr_file, "%lf", (x + i));
 	}
+
 	fclose(ptr_file);
+
 	for(i=0; i<n; i++){
 		printf("x %f\n", x[i]);
 	}
+	
 	ptr_file = fopen("a.in", "r");
 
-	for(i=0; i<10; i++){
-		fscanf(ptr_file, "%lf %lf", (A + i*n), (A + i*n + 1));	
+	for(i=0; i<M; i++){
+		/* fscanf(ptr_file, "%lf %lf", (A + i*n), (A + i*n + 1));	 */
+		fscanf(ptr_file, "%lf %lf", (A + i), (A + M + 1));
 	}
 
 	fclose(ptr_file);
 
-	for(i=0; i<n*10; i++){
-		printf("a %f\n", A[i]);
+	for(i=0; i<M; i++){
+		printf("a %f %f\n", A[i], A[M + 1]);
 	}
 
 	dgemv_(&t, &M, &N, &ALPHA, A, &LDA, x, &INCX, &BETA, Y, &INCY);	

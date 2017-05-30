@@ -25,7 +25,7 @@
 #include "k_assemble_cc.h"
 #include "kmalloc.h"
 #include "mc30_driver.h"
-/*#include "pardiso_driver.h" */
+#include "pardiso_driver.h"
 
 #include "get_jac_asl.h"
 #include "get_hess_asl.h"
@@ -33,19 +33,22 @@
 #include "find_inequalities.h"
 #include "assemble_corrector_rhs.h"
 /*#include "assemble_rhsds.h" */
-#include "assemble_rhsdsv3.h"
+#include "assemble_rhsd_red_hess.h"
 #include "sens_update_driver.h"
+#include "suffix_decl_hand.h"
 
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
+static int n_dof = 0;
 static int l_over = 0;
 static I_Known l_over_kw = {1, &l_over};
 
 /* keywords */
 static keyword keywds[] = {
   KW("smth", IK_val, &dumm_kw, "Cheers mate the cavalry is here"),
-  KW("n_rhs", I_val, &n_rhs, "Number or right hand sides"),	
+  KW("n_dof", I_val, &n_dof, "another keyword"),
+  KW("n_rhs", I_val, &n_rhs, "Number of right hand sides"),	
   KW("no_lambda", IK_val, &l_over_kw, "Override multiplier check(lambda)")
 };
 static char banner[] = {"[KMATRIX] written by DT\n\n"};
@@ -63,11 +66,10 @@ int main(int argc, char **argv){
 	int nnzw; /* let's try this */
 	real *x=NULL, *lambda=NULL;
 	char *s=NULL;
-	static char sword[] = "rhs_";
 	SufDesc *var_f=NULL;
 	SufDesc *con_f=NULL;
 	SufDesc **rhs_ptr=NULL;
-	SufDecl *tptr=NULL;
+	SufDecl *suf_ptr=NULL;
 
 	fint *Acol=NULL, *Arow=NULL;
 	real *Aij=NULL;
@@ -90,7 +92,7 @@ int main(int argc, char **argv){
 	/*real *gf= NULL; */
 	real *s_star = NULL;
 	int *c_flag=NULL;
-	char **suf_name=NULL;
+	char **rhs_name=NULL;
 
 	/* the pointer to array that will contain */
 	/* the rhs */
@@ -99,19 +101,37 @@ int main(int argc, char **argv){
   FILE *somefile;
   fint nerror;
   fint nzA;
+  int *hr_point = NULL;
 
   char ter_msg[] = {"I[KMATRIX]...\t[KMATRIX_ASL]"
 	"All done it seems."};
 
+	printf("I[PRE-TEST]...\t[KMATRIX_ASL]"
+	"Number of Right hand sides %d\n", n_rhs);
+
+	/*if(n_rhs > 0){
+		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
+		rhs_name = (char **)malloc(sizeof(char *)*n_rhs);
+		for(i=0; i<n_rhs; i++){
+			rhs_name[i] = (char *)malloc(sizeof(char) * 32); 
+		}
+		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
+	}
+	else{
+		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*2);
+		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
+	}
+	*/
+
+
 	/* The memory allocation */
 	asl = ASL_alloc(ASL_read_pfgh);
 
-
 	s = getstops(argv, &Oinfo);
-	/*s = getstub(&argv,&Oinfo); */
-
 
 	if (!s) {
+		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+			"No input\n");
 		return 1;
 	}
 	else {
@@ -122,58 +142,53 @@ int main(int argc, char **argv){
 	if (n_rhs == 0){
 		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
 			"No n_rhs declared\n");
-		return -1;
+		/*exit(-1);*/
 	}
+
+
+	if(n_rhs > 0){
+		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
+		rhs_name = (char **)malloc(sizeof(char *)*n_rhs);
+		for(i=0; i<n_rhs; i++){
+			rhs_name[i] = (char *)malloc(sizeof(char) * 32); /* 32 bit long digit; why not?*/
+		}
+		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
+	}
+	else{
+		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*2);
+		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
+	}
+
 
 	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 	"Number of Right hand sides %d\n", n_rhs);
-/*	printf("Number of Right hand sides %d\n", n_rhs); */
-
-	/* Declare suffix array pointer */
-	tptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
-
-	/* First two suffixes */
-	tptr->name = "var_flag";
-	tptr->table = 0;
-	tptr->kind = ASL_Sufkind_var;
-	tptr->nextra = 0;
-
-	(tptr + 1)->name = "con_flag";
-	(tptr + 1)->table = 0;
-	(tptr + 1)->kind = ASL_Sufkind_con;
-	(tptr + 1)->nextra = 0;
-
-	/* Suffix for the right hand side creation */
-	suf_name = (char **)malloc(sizeof(char *)*n_rhs);
-
-	/* this bit writes names of the rhs suffixes */
-	for(i=0; i < n_rhs; i++){
-		char numeric_rhs[5];
-		numeric_rhs[0] = '\0';
-	  sprintf(numeric_rhs, "%d", i);
-	  suf_name[i] = (char *)malloc(sizeof(char)*10);
-	  *(suf_name[i]) = '\0';
-	  strcat(suf_name[i], sword);
-	  strcat(suf_name[i], numeric_rhs);
-/*	  printf("The name of the suffix %s\n", suf_name[i]); */
-	}
-
+	
+	
 	for(i=0; i<n_rhs; i++){
-		printf("NAME %s\n", suf_name[i]);
-	}
-
-	for(i=0; i<n_rhs; i++){
-		(tptr + i + 2)->name = suf_name[i];
-		(tptr + i + 2)->table = 0;
-		(tptr + i + 2)->kind = ASL_Sufkind_con|ASL_Sufkind_real;
-		(tptr + i + 2)->nextra = 0;
+		printf("NAME %s\n", rhs_name[i]);
 	}
 
 	/* Declare suffixes */
-	suf_declare(tptr, (n_rhs + 2));
+	if(n_rhs > 0){suf_declare(suf_ptr, (n_rhs + 2));}
+	else{suf_declare(suf_ptr, (2));}
+	
 
 	/* dhis bit setups ASL components e.g. n_var, n_con, etc. */
 	f = jac0dim(s, (fint)strlen(s));
+
+	if (n_dof > (n_var - n_con) || n_dof == 0){
+		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
+			"No invalid number of n_dof declared\n");
+		return -1;
+	}
+	else if (n_dof < (n_var - n_con) ){
+		printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+			"n_dof is less than n_var - n_con \n");
+	}
+	else if (n_dof == (n_var - n_con) ){
+		printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+			"n_dof exactly n_var - n_con \n");
+	}
 
 	x = X0 = M1alloc(n_var*sizeof(real));
 
@@ -193,22 +208,22 @@ int main(int argc, char **argv){
 		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
 	"Constraint Multipliers not declared(suffix dual), abort\n");
 		for(i=0; i<n_rhs; i++){
-			free(suf_name[i]);
+			free(rhs_name[i]);
 		}
-		free(suf_name);
+		free(rhs_name);
 		ASL_free(&asl);
-		free(tptr);
-		return -1;
+		free(suf_ptr);
+		exit(-1);
 	}
 
 
 	con_f = suf_get("con_flag", ASL_Sufkind_con);
-	var_f = suf_get("var_flag", ASL_Sufkind_var);
+	var_f = suf_get("dof_v", ASL_Sufkind_var);
 
-	if(var_f->u.i == NULL){
+	if(var_f->u.r == NULL && var_f->u.i == NULL){
     fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
     	"u.i empty, no var_flag declared.\n");
-    /*return -1; */
+    return -1;
 	}
 	if(con_f->u.i == NULL){
 		fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
@@ -223,7 +238,7 @@ int main(int argc, char **argv){
 	rhs_ptr = (SufDesc **)malloc(sizeof(SufDesc *) * n_rhs);
 
 	for(i=0; i < n_rhs; i++){
-   *(rhs_ptr + i)= suf_get(suf_name[i], ASL_Sufkind_con|ASL_Sufkind_real);
+   *(rhs_ptr + i)= suf_get(rhs_name[i], ASL_Sufkind_con|ASL_Sufkind_real);
   	if((*(rhs_ptr + i))->u.r == NULL){
 		  fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
 		  	"u.r empty, no rhs values declared for rhs_%d.\n", i);
@@ -359,9 +374,10 @@ int main(int argc, char **argv){
 
 	/* */
   /* by [rhs][n] */
-  rhs_baksolve = (real *)calloc(K_nrows * n_rhs, sizeof(real));
-  x_           = (real *)calloc(K_nrows * n_rhs, sizeof(real));
-  dp_					 = (real *)calloc(n_rhs, sizeof(real)); /* array that contains delta_p */
+  rhs_baksolve = (real *)calloc(K_nrows * (n_dof), sizeof(real));
+  x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
+  hr_point		 = (int *)malloc(n_dof * sizeof(int));
+
   s_star			 = (real *)calloc(K_nrows, sizeof(real)); /* array that contains the primal dual update */
 
   /* Primal-dual vector */
@@ -383,34 +399,18 @@ int main(int argc, char **argv){
 
 
 	/* */
-	assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr);
+	/*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
+  printf("Here0!\n");
+  assemble_rhs_red_hess(rhs_baksolve, n_var, n_con, n_dof, var_f, hr_point);
+  printf("Here1!\n");
   
-	for(i=0; i<n_rhs; i++){
-		printf("rhs_%d, delta_p %f\n", i, dp_[i] );
-	}
-
+	
   /* scale matrix */
   for(i=0; i< k_space; i++){
   	Kij[i] = Kij[i] * exp(S_scale[Kcol[i]-1]) * exp(S_scale[Krow[i]-1]);
   }
   
-  /* scale rhs by [n][rhs] */
-  /*
-  for(i=0; i< K_nrows; i++){
-  	for(j=0; j < n_rhs; j++)
-  		*(*(rhs_baksolve+i)+j) = *(*(rhs_baksolve + i)+j) * exp(S_scale[i]);
-  }
-  */
-
- 	/*assert(&(rhs_baksolve[300][1]) == (*(rhs_baksolve + 300)+1)); */
-  /*
-  // scale rhs by [rhs][n] 
-  for(i=0; i< n_rhs; i++){
-  	for(j=0; j < K_nrows; j++)
-  		*(*(rhs_baksolve+i)+j) = *(*(rhs_baksolve + i)+j) * exp(S_scale[j]);
-  }
-	*/
-
+  
   /* v3 */
   for(i=0; i< n_rhs; i++){
   	for(j=0; j < K_nrows; j++){
@@ -440,7 +440,7 @@ int main(int argc, char **argv){
 
  
   /*  factorize the matrix */
-	/* pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, k_space, n_rhs, rhs_baksolve, x_);  */
+	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, k_space, n_dof, rhs_baksolve, x_);
       
   printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 		"Pardiso done. \n");
@@ -458,8 +458,8 @@ int main(int argc, char **argv){
   fclose(somefile);
   somefile = fopen("result_unscaled.txt", "w");
   for(i=0; i<K_nrows; i++){
-    fprintf(somefile, "\t%d", i);
-		for(j=0; j<n_rhs; j++){
+    /*fprintf(somefile, "\t%d", i);*/
+		for(j=0; j<n_dof; j++){
 			*(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) / exp(S_scale[i]);
     	fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));
     }
@@ -467,7 +467,16 @@ int main(int argc, char **argv){
       }
   fclose(somefile);
 
-  sens_update_driver(n_rhs, K_nrows, x_, dp_, s_star);
+
+  somefile = fopen("result_red_hess.txt", "w");
+  for(i=0; i<n_dof; i++){
+		for(j=0; j<n_dof; j++){
+    	fprintf(somefile, "\t%f", *(x_+ j * K_nrows + hr_point[i]));
+    }
+    fprintf(somefile, "\n");
+  }
+  fclose(somefile);
+
 
   somefile = fopen("result_primal_dual.txt", "w");
   
@@ -480,40 +489,9 @@ int main(int argc, char **argv){
   write_sol(ter_msg, s_star, s_star + n_var, 0);
   
   
-
-/* */
-
-  /*
-  somefile = fopen("result.txt", "w");
-  for(i=0; i<K_nrows; i++){
-    fprintf(somefile, "\t%d", i);
-		for(j=0; j<n_rhs; j++){
-    	fprintf(somefile, "\t%f", *(*(x_+j)+i));
-    }
-      fprintf(somefile, "\n");
-      }
-  fclose(somefile);
-*/
-/*
-  somefile = fopen("result.txt", "w");
-  for(i=0; i<K_nrows; i++){
-    fprintf(somefile, "\t%d", i);
-   for(j=0; j<n_rhs; j++){
-    fprintf(somefile, "\t%f", *(*(x_+i)+j));
-    }
-  fprintf(somefile, "\n");
-  }
-  fclose(somefile);
-
-  
-	for(i=0; i<n_rhs; i++){ // by [rhs][n]
-	//for(i=0; i<K_nrows; i++){ // by [n][rhs]
-		free(*(rhs_baksolve+i));
-		free(*(x_+i));
-	}
-  */
 	free(rhs_baksolve);
 	free(x_);
+	free(hr_point);
 	free(dp_);
 	free(s_star);
 	/* suf_name = (char **)malloc(sizeof(char *)*n_rhs); */
@@ -523,12 +501,12 @@ int main(int argc, char **argv){
 	
 
 	for(i=0; i<n_rhs; i++){
-		free(suf_name[i]);
+		free(rhs_name[i]);
 	}
-	free(suf_name);
+	free(rhs_name);
 
 	ASL_free(&asl);
-	free(tptr);
+	free(suf_ptr);
 	free(Arow);
 	free(Acol);
 	free(Aij);
