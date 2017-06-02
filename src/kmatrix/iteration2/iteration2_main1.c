@@ -8,7 +8,10 @@
 @main ********************************************
 **
 ** Reads nl file, allocates data structures, calls assembling funcs
-**
+** ToDo:
+** Need to implement rhs and red hess in a single program
+** Write program that takes suffixes from dot_prod calculation and performs the
+** Sensitivity step. 
 ** @param [r] stub
 ** @param [r] KWs
 ** @@
@@ -35,33 +38,39 @@
 /*#include "sens_update_driver.h"*/
 #include "suffix_decl_hand.h"
 #include "csr_driver.h"
-
+#define NUM_REG_SUF 4
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
-static int n_dof = 0;
+static int n_dof = 1;
 static int l_over = 0;
 static I_Known l_over_kw = {1, &l_over};
+
 static char name1[] = {"smth"};
 static char _n_dofopt_[] = {"n_dof"};
 static char _n_rhsopt_[] = {"n_rhs"};
 static char _no_lambdaopt_[] = {"no_lambda"};
+static char _dot_pr_f[] = {"dot_prod"};
+
+static int dot_prod_f = 0;
+static I_Known dot_p_kw = {1, &dot_prod_f};
 
 /*static char dof_v[] = {"dof_v"};*/
 
-/* keywords */
+/* keywords, they must be in alphabetical order! */
 static keyword keywds[] = {
-  KW(name1 , IK_val, &dumm_kw, name1),
+	KW(_dot_pr_f, IK_val, &dot_p_kw, _dot_pr_f),
   KW(_n_dofopt_ , I_val, &n_dof, _n_dofopt_),
   KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),	
-  KW(_no_lambdaopt_ , IK_val, &l_over_kw, _no_lambdaopt_)
+  KW(_no_lambdaopt_ , IK_val, &l_over_kw, _no_lambdaopt_),  
+  KW(name1 , IK_val, &dumm_kw, name1),
 };
 static char banner[] = {"[KMATRIX] written by DT\n\n"};
 static char _k_[] = {"K_augmented"};
-static char _k_o_[] = {"K_augmented options"};
-static Option_Info Oinfo = 
-{_k_, banner, _k_o_, keywds, nkeywds};
-/*Remember to set reference back*/
+static char _k_o_[] = {"K_augmented_options"};
+static Option_Info Oinfo;
+
+
 
 
 int main(int argc, char **argv){
@@ -120,9 +129,36 @@ int main(int argc, char **argv){
   char ter_msg[] = {"I[KMATRIX]...\t[KMATRIX_ASL]"
 	"All done it seems."};
 
+	unsigned n_r_suff = NUM_REG_SUF;
+	/* Suffix names; yes, I know. */
 	char _dof_s[] = {"dof_v"};
 	char _rh_name_s[] = {"rh_name"};
+	char _s_dotp_v[] = {"s_dot_v"};
+	char _s_dotp_c[] = {"s_dot_c"};
+	printf("_nkeywds %d\n", nkeywds);
 
+
+	Oinfo.sname = _k_;
+	Oinfo.bsname = banner;
+	Oinfo.opname = _k_o_;
+	Oinfo.keywds = keywds;
+	Oinfo.n_keywds = nkeywds;
+	Oinfo.flags = 0;
+	Oinfo.version = NULL;
+	Oinfo.usage = NULL;
+	Oinfo.kwf = NULL;
+	Oinfo.feq = NULL;
+	Oinfo.n_options = 0;
+	Oinfo.driver_date = 0;
+	Oinfo.wantsol = 0;
+	Oinfo.nS = 0;
+	Oinfo.S = NULL;
+	Oinfo.uinfo = NULL;
+	Oinfo.asl = NULL;
+	Oinfo.eqsign = NULL;
+	Oinfo.n_badopts = 0;
+	Oinfo.option_echo = 0;
+	Oinfo.nnl = 0;
 
 	/* The memory allocation for asl data structure */
 	asl = ASL_alloc(ASL_read_pfgh);
@@ -153,27 +189,40 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
-	reg_suffix_name =   (char **)malloc(sizeof(char *) * 2);
-	reg_suffix_name[0] = (char *)malloc(sizeof(char) * 16 );
-	reg_suffix_name[1] = (char *)malloc(sizeof(char) * 16 );
-	reg_suffix_name[0][0] = '\0';
-	reg_suffix_name[1][0] = '\0';
+	if (l_over){
+		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+			"Multiplier check override.\n");
+	}
+	if (dot_prod_f){
+		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+			"Dot product preparation.\n");
+	}
+
+
+	/* Allocate suffix names (regular)*/
+	reg_suffix_name =   (char **)malloc(sizeof(char *) * n_r_suff);
+	for(i=0; i < n_r_suff; i++){
+		reg_suffix_name[i] = (char *)malloc(sizeof(char) * 16 );
+		reg_suffix_name[i][0] = '\0';
+	}
+	
 	strcat(reg_suffix_name[0], _dof_s);
 	strcat(reg_suffix_name[1], _rh_name_s);
-
+	strcat(reg_suffix_name[2], _s_dotp_v);
+	strcat(reg_suffix_name[3], _s_dotp_c);
 
 	if(n_rhs > 0){
-		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
+		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs + n_r_suff));
 		rhs_name = (char **)malloc(sizeof(char *)*n_rhs);
 		for(i=0; i<n_rhs; i++){
 			rhs_name[i] = (char *)malloc(sizeof(char) * 32); /* 32 bit long digit;
 			 why not?*/
 		}
-		suffix_decl_hand(n_rhs, suf_ptr, reg_suffix_name, rhs_name);
+		suffix_decl_hand(suf_ptr, reg_suffix_name, rhs_name, n_r_suff, n_rhs);
 	}
 	else{
-		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*2);
-		suffix_decl_hand(n_rhs, suf_ptr, reg_suffix_name, rhs_name);
+		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl) * n_r_suff);
+		suffix_decl_hand(suf_ptr, reg_suffix_name, rhs_name, n_r_suff, n_rhs);
 	}
 
 
@@ -186,8 +235,8 @@ int main(int argc, char **argv){
 	}
 
 	/* Declare suffixes */
-	if(n_rhs > 0){suf_declare(suf_ptr, (n_rhs + 2));}
-	else{suf_declare(suf_ptr, (2));}
+	if(n_rhs > 0){suf_declare(suf_ptr, (n_rhs + n_r_suff));}
+	else{suf_declare(suf_ptr, n_r_suff);}
 	
 
 	/* dhis bit setups ASL components e.g. n_var, n_con, etc. */
@@ -204,7 +253,7 @@ int main(int argc, char **argv){
 	if (n_dof > (n_var - n_con)){
 		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
 			"No valid number of n_dof declared\n");
-		return -1;
+		exit(-1);
 	}
 	else if (n_dof < (n_var - n_con) ){
 		printf("I[KMATRIX]...\t[KMATRIX_ASL]"
@@ -232,12 +281,16 @@ int main(int argc, char **argv){
 	if(lambda==NULL && l_over == 0){
 		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
 	"Constraint Multipliers not declared(suffix dual), abort\n");
-		for(i=0; i<n_rhs; i++){
-			free(rhs_name[i]);
+		for(i=0; i < n_r_suff; i++){free(reg_suffix_name[i]);}
+		free(reg_suffix_name);
+		if(n_rhs){
+			for(i=0; i<n_rhs; i++){
+				free(rhs_name[i]);
+			}
+			free(rhs_name);
 		}
-		free(rhs_name);
-		ASL_free(&asl);
 		free(suf_ptr);
+		ASL_free(&asl);
 		exit(-1);
 	}
 
@@ -424,12 +477,20 @@ int main(int argc, char **argv){
   fclose(somefile);
 
   suf_iput(reg_suffix_name[1], ASL_Sufkind_var, positions_rh);
-
+  if(dot_prod_f != 0){
+  	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Dot product preparation phase.\n");
+  	/* do dot products*/
+  	suf_rput(reg_suffix_name[2], ASL_Sufkind_var, x_);
+  	suf_rput(reg_suffix_name[3], ASL_Sufkind_con, (x_ + n_var));
+  	;
+  }
 
   write_sol(ter_msg, s_star, s_star + n_var, 0);
   free(positions_rh);
-	free(reg_suffix_name[0]);
-	free(reg_suffix_name[1]);
+  for(i=0; i<n_r_suff; i++){
+  	free(reg_suffix_name[i]);
+  }
 	free(reg_suffix_name);
 	free(nz_row_w);
 	free(nz_row_a);

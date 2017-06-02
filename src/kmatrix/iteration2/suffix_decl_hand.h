@@ -24,6 +24,6 @@
 
 #include "asl.h"
 
-void suffix_decl_hand(int n_rhs, SufDecl *suf_ptr, char **ptr_name, char **rhs_name);
+void suffix_decl_hand(SufDecl *suf_ptr, char **ptr_name, char **rhs_name, unsigned n_reg_suf, int n_rhs);
 
 #endif /* SUF_DECL_HAND */

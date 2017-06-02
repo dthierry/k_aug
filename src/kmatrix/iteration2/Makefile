@@ -1,5 +1,6 @@
 CC = gcc
-CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
+#CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
+CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W
 FC = gfortran
 S = ../..
 L = -lm -ldl
