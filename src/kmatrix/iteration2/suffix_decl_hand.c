@@ -25,16 +25,19 @@
 #include <stdlib.h>
 
 
-void suffix_decl_hand(int n_rhs, SufDecl *suf_ptr, char **rhs_name){
+void suffix_decl_hand(int n_rhs, SufDecl *suf_ptr, char **ptr_name, char **rhs_name){
   static char sword[] = "rhs_";  
   int i;
+  /*char dof_v[] = {"dof_v"};*/
+  char second[] = {"con_flag"};
+
   /* First two suffixes */
-  suf_ptr->name = "dof_v";
+  suf_ptr->name = ptr_name[0];
   suf_ptr->table = 0;
   suf_ptr->kind = ASL_Sufkind_var;
   suf_ptr->nextra = 0;
 
-  (suf_ptr + 1)->name = "con_flag";
+  (suf_ptr + 1)->name = ptr_name[1];
   (suf_ptr + 1)->table = 0;
   (suf_ptr + 1)->kind = ASL_Sufkind_var | ASL_Sufkind_outonly;
   (suf_ptr + 1)->nextra = 0;
@@ -47,7 +50,7 @@ void suffix_decl_hand(int n_rhs, SufDecl *suf_ptr, char **rhs_name){
     for(i=0; i < n_rhs; i++){
       char numeric_rhs[27];
       numeric_rhs[0] = '\0';
-      sprintf(numeric_rhs, "%d", i);
+      sprintf(numeric_rhs, "%d", i); /* Number into string */
       *(rhs_name[i]) = '\0';
       strcat(rhs_name[i], sword);
       strcat(rhs_name[i], numeric_rhs);

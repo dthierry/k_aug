@@ -20,7 +20,6 @@
 #include <math.h>
 
 #include "getstub.h"
-/*#include "sort_by_column.h" */
 #include "w_append_nz.h"
 #include "k_assemble_cc.h"
 #include "kmalloc.h"
@@ -32,10 +31,10 @@
 
 #include "find_inequalities.h"
 #include "assemble_corrector_rhs.h"
-/*#include "assemble_rhsds.h" */
 #include "assemble_rhsd_red_hess.h"
-#include "sens_update_driver.h"
+/*#include "sens_update_driver.h"*/
 #include "suffix_decl_hand.h"
+#include "csr_driver.h"
 
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
@@ -43,17 +42,25 @@ static int n_rhs = 0;
 static int n_dof = 0;
 static int l_over = 0;
 static I_Known l_over_kw = {1, &l_over};
+static char name1[] = {"smth"};
+static char _n_dofopt_[] = {"n_dof"};
+static char _n_rhsopt_[] = {"n_rhs"};
+static char _no_lambdaopt_[] = {"no_lambda"};
+
+/*static char dof_v[] = {"dof_v"};*/
 
 /* keywords */
 static keyword keywds[] = {
-  KW("smth", IK_val, &dumm_kw, "Cheers mate the cavalry is here"),
-  KW("n_dof", I_val, &n_dof, "another keyword"),
-  KW("n_rhs", I_val, &n_rhs, "Number of right hand sides"),	
-  KW("no_lambda", IK_val, &l_over_kw, "Override multiplier check(lambda)")
+  KW(name1 , IK_val, &dumm_kw, name1),
+  KW(_n_dofopt_ , I_val, &n_dof, _n_dofopt_),
+  KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),	
+  KW(_no_lambdaopt_ , IK_val, &l_over_kw, _no_lambdaopt_)
 };
 static char banner[] = {"[KMATRIX] written by DT\n\n"};
+static char _k_[] = {"K_augmented"};
+static char _k_o_[] = {"K_augmented options"};
 static Option_Info Oinfo = 
-{"k_matrix", banner, "k_matrix_options", keywds, nkeywds};
+{_k_, banner, _k_o_, keywds, nkeywds};
 /*Remember to set reference back*/
 
 
@@ -70,6 +77,7 @@ int main(int argc, char **argv){
 	SufDesc *con_f=NULL;
 	SufDesc **rhs_ptr=NULL;
 	SufDecl *suf_ptr=NULL;
+	SufDecl *some_suffix=NULL;
 
 	fint *Acol=NULL, *Arow=NULL;
 	real *Aij=NULL;
@@ -81,7 +89,7 @@ int main(int argc, char **argv){
 	fint K_nrows;
 
 	real *S_scale=NULL;
-	fint k_space;
+	fint nzK;
 
 	fint *Wc_t=NULL, *Wr_t=NULL;
 	real *Wi_t=NULL;
@@ -93,6 +101,7 @@ int main(int argc, char **argv){
 	real *s_star = NULL;
 	int *c_flag=NULL;
 	char **rhs_name=NULL;
+	char **reg_suffix_name=NULL;
 	int *nz_row_w=NULL;
 	int *nz_row_a=NULL;
 	int *md_off_w=NULL;
@@ -104,31 +113,18 @@ int main(int argc, char **argv){
 
   FILE *somefile;
   fint nerror;
-  fint nzA;
+  int nzW, nzA;
   int *hr_point = NULL;
+  int *positions_rh = NULL;
 
   char ter_msg[] = {"I[KMATRIX]...\t[KMATRIX_ASL]"
 	"All done it seems."};
 
-	printf("I[PRE-TEST]...\t[KMATRIX_ASL]"
-	"Number of Right hand sides %d\n", n_rhs);
-
-	/*if(n_rhs > 0){
-		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
-		rhs_name = (char **)malloc(sizeof(char *)*n_rhs);
-		for(i=0; i<n_rhs; i++){
-			rhs_name[i] = (char *)malloc(sizeof(char) * 32); 
-		}
-		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
-	}
-	else{
-		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*2);
-		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
-	}
-	*/
+	char _dof_s[] = {"dof_v"};
+	char _rh_name_s[] = {"rh_name"};
 
 
-	/* The memory allocation */
+	/* The memory allocation for asl data structure */
 	asl = ASL_alloc(ASL_read_pfgh);
 
 	s = getstops(argv, &Oinfo);
@@ -144,23 +140,40 @@ int main(int argc, char **argv){
 				}
 
 	if (n_rhs == 0){
-		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
 			"No n_rhs declared\n");
-		/*exit(-1);*/
 	}
+	if (n_dof == 0){
+		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+			"No n_dof declared\n");
+	}
+	if (n_rhs == 0 && n_dof == 0){
+		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+			"Neither n_rhs nor n_dof specified... exiting\n");
+		return 1;
+	}
+
+	reg_suffix_name =   (char **)malloc(sizeof(char *) * 2);
+	reg_suffix_name[0] = (char *)malloc(sizeof(char) * 16 );
+	reg_suffix_name[1] = (char *)malloc(sizeof(char) * 16 );
+	reg_suffix_name[0][0] = '\0';
+	reg_suffix_name[1][0] = '\0';
+	strcat(reg_suffix_name[0], _dof_s);
+	strcat(reg_suffix_name[1], _rh_name_s);
 
 
 	if(n_rhs > 0){
 		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs+2));
 		rhs_name = (char **)malloc(sizeof(char *)*n_rhs);
 		for(i=0; i<n_rhs; i++){
-			rhs_name[i] = (char *)malloc(sizeof(char) * 32); /* 32 bit long digit; why not?*/
+			rhs_name[i] = (char *)malloc(sizeof(char) * 32); /* 32 bit long digit;
+			 why not?*/
 		}
-		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
+		suffix_decl_hand(n_rhs, suf_ptr, reg_suffix_name, rhs_name);
 	}
 	else{
 		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*2);
-		suffix_decl_hand(n_rhs, suf_ptr, rhs_name);
+		suffix_decl_hand(n_rhs, suf_ptr, reg_suffix_name, rhs_name);
 	}
 
 
@@ -180,9 +193,17 @@ int main(int argc, char **argv){
 	/* dhis bit setups ASL components e.g. n_var, n_con, etc. */
 	f = jac0dim(s, (fint)strlen(s));
 
-	if (n_dof > (n_var - n_con) || n_dof == 0){
+
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Number of Right hand sides %d\n", n_rhs);
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Number of variables %d\n", n_var);
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Number of constraints %d\n", n_con);
+
+	if (n_dof > (n_var - n_con)){
 		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
-			"No invalid number of n_dof declared\n");
+			"No valid number of n_dof declared\n");
 		return -1;
 	}
 	else if (n_dof < (n_var - n_con) ){
@@ -198,7 +219,7 @@ int main(int argc, char **argv){
 
 	/* Want initial guess lambda */
 	want_xpi0 = 2;
-
+  /* I think this allocates _pi0 if = 2 although its behavior is still unknown*/
 	/* need to do part of changing sign for y */
 
 	pfgh_read(f, ASL_findgroups);
@@ -221,24 +242,22 @@ int main(int argc, char **argv){
 	}
 
 
-	con_f = suf_get("con_flag", ASL_Sufkind_con);
-	var_f = suf_get("dof_v", ASL_Sufkind_var);
+	/*con_f = suf_get("con_flag", ASL_Sufkind_con);*/
+	var_f = suf_get(reg_suffix_name[0], ASL_Sufkind_var);
 
 	if(var_f->u.r == NULL && var_f->u.i == NULL){
     fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
     	"u.i empty, no var_flag declared.\n");
-    return -1;
+    exit(-1);
 	}
+	/*
 	if(con_f->u.i == NULL){
 		fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
 			"u.i empty, no con_flag declared.\n");
-	/*	return -1; */
+		return -1; 
 	}
+	*/
 
-	/*SufDesc *smptr0, *smptr1; */
-
-	/* smptr0 = suf_get("rhs_0", ASL_Sufkind_con); */
-	/* smptr1 = suf_get("rhs_1", ASL_Sufkind_con); */
 	rhs_ptr = (SufDesc **)malloc(sizeof(SufDesc *) * n_rhs);
 
 	for(i=0; i < n_rhs; i++){
@@ -246,23 +265,11 @@ int main(int argc, char **argv){
   	if((*(rhs_ptr + i))->u.r == NULL){
 		  fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
 		  	"u.r empty, no rhs values declared for rhs_%d.\n", i);
-		  return -1;
+		  exit(-1);
   	}
 	}
 	
-	/*
-	real temp;	
-	for(i=0; i < n_con; i++){
-		printf("%d", i);
-		for(int k=0; k < n_rhs; k++){
-			temp = (*(rhs_ptr + k))->u.r[i];
-			printf("\t%f", temp);
-		}
-		printf("\n");
-	}
-	*/
-
-	c_flag = (int *)malloc(sizeof(int) * n_con);
+	c_flag = (int *)malloc(sizeof(int) * n_con); /* Flags for ineq or equalities*/
 	
 	/*constraints flags */
 	find_ineq_con(n_con, LUrhs, c_flag);
@@ -273,97 +280,47 @@ int main(int argc, char **argv){
 	Arow = (fint *)malloc(sizeof(fint)*nzc);
 	Aij  = (real *)malloc(sizeof(real)*nzc);
 
-	
+	/* TO DO:
+	CHECH WHICH VARIABLES HAVE BOUNDS
+	LOOK FOR BOUND MULTIPLIERS
+	CHECH WHICH VARIABLES HAVE MULTIPLIERS
+	ASSEMBLE SIGMA
+	ADD SIGMA TO HESSIAN
+
+	assemble csr or coordinate
+	 */ 
 	nerror = 0;
-	
-	/* get_jac_asl function */
-	/* is it better to pass asl as a reference? */
-	/*get_grad_f(asl, x, n_var, n_obj, gf, &nerror); */
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		"Nonzeroes in the sparse Jacobian %d\n", nzc);
+
 	get_jac_asl_aug (asl, x, Acol, Arow, Aij, n_var, n_con, nzc, &nerror, &nz_row_a);
 	get_hess_asl_aug(asl, x, &Wcol, &Wrow, &Wij, n_var, n_con, n_obj,
-	 &nnzw, lambda, &nerror, &nz_row_w, &md_off_w, miss_nz_w);
-	/* */
-	exit(-1);
-	/*printf("nonzeroes in the sparse hessian %d\n", nnzw); */
-	/*printf("print dummy %d\n", dumm); */
-	
-	if (dumm == 2){
-    printf("I[KMATRIX]...\t[KMATRIX_ASL]"
-    "Cheers mate, the cavalry is here!");
-	}
-
-	/*printf("size of s %d\n", sizeof(f)); */
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
-		"Number of Right hand sides %d\n", n_rhs);
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
-		"Number of variables %d\n", n_var);
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
-		"Number of constraints %d\n", n_con);
-	
-	nzA = nzc;
-	/* Reorder the jacobian */
-	/* Done by now */
-	
+	 &nnzw, lambda, &nerror, &nz_row_w, &md_off_w, &miss_nz_w);
+	assert(nerror == 0);
+	nzA = nzc; 
+	nzW = nnzw + miss_nz_w; /* Recomputed number of nz in the Hessian-of-theLagrange */
 
 
-	/*wnzappnd(Wrow, Wcol, Wij, nnzw, n_var); */
-	/*w_col_sort(Wrow, Wcol, Wij, nnzw, n_var); */
-	/* calculate the space required for the KKT_matrix */
-	
-	k_space = nzA + nnzw + miss_nz_w + n_var;
+	csr_driver((int)n_var, (int)n_con, nzW, nzA, nz_row_w, nz_row_a,
+		(int*)Wrow, (int*)Wcol, Wij, (int*)Arow, (int*)Acol, Aij, 
+		&Krow, &Kcol, &Kij, &Kr_strt);
 
-	/* temporal space for w_appended */
-	wa_tsp = k_space - n_con - nzA;
-	Krow = (fint *)malloc(sizeof(fint) * k_space);
-	Kcol = (fint *)malloc(sizeof(fint) * k_space);
-	Kij  = (real *)malloc(sizeof(real) * k_space);
-	
+	K_nrows = n_var + n_con; /* Number of rows of the KKT matrix (no ineq) */
+	nzK = nzA + nzW + n_con; /* NZ in the kkt matrix (for pardiso, yes)*/
+	assert(Krow != NULL);
 
-	/* the question is if we do not append nz to the W matrix, can k_assemble  */
-	/* still do its work? */
-	/* appearently, yes it will */
-
-	/* row starts */
-	K_nrows = n_var + n_con;
-	/* number of rows of the KKT matrix */
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
-		"n_rows KKT %d\n", K_nrows);
-
-	Kr_strt = (fint *)malloc(sizeof(fint) * (K_nrows + 1));
-	S_scale = (real *)malloc(sizeof(real) * K_nrows);
-
-	
-	/*real * Crhs=NULL; */
-	/* assemble_corrector_rhs(asl, x, lambda, n_var, n_con, Arow, Acol, Aij, nzA, Crhs, &nerror, c_flag); */
-
-	k_assemble_cc(Wr_t, Wc_t, Wi_t, wa_tsp, n_var, n_con, 
-		Arow, Acol, Aij, nzA, 
-		Krow, Kcol, Kij, k_space,
-	        Kr_strt);
-
-	mc30driver(K_nrows, k_space, Kij, Krow, Kcol, S_scale);
-
-	/* by [n][rhs] */
-  /*
-  rhs_baksolve = (real **)malloc(sizeof(real *) * K_nrows);
-	x_ =           (real **)malloc(sizeof(real *) * K_nrows);
-	assert(rhs_baksolve != NULL);
-	assert(x_ != NULL);
-	for(i = 0; i < K_nrows; i++){
-		*(rhs_baksolve + i) = (real *)calloc(n_rhs, sizeof(real));
-		*(x_ + i) =           (real *)calloc(n_rhs, sizeof(real));
-		assert(*(rhs_baksolve + i) != NULL);
-		assert(*(x_ + i) != NULL);
-	}
-  */
+	S_scale = (real *)calloc(sizeof(real), K_nrows);
+	mc30driver(K_nrows, nzK, Kij, Krow, Kcol, S_scale);
 
 	/* */
   /* by [rhs][n] */
   rhs_baksolve = (real *)calloc(K_nrows * (n_dof), sizeof(real));
   x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
   hr_point		 = (int *)malloc(n_dof * sizeof(int));
+  positions_rh = (int *)malloc(n_var * sizeof(int));
 
-  s_star			 = (real *)calloc(K_nrows, sizeof(real)); /* array that contains the primal dual update */
+  s_star			 = (real *)calloc(K_nrows, sizeof(real));
+   /* array that contains the primal dual update */
 
   /* Primal-dual vector */
   for(i=0; i<K_nrows; i++){
@@ -385,38 +342,29 @@ int main(int argc, char **argv){
 
 	/* */
 	/*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
-  printf("Here0!\n");
   assemble_rhs_red_hess(rhs_baksolve, n_var, n_con, n_dof, var_f, hr_point);
-  printf("Here1!\n");
   
 	
   /* scale matrix */
-  for(i=0; i< k_space; i++){
+  for(i=0; i< nzK; i++){
   	Kij[i] = Kij[i] * exp(S_scale[Kcol[i]-1]) * exp(S_scale[Krow[i]-1]);
   }
   
   
   /* v3 */
-  for(i=0; i< n_rhs; i++){
+  for(i=0; i< n_dof; i++){
   	for(j=0; j < K_nrows; j++){
-  		*(rhs_baksolve + i*K_nrows + j) = *(rhs_baksolve + i*K_nrows + j) * exp(S_scale[j]);
+  		*(rhs_baksolve + i*K_nrows + j) = 
+  		*(rhs_baksolve + i*K_nrows + j) * exp(S_scale[j]);
   	}
   }
 
 	somefile = fopen("rhs_sens_scaled", "w");
 
-	/*
- 	for(j=0; j < K_nrows; j++){
- 		for(i=0; i < n_rhs; i++){
- 			fprintf(somefile, "\t%f\t", *(*(rhs_baksolve + i)+j) );
- 		}
- 		fprintf(somefile, "\n");
- 	}
- 	fclose(somefile); */
 
  	/* v3 */
  	for(j=0; j < K_nrows; j++){
- 		for(i=0; i < n_rhs; i++){
+ 		for(i=0; i < n_dof; i++){
  			fprintf(somefile, "\t%f\t", *(rhs_baksolve + i*K_nrows + j) );
  		}
  		fprintf(somefile, "\n");
@@ -424,8 +372,8 @@ int main(int argc, char **argv){
  	fclose(somefile);
 
  
-  /*  factorize the matrix */
-	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, k_space, n_dof, rhs_baksolve, x_);
+  /* factorize the matrix */
+	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, nzK, n_dof, rhs_baksolve, x_);
       
   printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 		"Pardiso done. \n");
@@ -435,7 +383,7 @@ int main(int argc, char **argv){
   somefile = fopen("result.txt", "w");
   for(i=0; i<K_nrows; i++){
     fprintf(somefile, "\t%d", i);
-		for(j=0; j<n_rhs; j++){
+		for(j=0; j<n_dof; j++){
     	fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));
     }
       fprintf(somefile, "\n");
@@ -445,14 +393,19 @@ int main(int argc, char **argv){
   for(i=0; i<K_nrows; i++){
     /*fprintf(somefile, "\t%d", i);*/
 		for(j=0; j<n_dof; j++){
-			*(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) / exp(S_scale[i]);
+			*(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) * exp(S_scale[i]);
     	fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));
     }
       fprintf(somefile, "\n");
       }
   fclose(somefile);
 
+  memset(positions_rh, 0, sizeof(int)*n_var);
 
+  for(i=0; i<n_dof; i++){
+  	j = hr_point[i];
+  	positions_rh[j] = i;
+  }
   somefile = fopen("result_red_hess.txt", "w");
   for(i=0; i<n_dof; i++){
 		for(j=0; j<n_dof; j++){
@@ -470,9 +423,14 @@ int main(int argc, char **argv){
   }
   fclose(somefile);
 
+  suf_iput(reg_suffix_name[1], ASL_Sufkind_var, positions_rh);
+
 
   write_sol(ter_msg, s_star, s_star + n_var, 0);
-  
+  free(positions_rh);
+	free(reg_suffix_name[0]);
+	free(reg_suffix_name[1]);
+	free(reg_suffix_name);
 	free(nz_row_w);
 	free(nz_row_a);
 	free(md_off_w);

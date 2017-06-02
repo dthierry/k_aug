@@ -1,5 +1,5 @@
 CC = gcc
-CCFLAGS = -g -Wall -ansi -pedantic-errors
+CCFLAGS = -g -pg -Wall -ansi -pedantic-errors
 FC = gfortran
 S = ../..
 L = -lm -ldl
@@ -31,30 +31,55 @@ KMATRIX = iteration1_main.c
 
 
 
-k_matrix_mkl_rh: sort_by_column w_append_nz k_assemble kmalloc mc30_dri pard_dri \
+k_matrix_mkl_rh:  w_append_nz k_assemble kmalloc mc30_dri pard_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_corrector_rhs assemble_rhsds_rh \
       sens_update_driver suffix_decl_hand
 	$(CC) $(CCFLAGS) iteration1_main_hess_aug.c -o k_rh  $A $L \
 	-I$S/ASL/solvers/ \
-	sort_by_column.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
-	get_jac_asl.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
+	 w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
+	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_corrector_rhs.o assemble_rhsd_red_hess.o pardiso_driver.o sens_update_driver.o \
 	suffix_decl_hand.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(PARENT) \
 	$(LIBPARDISO) $(LIBMC30) $(LMKLIB)
 
 
-test: sort_by_column w_append_nz k_assemble kmalloc mc30_dri  \
+test:  w_append_nz k_assemble kmalloc mc30_dri  \
     get_jac_asl get_hess_asl find_ineq get_grad_f assemble_corrector_rhs assemble_rhsds_rh \
     sens_update_driver suffix_decl_hand
 	$(CC) $(CCFLAGS) iteration1_main_hess_aug.c -o k_rh  $A $L \
 	-I$S/ASL/solvers/ \
-	sort_by_column.o w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
-	get_jac_asl.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
+	 w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
+	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_corrector_rhs.o assemble_rhsd_red_hess.o sens_update_driver.o \
 	suffix_decl_hand.o \
 	-I$(S)/HSL/ -I$(S)/matrix/ -I$(PARENT) \
 	$(LIBMC30) $(LIBOPENBLAS)
+
+test_br:  w_append_nz k_assemble kmalloc mc30_dri pard_dri \
+      get_jac_asl get_hess_asl find_ineq get_grad_f assemble_corrector_rhs assemble_rhsds_rh \
+      sens_update_driver suffix_decl_hand csr_driver
+	$(CC) $(CCFLAGS) iteration1_main_kkt_brow.c -o k_rh  $A $L \
+	-I$S/ASL/solvers/ \
+	 w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
+	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
+	assemble_corrector_rhs.o assemble_rhsd_red_hess.o pardiso_driver.o sens_update_driver.o \
+	suffix_decl_hand.o csr_driver.o \
+	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(PARENT) \
+	$(LIBPARDISO) $(LIBMC30) $(LMKLIB)
+
+test_br_wo_pard:  w_append_nz k_assemble kmalloc mc30_dri \
+      get_jac_asl get_hess_asl find_ineq get_grad_f assemble_corrector_rhs assemble_rhsds_rh \
+      suffix_decl_hand csr_driver
+	$(CC) $(CCFLAGS) iteration1_main_kkt_brow.c -o k_rh  $A $L \
+	-I$S/ASL/solvers/ \
+	 w_append_nz.o k_assemble_cc.o kmalloc.o mc30_driver.o  \
+	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
+	assemble_corrector_rhs.o assemble_rhsd_red_hess.o  \
+	suffix_decl_hand.o csr_driver.o \
+	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(PARENT) \
+	 $(LIBMC30)
+
 
 
 clean:
@@ -76,7 +101,7 @@ pard_dri:
 
 
 get_jac_asl:
-	$(CC) $(CCFLAGS) -c $(PARENT)/get_jac_asl.c -I$S/ASL/solvers/
+	$(CC) $(CCFLAGS) -c get_jac_asl_aug.c -I$S/ASL/solvers/
 
 get_hess_asl:
 	$(CC) $(CCFLAGS) -c get_hess_asl_aug.c -I$S/ASL/solvers/
@@ -102,3 +127,6 @@ assemble_rhsds_rh:
 	$(CC) $(CCFLAGS) -c $(PARENT)/assemble_rhsd_red_hess.c -I$(S)/ASL/solvers/
 suffix_decl_hand:
 	$(CC) $(CCFLAGS) -c suffix_decl_hand.c -I$(S)/ASL/solvers/
+
+csr_driver:
+	$(CC) $(CCFLAGS) -c csr_driver.c -I$(S)/ASL/solvers/

@@ -7,8 +7,13 @@
 
 @mc30driver ********************************************
 **
-** Calculates scaling factors
-**
+** Calculates scaling factors exp(s[i])
+** To solve the linear system, Ax=b
+** (D1^-1) A (D2) y = (D1^-1)  b
+** and set x = D2 y
+** (D1^-1) = exp(s[i])_{ii}
+** (D2) = exp(s[i])_{ii}
+** pls check Golub & Van Loan 4ed pp 138
 ** @param [r] nr row number
 ** @param [r] nz number of nz
 ** @@
@@ -28,19 +33,12 @@ int mc30driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
 	fint ifail, lp;
 	FILE *somefile;
 	int i;
+	/* working array */
 	w = (real *)malloc(sizeof(real) * n * 4);
-	memset(w, 0.0, n*4);
-	memset(s, 0.0, n);
+
+	memset(w, 0, n * 4 * sizeof(real));
+	memset(s, 0, n * sizeof(real));
 	
-	/* initialize s & w */
-	/*for(i=0; i<n; i++){ */
-	/*	s[i] = 0.0; */
-	/*} */
-
-	/*for(i=0; i<(4*n); i++){ */
-	/*	w[i] = 0.0; */
-	/*} */
-
 	ifail = 0;
 	lp = 6;
 
@@ -48,6 +46,7 @@ int mc30driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
 	mc30ad_(&n, &nz, a, irn, icn, s, w, &lp, &ifail);
 	
 	assert(ifail == 0);
+	
 	free(w);
 
 	somefile = fopen("scale_facts.txt", "w");

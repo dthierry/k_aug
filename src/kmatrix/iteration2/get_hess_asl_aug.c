@@ -53,7 +53,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
 	/* evaluate the objective function first  */
 	obj_val = objval(0, x, nerror);
 	printf("I[KMATRIX]...\t[GET_HESS_ASL]"
-			"Current objective %d\n", obj_val);
+			"Current objective %f\n", obj_val);
 	c_body = (real *)malloc(sizeof(real) * ncon);
 	/* need to evaluate the constraint-body first */
 	conval(x, c_body, nerror);
