@@ -30,15 +30,15 @@
 
 int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza, 
 	fint n_rhs, real *b, real *x){
-	// do something
-	int i, j;
+	/* do something */
+	
 	int nrhs=n_rhs;
 	int mtype = -2;
 	void	*pt[64];
 
 	int			iparm[64];
 	double	dparm[64];
-	real *btemp, *xtemp;
+	/* real *btemp, *xtemp; */
 
 	int maxfct, mnum, phase, error, msglvl, solver;
 	int num_proc;
@@ -50,7 +50,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 
 	error = 0;
 	solver = 0;
-	// license check
+	/* license check */
 	pardisoinit(pt, &mtype, &solver, iparm, dparm, &error);
 
 	if(error != 0){
@@ -79,10 +79,10 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 	maxfct = 1;
 	mnum = 1;
 
-	msglvl = 1;
+	msglvl = 0;
 	error = 0;
 
-	// check Matrix
+	/* check Matrix */
 	pardiso_chkmatrix(&mtype, &n, a, ia, ja, &error);
 	if(error != 0){
 		printf("Error in...\t[MATRIX] %d\n", error);
@@ -101,14 +101,14 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
 			printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
 		"RHS CHECKING successful\n");}
 	
-	// check RHS
+	/* check RHS */
 
 	pardiso_printstats(&mtype, &n, a, ia, ja, &nrhs, b, &error);
 	if(error != 0){
 		printf("Error...\t[PRINT_STATS] %d\n", error);
 		exit(1);
 	}
-	phase = 11; // Symbolic factorization
+	phase = 11; /* Symbolic factorization */
 
 	pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,
 		iparm, &msglvl, &ddum, &ddum, &error, dparm);
@@ -122,7 +122,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
   printf("Number of nonzeros in factors  = %d\n", iparm[17]);
   printf("\nNumber of factorization MFLOPS = %d\n", iparm[18]);
 
-  phase = 22; // Numerical factorization
+  phase = 22; /* Numerical factorization */
   pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum,	&nrhs,
   	iparm, &msglvl, &ddum, &ddum, &error, dparm);
 
@@ -137,10 +137,10 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
   phase = 33;
 
 
-  iparm[7] = 1;       /* Max numbers of iterative refinement steps. */
-  //btemp = b;
-  //xtemp = *x;
-  //exit(1);
+  iparm[7] = 1;       /* Max numbers of iterative refinement steps. */ 
+  /*btemp = b; */
+  /*xtemp = *x; */
+  /*exit(1); */
 	pardiso (pt, &maxfct, &mnum, &mtype, &phase,
            &n, a, ia, ja, &idum, &nrhs,
            iparm, &msglvl, b, x, &error,  dparm);
@@ -153,7 +153,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
  		"Solve completed x\n\n");
 	
 
-	phase = -1; // Internal memory release
+	phase = -1; /* Internal memory release */
     
   pardiso (pt, &maxfct, &mnum, &mtype, &phase, &n, &ddum, ia, ja, 
   	&idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error,  dparm);

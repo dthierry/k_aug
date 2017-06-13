@@ -392,6 +392,25 @@ int main(int argc, char **argv){
       fprintf(somefile, "\n");
   }
   fclose(somefile);
+
+  somefile = fopen("primal0.txt", "w");
+  for(i=0; i<n_var; i++){
+    fprintf(somefile, "\t%d", i);
+    	fprintf(somefile, "\t%f", *(x + i));
+      fprintf(somefile, "\n");
+  }
+  fclose(somefile);
+
+
+  somefile = fopen("dual0.txt", "w");
+  for(i=0; i<n_con; i++){
+    fprintf(somefile, "\t%d", i);
+    	fprintf(somefile, "\t%f", *(lambda + i));
+      fprintf(somefile, "\n");
+  }
+  fclose(somefile);
+
+
   ptr_primal = x_;
   ptr_dual   = x_ + n_var;
   write_sol(ter_msg, ptr_primal, ptr_dual, 0);

@@ -15,7 +15,8 @@
 ** @@
 *******************************************************************************/
 #include "kmalloc.h"
-// Calculates the amount of space for the whole KKT matrix
+#include <sys/types.h>
+/* Calculates the amount of space for the whole KKT matrix */
 fint k_malloc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
  fint Anz){
 
@@ -23,24 +24,25 @@ fint k_malloc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
 	fint i;
 	int j, k;
 
-	//unsigned char flag;
+	
 	fint ptr0;
-	ptr0 = 0;
 	int miss_nz, miss_row;
+	fint Knz;
+	ptr0 = 0;
 	newNZ = 0;
 	miss_row = 0;
 	miss_nz = 0;
-	fint Knz;
-	//should skip this if Wnz == 0
-	// count the number of missing nz
-	// first loop on vector elements (starts 1)
+	
+	/* should skip this if Wnz == 0 */
+	/* count the number of missing nz */
+	/* first loop on vector elements (starts 1) */
 	for(i=1; i <= nvar; i++){
 		for(j=ptr0; j<Wnz ;j++){
-			// found col
+			/* found col */
 			if(Wcol[j] == i){
 				k = j;
 				while(k < Wnz-1 && Wcol[k] == Wcol[j]){
-					// found nz in main diag
+					/* found nz in main diag */
 					if(Wrow[k] == i){
 						break;
 					}
@@ -50,33 +52,33 @@ fint k_malloc(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar, fint ncon,
 				if(Wrow[k] == i){
 					break;
 				}
-				// not found nz in main diag
+				/* not found nz in main diag */
 				else{
 					miss_nz++;
 					break;
 				}
 			}
-			// not found col
+			/* not found col */
 			else if (Wcol[j] > i){
 				miss_row++;
 				break;
 			}
-			//else{
-				//printf("Something else happened\n");
-			//}
+			/* else{ 
+				printf("Something else happened\n");
+			} */
 		}
 	}
 
 	printf("I[KMATRIX]...\t[KMALLOC]"
 			"Number of elements missing in the main diag W%d\n", miss_nz);
-	//printf("Number of elements missing in the main diag W%d\n", miss_nz);
+	/* printf("Number of elements missing in the main diag W%d\n", miss_nz); */
 	
 	printf("I[KMATRIX]...\t[KMALLOC]"
 			"Number of rows missing W %d\n", miss_row);
 
 	newNZ = miss_row + miss_nz + Wnz;
 	
-	//assert(Wcol == NULL);
+	/* assert(Wcol == NULL); */
 	if(Wnz != 0){
 		if(Wcol[Wnz-1] < nvar){
 			printf("I[KMATRIX]...\t[KMALLOC]"

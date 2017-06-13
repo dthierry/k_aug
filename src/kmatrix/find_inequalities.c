@@ -11,8 +11,8 @@ void find_ineq_con(fint ncon_,real *LBC, int *c_flag){
 	leq_con=0;
 	eq_con =0;
 	for(i=0; i<ncon_; i++){
-		//printf("%d LBC %f \t UBC %f\n",i, LBC[2*i], LBC[2*i+1]);
-		//assert(LBC[2*i] <= -1e300);
+		/*printf("%d LBC %f \t UBC %f\n",i, LBC[2*i], LBC[2*i+1]); */
+		/*assert(LBC[2*i] <= -1e300); */
 		if(LBC[2*i] <= -1e300){
 			leq_con++;
 			c_flag[i] = 1;

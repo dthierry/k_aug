@@ -29,11 +29,11 @@ void wnzappnd(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar,
 	l = 0;
 	ptr0 = 0;
 
-	//should skip this if Wnz == 0
+	/*should skip this if Wnz == 0 */
 	for(i=1; i<=nvar; i++){
-		//assert(l<Wnz_new);
+		/*assert(l<Wnz_new); */
 		for(j=ptr0; j<Wnz; j++){
-			// found col
+			/* found col */
 			if(Wcol[j] == i){
 				k = j;
 				while(k < Wnz && Wcol[j] == Wcol[k]){
@@ -44,7 +44,7 @@ void wnzappnd(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar,
 					k++;
 					if(k == Wnz){break;}
 				}
-				// check main diagonal (upper triangular)
+				/* check main diagonal (upper triangular) */
 				if(Wrow[k-1] != Wcol[k-1]){
 					Wr_new[l] = i;
 					Wc_new[l] = i;
@@ -60,7 +60,7 @@ void wnzappnd(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar,
 				
 				break;
 		  }
-		  // row not found appending new element
+		  /* row not found appending new element */
 		  else if (Wcol[j] > i){
 		  	Wr_new[l] = i;
 				Wc_new[l] = i;
@@ -70,7 +70,7 @@ void wnzappnd(fint *Wrow, fint *Wcol, real *Wij, fint Wnz, fint nvar,
 			}
 		}
 	}
-// Last col is less than nvar, appending missing elements
+/* Last col is less than nvar, appending missing elements */
 if(Wnz != 0){
 	if(Wcol[Wnz-1] < nvar){
 		for(i=(Wcol[Wnz-1]+1); i<=nvar; i++){
