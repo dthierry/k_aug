@@ -8,8 +8,8 @@ rm -rf solvers
 wget http://www.netlib.org/blas/blas-3.7.0.tgz 
 tar -zxvf blas-3.7.0.tgz
 echo "Making .."
-cd ./blas-3.7.0/
-make 
+cd ./BLAS-3.7.0/
+make all
 
 
 echo "

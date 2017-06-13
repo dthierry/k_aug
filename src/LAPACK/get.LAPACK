@@ -8,9 +8,11 @@ rm -rf solvers
 wget http://www.netlib.org/lapack/lapack-3.7.0.tgz
 tar -zxvf lapack-3.7.0.tgz
 echo "Making .."
+cp ../BLAS/BLAS-3.7.0/blas_LINUX.a ./lapack-3.7.0/librefblas.a
 cd ./lapack-3.7.0/
 cp make.inc.example make.inc
-
+ulimit -s 6500
+make
 echo "PLEASE ADD THE BLAS LIBRARY FILE ADDRESS TO make.inc (blas_LINUX.a)"
 echo "The line is BLASLIB = "
 echo "Then set ulimit -s 65000"

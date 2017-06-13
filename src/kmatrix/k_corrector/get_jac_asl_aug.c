@@ -49,6 +49,7 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 
 	if(*nerror != 0){
 		printf("E[KMATRIX]...\t[GET_JAC_ASL]nerror points to %ld\n", *nerror);
+		printf("E[KMATRIX]...\t[GET_JAC_ASL]Evaluation error in the Jacobian %ld\n", *nerror);
 		exit(-1);
 	}
 	f_jac = fopen("jacobi_debug.in", "w");
