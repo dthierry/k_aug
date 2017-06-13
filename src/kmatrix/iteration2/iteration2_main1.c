@@ -396,6 +396,10 @@ int main(int argc, char **argv){
 	/* */
 	/*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
   assemble_rhs_red_hess(rhs_baksolve, n_var, n_con, n_dof, var_f, hr_point);
+
+  for(i=0; i<n_dof; i++){
+  	printf("i %d, hr %d\n", i, hr_point[i]);
+  }
   
 	
   /* scale matrix */
@@ -453,20 +457,34 @@ int main(int argc, char **argv){
       }
   fclose(somefile);
 
+  somefile = fopen("dot_in.in", "w");
+  for(i=0; i<n_dof; i++){
+		for(j=0; j<K_nrows; j++){
+    	fprintf(somefile, "\t%.g\n", *(x_+ i * K_nrows + j));
+    }
+      }
+  fclose(somefile);
+
+
+
+
   memset(positions_rh, 0, sizeof(int)*n_var);
 
   for(i=0; i<n_dof; i++){
   	j = hr_point[i];
   	positions_rh[j] = i;
   }
+
   somefile = fopen("result_red_hess.txt", "w");
+  
   for(i=0; i<n_dof; i++){
 		for(j=0; j<n_dof; j++){
-    	fprintf(somefile, "\t%f", *(x_+ j * K_nrows + hr_point[i]));
+    	fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i]));
     }
     fprintf(somefile, "\n");
   }
   fclose(somefile);
+
 
 
   somefile = fopen("result_primal_dual.txt", "w");

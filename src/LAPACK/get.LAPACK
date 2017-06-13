@@ -1,0 +1,30 @@
+#!/bin/bash
+echo "If os=mac pls edit this file"
+# activate the following line if os=mac, deactivate wget line
+# curl "http://ampl.com/netlib/ampl/solvers.tgz" -o solvers.tgz
+
+rm solvers.*
+rm -rf solvers
+wget http://www.netlib.org/lapack/lapack-3.7.0.tgz
+tar -zxvf lapack-3.7.0.tgz
+echo "Making .."
+cd ./lapack-3.7.0/
+cp make.inc.example make.inc
+
+echo "PLEASE ADD THE BLAS LIBRARY FILE ADDRESS TO make.inc (blas_LINUX.a)"
+echo "The line is BLASLIB = "
+echo "Then set ulimit -s 65000"
+echo "and run make"
+
+#ulimit -s 65000
+#make 
+
+
+echo "
+    ___o .--.
+   /___| |OO|
+  /'   |_|  |_
+       (_    _)
+       | |   \
+       | |oo_/sjw \n\n done "
+

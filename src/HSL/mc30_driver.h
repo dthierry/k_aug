@@ -19,7 +19,7 @@
 
 #include "asl.h"
 
-void mc30ad_(fint *nr, fint *nz, real *a, fint *irn, fint *icn, real *s, real *w, fint *lp, fint *ifail);
+extern void mc30ad_(fint *nr, fint *nz, real *a, fint *irn, fint *icn, real *s, real *w, fint *lp, fint *ifail);
 
 int mc30driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s);
 

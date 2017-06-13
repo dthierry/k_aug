@@ -22,6 +22,9 @@ LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
 SRC = dot_driver.c
 
 _dot_drivers:
-	$(CC) $(CCFLAGS) $(SRC) -I$(S)/ASL/solvers/ $A $L
+	$(CC) $(CCFLAGS) $(SRC) -o $(ONAME) -I$(S)/ASL/solvers/ -I$(S)/matrix/ $A $L sens_update_driver_dot.o $(LIBOPENBLAS)
+
+sens_update_driver:
+	$(CC) $(CCFLAGS) -c $(S)/matrix/sens_update_driver_dot.c -I$S/ASL/solvers/
 
 
