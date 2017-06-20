@@ -12,15 +12,7 @@ cp ../BLAS/BLAS-3.7.0/blas_LINUX.a ./lapack-3.7.0/librefblas.a
 cd ./lapack-3.7.0/
 cp make.inc.example make.inc
 ulimit -s 6500
-make
-echo "PLEASE ADD THE BLAS LIBRARY FILE ADDRESS TO make.inc (blas_LINUX.a)"
-echo "The line is BLASLIB = "
-echo "Then set ulimit -s 65000"
-echo "and run make"
-
-#ulimit -s 65000
-#make 
-
+make lapacklib
 
 echo "
          (__) 
