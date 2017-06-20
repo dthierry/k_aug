@@ -41,7 +41,7 @@
 #include "sigma_compute.h"
 #define NUM_REG_SUF 4
 
-static real not_zero = 1e-08;
+static real not_zero = 1.84e-04;
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
@@ -412,7 +412,7 @@ int main(int argc, char **argv){
   /*for(i=0; i<n_dof; i++){
   	printf("i %d, hr %d\n", i, hr_point[i]);
   }*/
-  printf("ndof %d\n", n_dof);
+  
 	
   /* scale matrix */
   for(i=0; i< nzK; i++){
@@ -493,16 +493,33 @@ int main(int argc, char **argv){
   	/*printf("j %d, position %d\n", j, positions_rh[j]);*/
   }
   fclose(somefile);
+
+
+  somefile = fopen("sigma_super_basic.txt", "w");
+  for(i=0; i<n_dof; i++){
+  	j = hr_point[i];
+		fprintf(somefile, "%d\t%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%f\n", j, i+1, z_L[j], z_U[j], LUv[2*j], x[j], LUv[2*j+1], sigma[j]); 
+  }
+  fclose(somefile);
+
+  somefile = fopen("zx.txt", "w");
+  for(i=0; i<n_dof; i++){
+  	j = hr_point[i];
+		fprintf(somefile, "%d\t%d\t%.g\t%.g\n", j, i+1, (LUv[2*j] - x[j]) * z_L[j], (x[j] - LUv[2*j+1]) * z_U[j]); 
+  }
+  fclose(somefile);
+
   somefile = fopen("result_red_hess.txt", "w");
-  
+  /* fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i])); */
   for(i=0; i<n_dof; i++){
 		for(j=0; j<n_dof; j++){
-			if(j<i){
+			/*if(j<i){
 				fprintf(somefile, "\t%.g", *(x_+ i * K_nrows + hr_point[j]));
 			}
 			else{
 				fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i]));
-			}
+			}*/
+			fprintf(somefile, "\t%.g", (*(x_+ j * K_nrows + hr_point[i]) + *(x_+ i * K_nrows + hr_point[j])) * 0.5 );
     }
     fprintf(somefile, "\n");
   }

@@ -84,9 +84,9 @@ void assemble_rhs_rh(real **rhs_rh, fint nvar, fint ncon, int *n_dof,
 
   somefile = fopen("rhs_red_hess", "w");
   
-  fprintf(somefile, "%d\n",(*n_dof));
+  
   for(i=0; i < (*n_dof); i++){
-    fprintf(somefile, "%d\t", (*hr_point)[i]);
+    fprintf(somefile, "\t%d\t", (*hr_point)[i]);
   }
   fprintf(somefile, "\n\n");
 
