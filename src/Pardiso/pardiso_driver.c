@@ -134,6 +134,9 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint nza,
   printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
   	"Factorization successful.\n");
 
+  printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+  	"Inertia (p, n, 0): (%d, %d, %d).\n", iparm[21], iparm[22], n - iparm[21] - iparm[22]);
+
   phase = 33;
 
 

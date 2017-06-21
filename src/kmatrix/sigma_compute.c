@@ -30,6 +30,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_z
 	int i;
 	real sl, su;
 	FILE *s_file;
+	/*
 	if(!(suf_zL->u.r)){
 		fprintf(stderr, "W[KMATRIX]...\t[KMATRIX_ASL]"
     	"No ipopt_zL_out suffix declared, setting zL = 0.\n");
@@ -50,33 +51,27 @@ void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_z
 			z_U[i] = suf_zU->u.r[i];
 		}
 	}
-
+	*/
 	for(i=0; i<nvar; i++){
 		if(LUv[2*i] < -HUGE_NUMBER){
 			sl = 0.0;
 		}
 		else{
-			if((x[i] - LUv[2*i]) < 1e-08){
-				sl = z_L[i]/(not_zero);
-			}
-			else{sl = z_L[i]/(x[i] - LUv[2*i]);}
-			
+			sl = z_L[i]/(x[i] - LUv[2*i]);
 		}
 		if(LUv[2*i + 1] > HUGE_NUMBER){
 			su = 0.0;
 		}
 		else{
-			if((LUv[2*i + 1] - x[i]) < 1e-08){
-				su = -z_U[i]/(not_zero);
-			}
-			else{su = -z_U[i]/(LUv[2*i + 1] - x[i]);}
+			/* now with correct expression */
+			su = z_U[i]/(x[i] - LUv[2*i+1]);
 		}
 		sigma[i] = sl + su;
 	}
 	s_file = fopen("sigma_out", "w");
 	fprintf(s_file, "%s\t%s\t%s\t%s\t%s\t%s\t\t%s\n", "i", "z_L[i]", "z_U[i]", "LUv[2*i]", "x[i]", "LUv[2*i+1]", "sigma[i]");
 	for(i=0; i<nvar; i++){
-		fprintf(s_file, "%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%f\n", i, z_L[i], z_U[i], LUv[2*i], x[i], LUv[2*i+1], sigma[i]);
+		fprintf(s_file, "%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%e %c\n", i, z_L[i], z_U[i], LUv[2*i], x[i], LUv[2*i+1], sigma[i], sigma[i]>1e-02 ? '*':' ');
 	}
 	fclose(s_file);
 

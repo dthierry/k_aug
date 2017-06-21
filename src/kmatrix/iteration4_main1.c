@@ -24,16 +24,16 @@
 #include "getstub.h"
 #include "mc30_driver.h"
 #include "pardiso_driver.h"
-
 #include "get_jac_asl_aug.h"
 #include "get_hess_asl_aug.h"
-
 #include "find_inequalities.h"
 #include "assemble_rhs_rh.h"
-/*#include "sens_update_driver.h"*/
 #include "suffix_decl_hand.h"
 #include "csr_driver.h"
 #include "sigma_compute.h"
+#include "mu_adjust_primal.h"
+#include "dsyev_driver.h"
+
 #define NUM_REG_SUF 4
 
 static real not_zero = 1.84e-04;
@@ -45,9 +45,11 @@ static I_Known l_over_kw = {1, &l_over};
 
 static char _dot_pr_f[] = {"dot_prod"};
 static char name1[] = {"smth"};
+static char _e_eval[] = {"eig_rh"};
 static char _n_rhsopt_[] = {"n_rhs"};
 static char _no_barrieropt_[] = {"no_barrier"};
 static char _no_lambdaopt_[] = {"no_lambda"};
+static char _no_scaleopt_[]  = {"no_scale"};
 static char _not_zero[] = {"not_zero"};
 
 
@@ -55,8 +57,14 @@ static char _not_zero[] = {"not_zero"};
 static int dot_prod_f = 0;
 static I_Known dot_p_kw = {1, &dot_prod_f};
 
+static int eig_rh_eval = 0;
+static I_Known e_eval_kw = {1, &eig_rh_eval};
+
 static int no_barrier = 1;
 static I_Known nbarrier_kw = {0, &no_barrier};
+
+static int no_scale = 1;
+static I_Known nscale_kw = {0, &no_scale};
 
 
 /*static char dof_v[] = {"dof_v"};*/
@@ -64,10 +72,11 @@ static I_Known nbarrier_kw = {0, &no_barrier};
 /* keywords, they must be in alphabetical order! */
 static keyword keywds[] = {
 	KW(_dot_pr_f, IK_val, &dot_p_kw, _dot_pr_f),
-  /*KW(_n_dofopt_ , I_val, &n_dof, _n_dofopt_),*/
+	KW(_e_eval, IK_val, &e_eval_kw, _e_eval),
   KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),	
   KW(_no_barrieropt_ , IK_val, &nbarrier_kw, _no_barrieropt_),
   KW(_no_lambdaopt_ , IK_val, &l_over_kw, _no_lambdaopt_),  
+  KW(_no_scaleopt_ , IK_val, &nscale_kw, _no_scaleopt_),  
   KW(_not_zero , D_val, &not_zero, _not_zero),  
   KW(name1 , IK_val, &dumm_kw, name1),
 };
@@ -145,7 +154,7 @@ int main(int argc, char **argv){
 	char _sfx_2[] = {"rh_name"};
 	char _sfx_3[] = {"ipopt_zL_in"};
 	char _sfx_4[] = {"ipopt_zU_in"};
-	printf("_nkeywds %d\n", nkeywds);
+	
 
 
 	Oinfo.sname = _k_;
@@ -231,9 +240,6 @@ int main(int argc, char **argv){
 	"Number of Right hand sides %d\n", n_rhs);
 	
 	
-	for(i=0; i<n_rhs; i++){
-		printf("NAME %s\n", rhs_name[i]);
-	}
 
 	/* Declare suffixes */
 	if(n_rhs > 0){suf_declare(suf_ptr, (n_rhs + n_r_suff));}
@@ -292,16 +298,54 @@ int main(int argc, char **argv){
 
 	z_L = (real *)malloc(sizeof(real) * n_var);
 	z_U = (real *)malloc(sizeof(real) * n_var);
-	sigma = (real *)malloc(sizeof(real) * n_var);
 
 	memset(z_L, 0, sizeof(real) * n_var);
 	memset(z_U, 0, sizeof(real) * n_var);
+
+
+	if(!(suf_zL->u.r)){
+		fprintf(stderr, "W[KMATRIX_ASL]...\t[KMATRIX_ASL]"
+    	"No ipopt_zL_out suffix declared, setting zL = 0.\n");
+	}
+	else{
+		for(i=0; i< n_var; i++){
+			z_L[i] = suf_zL->u.r[i];
+		}
+	}
+	if(!(suf_zU->u.r)){
+		fprintf(stderr, "W[KMATRIX_ASL]...\t[KMATRIX_ASL]"
+    	"No ipopt_zU_out suffix declared, setting zU = 0.\n");
+	}
+	else{
+		for(i=0; i< n_var; i++){
+			z_U[i] = suf_zU->u.r[i];
+		}
+	}
+
+
+	somefile = fopen("primal0.txt", "w");
+	for(i=0; i< n_var; i++){
+		fprintf(somefile, "%.g\n", x[i]);
+	}
+	fclose(somefile);
+
+	mu_adjust_x(n_var, x, LUv, z_L, z_U);
+	
+	somefile = fopen("primal1.txt", "w");
+	for(i=0; i< n_var; i++){
+		fprintf(somefile, "%.g\n", x[i]);
+	}
+	fclose(somefile);
+
+	sigma = (real *)malloc(sizeof(real) * n_var);
 	memset(sigma, 0, sizeof(real) * n_var);
+
 	if(var_f->u.r == NULL && var_f->u.i == NULL){
     fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
     	"suffix empty no n_dof declared!\n");
     exit(-1);
 	}
+
 	compute_sigma(asl, n_var, x, suf_zL, suf_zU, z_L, z_U, sigma, not_zero);
 	
 	
@@ -409,32 +453,30 @@ int main(int argc, char **argv){
   }*/
   
 	
-  /* scale matrix */
-  for(i=0; i< nzK; i++){
-  	Kij[i] = Kij[i] * exp(S_scale[Kcol[i]-1]) * exp(S_scale[Krow[i]-1]);
-  }
-  
-  
-  /* v3 */
-  for(i=0; i< n_dof; i++){
-  	for(j=0; j < K_nrows; j++){
-  		*(rhs_baksolve + i*K_nrows + j) = 
-  		*(rhs_baksolve + i*K_nrows + j) * exp(S_scale[j]);
+  /* scale matrix & rhs*/
+  if(no_scale > 0){
+  	for(i=0; i< nzK; i++){
+  		Kij[i] = Kij[i] * exp(S_scale[Kcol[i]-1]) * exp(S_scale[Krow[i]-1]);
   	}
-  }
-
-	somefile = fopen("rhs_sens_scaled", "w");
-
-
- 	/* v3 */
- 	for(j=0; j < K_nrows; j++){
- 		for(i=0; i < n_dof; i++){
- 			fprintf(somefile, "\t%f\t", *(rhs_baksolve + i*K_nrows + j) );
+  	for(i=0; i< n_dof; i++){
+	  	for(j=0; j < K_nrows; j++){
+	  		*(rhs_baksolve + i*K_nrows + j) = 
+	  		*(rhs_baksolve + i*K_nrows + j) * exp(S_scale[j]);
+	  	}
+  	}
+  	somefile = fopen("rhs_sens_scaled", "w");
+ 		for(j=0; j < K_nrows; j++){
+ 			for(i=0; i < n_dof; i++){
+ 				fprintf(somefile, "\t%f\t", *(rhs_baksolve + i*K_nrows + j) );
+ 			}
+ 			fprintf(somefile, "\n");
  		}
- 		fprintf(somefile, "\n");
- 	}
- 	fclose(somefile);
-
+ 		fclose(somefile);
+  }
+  else{
+  	printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+			"The scaling has been skipped. \n");
+	}
  
   /* factorize the matrix */
 	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, nzK, n_dof, rhs_baksolve, x_);
@@ -442,7 +484,6 @@ int main(int argc, char **argv){
   printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 		"Pardiso done. \n");
 
-  /* v3 */
   /* */
   somefile = fopen("result.txt", "w");
   for(i=0; i<K_nrows; i++){
@@ -451,17 +492,30 @@ int main(int argc, char **argv){
     	fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));
     }
       fprintf(somefile, "\n");
-      }
+  }
+
   fclose(somefile);
-  somefile = fopen("result_unscaled.txt", "w");
-  for(i=0; i<K_nrows; i++){
-    /*fprintf(somefile, "\t%d", i);*/
+
+  /*somefile = fopen("result_red_hess_scaled.txt", "w");
+  for(i=0; i<n_dof; i++){
 		for(j=0; j<n_dof; j++){
-			*(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) * exp(S_scale[i]);
-    	fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));
+			fprintf(somefile, "\t%.g", (*(x_+ j * K_nrows + hr_point[i]) + *(x_+ i * K_nrows + hr_point[j])) * 0.5 );
     }
+    fprintf(somefile, "\n");
+  }
+  fclose(somefile);*/
+
+
+  somefile = fopen("result_unscaled.txt", "w");
+  if(no_scale > 0){
+  	for(i=0; i<K_nrows; i++){
+			for(j=0; j<n_dof; j++){
+				*(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) * exp(S_scale[i]);
+    		fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));
+    	}
       fprintf(somefile, "\n");
-      }
+    }  	
+  }
   fclose(somefile);
 
   somefile = fopen("dot_in.in", "w");
@@ -471,8 +525,6 @@ int main(int argc, char **argv){
     }
       }
   fclose(somefile);
-
-
 
 
   memset(positions_rh, 0, sizeof(int)*n_var);
@@ -515,6 +567,7 @@ int main(int argc, char **argv){
 				fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i]));
 			}*/
 			fprintf(somefile, "\t%.g", (*(x_+ j * K_nrows + hr_point[i]) + *(x_+ i * K_nrows + hr_point[j])) * 0.5 );
+
     }
     fprintf(somefile, "\n");
   }
@@ -536,6 +589,13 @@ int main(int argc, char **argv){
   }
   solve_result_num = 0;
   write_sol(ter_msg, s_star, s_star + n_var, &Oinfo);
+
+  /* evaluate_eigenvalues of the reduced hessian */
+  if(eig_rh_eval>0){dsyev_driver(n_dof, x_, K_nrows, hr_point);}
+  
+
+
+
   free(positions_rh);
   for(i=0; i<(int)n_r_suff; i++){
   	free(reg_suffix_name[i]);

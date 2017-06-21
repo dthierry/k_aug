@@ -36,13 +36,13 @@ KMATRIX = iteration4_main1.c
 
 k_aug_blas: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh \
-      suffix_decl_hand csr_driver pard_dri sig_comp
+      suffix_decl_hand csr_driver pard_dri sig_comp mu_ad dsyev_eig
 	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
 	mc30_driver.o  \
 	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_rhs_rh.o  \
 	suffix_decl_hand.o csr_driver.o pardiso_driver.o \
-	sigma_compute.o \
+	sigma_compute.o mu_adjust_primal.o dsyev_driver.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
 	 $(LIBMC30) $(LIBPARDISO) $(LIBLAPACK) $(LIBBLAS)
 
@@ -53,7 +53,7 @@ mc30_dri:
 	$(CC) $(CCFLAGS) -c $(S)/HSL/mc30_driver.c -I$(S)/HSL/ -I$S/ASL/solvers/
 
 pard_dri:
-	$(CC) $(CCFLAGS) -c $(S)/Pardiso/pardiso_driver.c -I$(S)/ASL/solvers/ $(LIBBLAS) $(LIBLAPACK)
+	$(CC) $(CCFLAGS) -c $(S)/Pardiso/pardiso_driver.c -I$(S)/ASL/solvers/ 
 
 get_jac_asl:
 	$(CC) $(CCFLAGS) -c get_jac_asl_aug.c -I$S/ASL/solvers/
@@ -84,3 +84,9 @@ csr_driver:
 
 sig_comp:
 	$(CC) $(CCFLAGS) -c sigma_compute.c -I$(S)/ASL/solvers/
+
+mu_ad:
+	$(CC) $(CCFLAGS) -c mu_adjust_primal.c -I$(S)/ASL/solvers/
+
+dsyev_eig:
+	$(CC) $(CCFLAGS) -c $(S)/matrix/dsyev_driver.c -I$(S)/ASL/solvers/

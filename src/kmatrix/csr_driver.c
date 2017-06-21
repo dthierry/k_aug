@@ -71,7 +71,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 		Kij[i]  = (real*)malloc(sizeof(real) *nzr_k[i]);
 	}
 
-	printf("nnzW %d\n", nzW);
+	
 	/* Traverse through the hessian of the lagrangian*/
 	for(i=0; i < nzW; i++){
 		row = (Wrow[i]-1);
@@ -158,7 +158,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 		}
 	}
 	fclose(somefile);
-	printf("nzk %d and k %d \n", nzK, k);
+	
 	assert(k == nzK);
 
 	for(i=0; i<nvar; i++){
