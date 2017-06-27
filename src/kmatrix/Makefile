@@ -34,17 +34,30 @@ LIBLAPACK = $(LAPACKROOT)liblapack.a
 LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
 KMATRIX = iteration4_main1.c
 
-k_aug_blas: mc30_dri \
+k_aug_pard: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh \
-      suffix_decl_hand csr_driver pard_dri sig_comp mu_ad dsyev_eig
+      suffix_decl_hand csr_driver pard_dri sig_comp mu_ad dsyev_eig dpotri_driver
 	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
 	mc30_driver.o  \
 	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_rhs_rh.o  \
 	suffix_decl_hand.o csr_driver.o pardiso_driver.o \
-	sigma_compute.o mu_adjust_primal.o dsyev_driver.o \
+	sigma_compute.o mu_adjust_primal.o dsyev_driver.o dpotri_driver.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
 	 $(LIBMC30) $(LIBPARDISO) $(LIBLAPACK) $(LIBBLAS)
+
+k_aug_ma57: mc30_dri \
+      get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh \
+      suffix_decl_hand csr_driver sig_comp mu_ad dsyev_eig  ma57_driver
+	$(CC) $(CCFLAGS) iteration4_main_ma_57.c -o k_aug_m  $A $L \
+	mc30_driver.o  ma57_driver.o \
+	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
+	assemble_rhs_rh.o  \
+	suffix_decl_hand.o csr_driver.o  \
+	sigma_compute.o mu_adjust_primal.o dsyev_driver.o \
+	-I$(S)/HSL/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
+	 $(LIBMC30) -L/usr/local/lib/ -lcoinhsl -lmetis  $(LIBLAPACK) $(LIBBLAS)
+
 
 clean:
 	rm -rf $(all) *.o
@@ -90,3 +103,10 @@ mu_ad:
 
 dsyev_eig:
 	$(CC) $(CCFLAGS) -c $(S)/matrix/dsyev_driver.c -I$(S)/ASL/solvers/
+
+ma57_driver:
+	$(CC) $(CCFLAGS) -c $(S)/HSL/ma57_driver.c 
+	#-L/usr/local/lib/ -lcoinhsl -lmetis $(LIBBLAS) $(LIBLAPACK) -lgfortran -lm -ldl
+
+dpotri_driver:
+	$(CC) $(CCFLAGS) -c $(S)/matrix/dpotri_driver.c 

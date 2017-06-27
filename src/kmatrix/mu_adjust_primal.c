@@ -66,7 +66,7 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
 	/*mu = (log(mu) > -8.6) ? exp(-8.6): mu;*/
 	for(i=0; i<nvar; i++){
 
-		if(zL[i] && -zU[i] > 0){
+		if(zL[i]>0 && -zU[i] > 0){
 			if((x[i] - lbv[2*i]) * (zL[i]) < mu*0.5 ||  (x[i] - lbv[2*i + 1])*(zU[i]) < mu*0.5){
 				x[i] = ((x[i] - lbv[2*i]) * (zL[i])) < ((x[i] - lbv[2*i + 1])*(zU[i])) ? 
 				mu/(zL[i]) + lbv[2*i]: mu/(zU[i]) +lbv[2*i+1];

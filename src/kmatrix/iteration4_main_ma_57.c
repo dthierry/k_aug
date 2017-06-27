@@ -23,7 +23,7 @@
 
 #include "getstub.h"
 #include "mc30_driver.h"
-#include "pardiso_driver.h"
+#include "ma57_driver.h"
 #include "get_jac_asl_aug.h"
 #include "get_hess_asl_aug.h"
 #include "find_inequalities.h"
@@ -33,7 +33,6 @@
 #include "sigma_compute.h"
 #include "mu_adjust_primal.h"
 #include "dsyev_driver.h"
-#include "dpotri_driver.h"
 
 #define NUM_REG_SUF 4
 
@@ -155,7 +154,6 @@ int main(int argc, char **argv){
 	char _sfx_2[] = {"rh_name"};
 	char _sfx_3[] = {"ipopt_zL_in"};
 	char _sfx_4[] = {"ipopt_zU_in"};
-	int _is_not_irh_pdf=1;
 	
 
 
@@ -474,10 +472,12 @@ int main(int argc, char **argv){
 	}
  
   /* factorize the matrix */
-	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con);
+	/*pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con);*/
+	
+	ma57_driver(K_nrows, nzK, Krow, Kcol, Kij, n_dof, rhs_baksolve, x_);
       
   printf("I[KMATRIX]...\t[KMATRIX_ASL]"
-		"Pardiso done. \n");
+		"\n");
 
   /* */
   somefile = fopen("result.txt", "w");
@@ -581,9 +581,7 @@ int main(int argc, char **argv){
   write_sol(ter_msg, s_star, s_star + n_var, &Oinfo);
 
   /* evaluate_eigenvalues of the reduced hessian */
-  if(eig_rh_eval>0){_is_not_irh_pdf = dsyev_driver(n_dof, x_, K_nrows, hr_point);}
-  if(_is_not_irh_pdf == 0){dpotri_driver(n_dof, x_, K_nrows, hr_point);}
-  
+  if(eig_rh_eval>0){dsyev_driver(n_dof, x_, K_nrows, hr_point);}
   
 
 

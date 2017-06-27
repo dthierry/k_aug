@@ -25,7 +25,7 @@
 #include <stdlib.h>
 
 
-void dsyev_driver(long n, double *_a, long Kn, int *sb_p){
+int dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 	char jobz, uplo;
 	double *w, *work;
 	double *a;
@@ -33,6 +33,7 @@ void dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 	int lwork, lda;
 	int info=0;
 	int i, j;
+	int ret_val=0;
 	FILE *somefile;
  /* transform a to up-triangular */
 	
@@ -59,7 +60,8 @@ void dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 	dsyev_(&jobz, &uplo, &n, a, &lda, w_mock, work_mock,
 	 &lwork, &info);
 
-	printf("info %d, work %f\n", info, work_mock[0]);
+	printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
+		"info %d, work %f\n", info, work_mock[0]);
 	
 	lwork = (int)work_mock[0];
 
@@ -77,16 +79,34 @@ void dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 
 	dsyev_(&jobz, &uplo, &n, a, &lda, w, work,
 	 &lwork, &info);
-	printf("info %d\n", info);
+	if(info != 0){
+		printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
+		"info is non-zero ! %d", info);
+	}
 
 	somefile = fopen("eig_red_hess.txt", "w");
 	for(i=0; i<n; i++){
 		fprintf(somefile, "\t%.g\n", w[i]);
 	}
 	fclose(somefile);
+
+	/* Check Positive Definiteness*/
+	for(i=0; i<n; i++){
+		if(w[i] < 0.0){
+			printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
+				"Negative eigenvalue found i %d, val=%f.\n", i, w[i]);
+			printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
+				"The matrix is indefinite.");
+			ret_val = 1;
+			break;
+		}
+	}
+
+	
 	
 	free(a);
 	free(work);
 	free(w);
+	return ret_val;
 }
 
