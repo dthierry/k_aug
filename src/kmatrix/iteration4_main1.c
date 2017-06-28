@@ -573,6 +573,7 @@ int main(int argc, char **argv){
   fclose(somefile);
 
   suf_iput(reg_suffix_name[1], ASL_Sufkind_var, positions_rh);
+  
   if(dot_prod_f != 0){
   	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 		"Dot product preparation phase.\n");
