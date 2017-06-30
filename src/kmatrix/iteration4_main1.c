@@ -44,6 +44,7 @@ static int n_rhs = 0;
 static int l_over = 0;
 static I_Known l_over_kw = {1, &l_over};
 
+static char _dbg_kkt[] = {"deb_kkt"};
 static char _dot_pr_f[] = {"dot_prod"};
 static char name1[] = {"smth"};
 static char _e_eval[] = {"eig_rh"};
@@ -54,6 +55,8 @@ static char _no_scaleopt_[]  = {"no_scale"};
 static char _not_zero[] = {"not_zero"};
 
 
+static int deb_kkt = 0;
+static I_Known deb_kkt_kw = {1, &deb_kkt};
 
 static int dot_prod_f = 0;
 static I_Known dot_p_kw = {1, &dot_prod_f};
@@ -72,6 +75,7 @@ static I_Known nscale_kw = {0, &no_scale};
 
 /* keywords, they must be in alphabetical order! */
 static keyword keywds[] = {
+	KW(_dbg_kkt, IK_val, &deb_kkt_kw, _dbg_kkt),
 	KW(_dot_pr_f, IK_val, &dot_p_kw, _dot_pr_f),
 	KW(_e_eval, IK_val, &e_eval_kw, _e_eval),
   KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),	
@@ -345,7 +349,11 @@ int main(int argc, char **argv){
 	if(var_f->u.r == NULL && var_f->u.i == NULL){
     fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
     	"suffix empty no n_dof declared!\n");
-    exit(-1);
+    if(deb_kkt>0){
+    	fprintf(stderr, "W[KMATRIX]...\t[KMATRIX_ASL]"
+    	"KKT check!\n");
+    }
+    else{exit(-1);}
 	}
 
 	compute_sigma(asl, n_var, x, suf_zL, suf_zU, z_L, z_U, sigma, not_zero);
@@ -376,7 +384,7 @@ int main(int argc, char **argv){
 	Aij  = (real *)malloc(sizeof(real)*nzc);
 
 	/* TO DO:
-	assemble csr or coordinate
+	assemble csr or coordinate: UPDATE, not necesary.
 	 */ 
 	nerror = 0;
 	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
@@ -396,7 +404,11 @@ int main(int argc, char **argv){
 		printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 		"Barrier term added.\n");
 	}
-	
+	if(deb_kkt > 0){
+		solve_result_num = 0;
+		write_sol(ter_msg, x, lambda, &Oinfo);
+		ASL_free(&asl);
+		return 0;}
 	nzA = nzc; 
 	nzW = nnzw + miss_nz_w; 
 	/* Recomputed number of nz in the Hessian-of-Lagrangian */

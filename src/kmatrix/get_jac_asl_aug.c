@@ -52,7 +52,7 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 		exit(-1);
 	}
 	f_jac = fopen("jacobi_debug.in", "w");
-	somefile = fopen("sorted.in", "w");
+	
 
 	cgx = Cgrad; /* point to the beggining of the list */
 	/* Cgrad is an array of pointers
@@ -110,6 +110,8 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
   }
 
 	fclose(f_jac);
+	somefile = fopen("anz_p_row.in", "w");
+	for(i=0; i<nvar; i++){fprintf(somefile, "%d\n", (*nz_row_a)[i]);}
 	fclose(somefile);
 	free(Jcont);
 	free(ttemp_v2);
