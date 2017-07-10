@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 #include "getstub.h"
 #include "mc30_driver.h"
@@ -160,7 +161,10 @@ int main(int argc, char **argv){
 	char _sfx_3[] = {"ipopt_zL_in"};
 	char _sfx_4[] = {"ipopt_zU_in"};
 	int _is_not_irh_pdf=1;
-	
+	clock_t start_c, ev_as_kkt_c, fact_kkt_c, total_c;
+	double ev_as_time, fact_time, overall_time;
+
+	start_c = clock();
 
 
 	Oinfo.sname = _k_;
@@ -421,6 +425,7 @@ int main(int argc, char **argv){
 	K_nrows = n_var + n_con; /* Number of rows of the KKT matrix (no ineq) */
 	nzK = nzA + nzW + n_con; /* NZ in the kkt matrix (for pardiso, yes)*/
 	assert(Krow != NULL);
+	ev_as_kkt_c = clock();
 
 	S_scale = (real *)calloc(sizeof(real), K_nrows);
 	mc30driver(K_nrows, nzK, Kij, Krow, Kcol, S_scale);
@@ -487,12 +492,13 @@ int main(int argc, char **argv){
  
   /* factorize the matrix */
 	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con);
-      
+    
   printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 		"Pardiso done. \n");
+  fact_kkt_c = clock();
 
   /* */
-  somefile = fopen("result.txt", "w");
+  somefile = fopen("result_lin_sol.txt", "w");
   for(i=0; i<K_nrows; i++){
     fprintf(somefile, "\t%d", i);
 		for(j=0; j<n_dof; j++){
@@ -585,22 +591,32 @@ int main(int argc, char **argv){
   fclose(somefile);
 
   suf_iput(reg_suffix_name[1], ASL_Sufkind_var, positions_rh);
-  
   if(dot_prod_f != 0){
   	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
 		"Dot product preparation phase.\n");
   }
   solve_result_num = 0;
+
+
   write_sol(ter_msg, s_star, s_star + n_var, &Oinfo);
+
 
   /* evaluate_eigenvalues of the reduced hessian */
   if(eig_rh_eval>0){_is_not_irh_pdf = dsyev_driver(n_dof, x_, K_nrows, hr_point);}
   if(_is_not_irh_pdf == 0){dpotri_driver(n_dof, x_, K_nrows, hr_point);}
-  
-  
 
+  total_c = clock();
 
-
+  ev_as_time = (double) (ev_as_kkt_c-start_c) / CLOCKS_PER_SEC;
+  fact_time = (double) (fact_kkt_c-start_c) / CLOCKS_PER_SEC;
+  overall_time = (double) (total_c - start_c) / CLOCKS_PER_SEC;
+	printf("I[KMATRIX]...\t[KMATRIX_ASL]Timings.."
+		"Ev&Assem %g, Fact %g, Overall %g.\n",
+		 ev_as_time, fact_time, overall_time);
+	somefile = fopen("timings_k_aug.txt", "w");
+	fprintf(somefile, "%g\t%g\t%g\n", ev_as_time, fact_time, overall_time);
+	fclose(somefile);
+	
   free(positions_rh);
   for(i=0; i<(int)n_r_suff; i++){
   	free(reg_suffix_name[i]);
