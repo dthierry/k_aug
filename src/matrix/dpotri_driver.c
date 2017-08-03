@@ -59,12 +59,12 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p){
 	dpotrf_(&uplo, &n, a, &lda, &info);
 
 	if(info != 0){
-		printf("I[KMATRIX]...\t[DPOTRI_DRIVER]"
+		printf("I[K_AUG]...\t[DPOTRI_DRIVER]"
 		"info is non-zero ! %d", info);
 		exit(-1);
 	}
 	else{
-		printf("I[KMATRIX]...\t[DPOTRI_DRIVER]"
+		printf("I[K_AUG]...\t[DPOTRI_DRIVER]"
 		"Cholesky fact, succesful!. %d\n", info);
 	}
 
@@ -73,13 +73,14 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p){
 	 &lwork, &info);*/
 	dpotri_(&uplo, &n, a, &lda, &info);
 
+
 	if(info != 0){
-		printf("I[KMATRIX]...\t[DPOTRI_DRIVER]"
+		fprintf(stderr, "E[K_AUG]...\t[DPOTRI_DRIVER]"
 		"info is non-zero ! %d", info);
 		exit(-1);
 	}
 	else{
-		printf("I[KMATRIX]...\t[DPOTRI_DRIVER]"
+		printf("I[K_AUG]...\t[DPOTRI_DRIVER]"
 		"Inversion , succesful!. %d\n", info);
 	}
 

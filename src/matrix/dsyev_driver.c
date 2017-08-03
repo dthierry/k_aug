@@ -60,7 +60,7 @@ int dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 	dsyev_(&jobz, &uplo, &n, a, &lda, w_mock, work_mock,
 	 &lwork, &info);
 
-	printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
+	printf("I[K_AUG]...\t[DSYEV_DRIVER]"
 		"info %d, work %f\n", info, work_mock[0]);
 	
 	lwork = (int)work_mock[0];
@@ -80,7 +80,7 @@ int dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 	dsyev_(&jobz, &uplo, &n, a, &lda, w, work,
 	 &lwork, &info);
 	if(info != 0){
-		printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
+		printf("I[K_AUG]...\t[DSYEV_DRIVER]"
 		"info is non-zero ! %d", info);
 	}
 
@@ -93,9 +93,11 @@ int dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 	/* Check Positive Definiteness*/
 	for(i=0; i<n; i++){
 		if(w[i] < 0.0){
-			printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
-				"Negative eigenvalue found i %d, val=%f.\n", i, w[i]);
-			printf("I[KMATRIX]...\t[DSYEV_DRIVER]"
+			printf("I[K_AUG]...\t[DSYEV_DRIVER]"
+				"Negative eigenvalue found i %d, val=%.6e.\n", i, w[i]);
+		}
+		if(w[i] < -1e-05){
+			printf("I[K_AUG]...\t[DSYEV_DRIVER]"
 				"The matrix is indefinite.");
 			ret_val = 1;
 			break;

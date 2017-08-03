@@ -116,13 +116,13 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 
 		pardiso_chkvec(&n, &nrhs, b, &error);
 		if(error != 0){
-			printf("E[KMATRIX]...\t[PARDISO_DRIVER]"
+			printf("E[K_AUG]...\t[PARDISO_DRIVER]"
 			"RHS CHECKING %d\n", error);
 			exit(1);
 		}
 
 		else{
-			printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+			printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 		"RHS CHECKING successful\n");}
 	
 	/* check RHS */
@@ -164,16 +164,17 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 		exit(1);
 	}
 
-	printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 		"Reordering completed ... \n");
-  printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+  printf("I[K_AUG]...\t[PARDISO_DRIVER]"
   	"Number of nonzeros in factors  = %d\n", iparm[17]);
-  printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+  printf("I[K_AUG]...\t[PARDISO_DRIVER]"
   	"Number of factorization MFLOPS = %d\n", iparm[18]);
 
   phase = 22; /* Numerical factorization */
 
-  /* check inertia */
+  /* check inertia
+  do at least ten tries */
   for(i=0; i<10; i++){
 
 	  pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum,	&nrhs,
@@ -188,24 +189,24 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 	  	exit(2);
 	  }
 
-	  printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+	  printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 	  	"Factorization successful.\n");
 
-	  printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+	  printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 	  	"Inertia (p, n, 0): (%d, %d, %d).\n", pi, ni, zi);
 
 	  if(pi != nvar || ni != ncon || zi != 0){
-	  	printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+	  	fprintf(stderr, "W[K_AUG]...\t[PARDISO_DRIVER]"
 	  	"Inertia check failure.\n");
 	  }
 	  else if(zi!=0){
-	  	printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+	  	fprintf(stderr,"E[K_AUG]...\t[PARDISO_DRIVER]"
 		  "Failure, there is a zero eigenvalue. The jacobian is possibly singular.\n");
 		  exit(-1);
 		}
 	  else{
 	  	dlast = d;
-	  	break;
+	  	if(try_fact > 0){break;}
   	}
 
   	if(dlast == 0.0 && try_fact == 0){d = d0;}
@@ -223,7 +224,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
   }
   phase = 33;
 
-  printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+  printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 		  "Reg tries %d, reg value %f.\n", try_fact, d);
 
   iparm[7] = 1;       /* Max numbers of iterative refinement steps. */ 
@@ -238,29 +239,29 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
     printf("\nERROR during solution: %d", error);
     exit(3);
   }
- 	printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+ 	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
  		"Solve completed x\n\n");
 
  	y = (double *)malloc(sizeof(double) * n * nrhs);
 
  	pardiso_residual (&mtype, &n, a, ia, ja, b, x, y, &normb, &normr);
 
- 	printf("normb %e, normr %e\n", normb, normr);
+ 	/*printf("normb %e, normr %e\n", normb, normr);*/
  	
  	nrm_r = dnrm2_(&n, y, &incx);
  	nrm_x = dnrm2_(&n, x, &incx);
 	
- 	printf("normr %e, normx %e\n", nrm_r, nrm_x);
+ 	/*printf("normr %e, normx %e\n", nrm_r, nrm_x);*/
 
 
- 	printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+ 	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 			": Eucl Norm of the residuals; %e \n", nrm_r);
 
 
-	printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 				": Ratio of norm of scaled residuals; %g \n", (nrm_r/(nrm_x+nrm_r)));
 	if((nrm_r/(nrm_x+nrm_r)) < residual_ratio_max){
-			printf("I[KMATRIX]...\t[PARDISO_DRIVER]"
+			printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 				": The norm of residuals is less than max ratio\n");
 	}
 

@@ -50,6 +50,12 @@ void suffix_decl_hand(SufDecl *suf_ptr, char **ptr_name, char **rhs_name, unsign
   (suf_ptr + 3)->table = 0;
   (suf_ptr + 3)->kind = ASL_Sufkind_var | ASL_Sufkind_real;
   (suf_ptr + 3)->nextra = 0;
+  /* Timestamp */
+
+  (suf_ptr + 4)->name = ptr_name[4];
+  (suf_ptr + 4)->table = 0;
+  (suf_ptr + 4)->kind = ASL_Sufkind_prob | ASL_Sufkind_input;
+  (suf_ptr + 4)->nextra = 0;
 
   /* Suffix for the right hand side creation */
   
