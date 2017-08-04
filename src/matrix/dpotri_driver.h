@@ -25,6 +25,6 @@
 extern void dpotrf_(char *uplo, int *n, double *a, int *lda, int *info);
 extern void dpotri_(char *uplo, int *n, double *a, int *lda, int *info);
 
-void dpotri_driver(int n, double *_a, long Kn, int *sb_p);
+void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest);
 
 #endif

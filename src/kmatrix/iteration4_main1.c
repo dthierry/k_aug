@@ -45,7 +45,10 @@ static int n_rhs = 0;
 static int l_over = 0;
 static I_Known l_over_kw = {1, &l_over};
 
+static char _comp_inv[] = {"compute_inv"}; /* The actual reduced hessian */
+static char _comp_inv_verb[] = {"Compute the inv(inv(red_hess)) i.e. the Red. Hess"};
 static char _dbg_kkt[] = {"deb_kkt"};
+static char _dbg_kkt_verb[] = {"Override dof checking, for debugging purposes"};
 static char _dot_pr_f[] = {"dot_prod"};
 static char name1[] = {"smth"};
 static char _e_eval[] = {"eig_rh"};
@@ -65,6 +68,9 @@ static I_Known dot_p_kw = {1, &dot_prod_f};
 static int eig_rh_eval = 0;
 static I_Known e_eval_kw = {1, &eig_rh_eval};
 
+static int comp_inv_ = 0;
+static I_Known comp_inv_kw = {1, &comp_inv_};
+
 static int no_barrier = 1;
 static I_Known nbarrier_kw = {0, &no_barrier};
 
@@ -76,7 +82,8 @@ static I_Known nscale_kw = {0, &no_scale};
 
 /* keywords, they must be in alphabetical order! */
 static keyword keywds[] = {
-	KW(_dbg_kkt, IK_val, &deb_kkt_kw, _dbg_kkt),
+	KW(_comp_inv, IK_val, &comp_inv_kw, _comp_inv_verb),
+	KW(_dbg_kkt, IK_val, &deb_kkt_kw, _dbg_kkt_verb),
 	KW(_dot_pr_f, IK_val, &dot_p_kw, _dot_pr_f),
 	KW(_e_eval, IK_val, &e_eval_kw, _e_eval),
   KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),	
@@ -172,7 +179,6 @@ int main(int argc, char **argv){
 	timestamp = time(NULL);
 	start_c = clock();
 	
-	fprintf(stderr, "timestamp %ld\n", (int *) &timestamp);
 
 	Oinfo.sname = _k_;
 	Oinfo.bsname = banner;
@@ -351,11 +357,11 @@ int main(int argc, char **argv){
 		printf("I[K_AUG]...\t[K_AUG_ASL]"
 			"Timestamp suffix = %d.\n\n", *(f_timestamp->u.i));
 		sprintf(_chr_timest, "%d", *(f_timestamp->u.i));
-		fprintf(stderr, "This goes here %s\n", _chr_timest);
+		/*fprintf(stderr, "This goes here %s\n", _chr_timest);*/
 	}
 	strcat(_file_name_, _chr_timest);
 	strcat(_file_name_, ".in");
-	fprintf(stderr, "I[K_AUG]...\t[K_AUG_ASL] %s\n", _file_name_);
+	fprintf(stderr, "I[K_AUG]...\t[K_AUG_ASL] Filename for dot_sens %s\n", _file_name_);
 
 	somefile = fopen("primal0.txt", "w");
 	for(i=0; i< n_var; i++){
@@ -627,8 +633,12 @@ int main(int argc, char **argv){
 
 
   /* evaluate_eigenvalues of the reduced hessian */
-  if(eig_rh_eval>0){_is_not_irh_pdf = dsyev_driver(n_dof, x_, K_nrows, hr_point);}
-  if(_is_not_irh_pdf == 0){dpotri_driver(n_dof, x_, K_nrows, hr_point);}
+  if(eig_rh_eval>0){
+  	fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]""Evaluating the eigenvalues of the solution matrix. \n");
+  	_is_not_irh_pdf = dsyev_driver(n_dof, x_, K_nrows, hr_point);}
+  if(comp_inv_ > 0){
+  	fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]""Evaluating the inverse of the solution matrix. \n");
+  	dpotri_driver(n_dof, x_, K_nrows, hr_point, _chr_timest);}
 
   total_c = clock();
 
