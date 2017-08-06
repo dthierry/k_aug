@@ -56,9 +56,9 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 
 	dmin = 10e-20;
 	dmax = 10e+6;
-	d0 = 1e-08;
+	d0 = 1e-03;
 	kbp = 100;
-	kp = 8;
+	kp = 100;
 	km = 1/3;
 	dlast = 0.0;
 	d = 0.0;
@@ -85,33 +85,21 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 	
 	/* Since the inertia was previously checked I expect the eigenvalues to be positive and if there are
 	negative ones; to be very small. */
-	dpotrf_(&uplo, &n, a, &lda, &info); /* Attempt once */
+	
 	
 
-	for(i=0; i<1000; i++){
+	for(i=0; i<10; i++){
+		dpotrf_(&uplo, &n, a, &lda, &info); /* Attempt once */
+		printf("I[K_AUG]...\t[DPOTRI_DRIVER]"
+			"Attempt %d Status:%d.\n", i, info);
  	  if(info != 0 && try_d == 0){ /* Set-up stage */
 			fprintf(stderr, "E[K_AUG]...\t[DPOTRI_DRIVER]"
 				"info is non-zero ! %d\n", info);
 			fprintf(stderr, "E[K_AUG]...\t[DPOTRI_DRIVER]"
 				"Trying the modified Cholesky strategy\n");
-			amax = max_fun(n, ai, &imax);
-			/* Find the overall max element of the off-diagonal matrix	*/
-			for(j=0; j<n; j++){
-				memset(ai, 0, sizeof(double) * n);
-				for(i=0; i<n; i++ ){if(i != j){ai[i] = *(a + n * i + j);}}
-				aimax[j] = max_fun(n, ai, &dummy);
-			}
-			xi = max_fun(n, aimax, &dummy);
-			ainf = aimax[imax];
-			sqbeta = pow(xi / sqrt(pow(n,2) - 1), 2);
-			fprintf(stderr, "E[K_AUG]...\t[DPOTRI_DRIVER]"
-				"The maximum value is %.10g at index %d\n", amax, imax);
-			fprintf(stderr, "E[K_AUG]...\t[DPOTRI_DRIVER]"
-				"Xi is %.10g ainf %.10g\n", xi, ainf);
 		}
-	  else if (info == 0){
-	  	/* The previous fact was successful*/
-	  	break;}
+	  else if (info == 0){break;}
+	  /* The previous fact was successful*/
 	  else{dlast = d;}
 
   	if(dlast == 0.0 && try_d == 0){d = d0;}
@@ -126,33 +114,20 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 			free(ai);
 			free(aimax);
 			exit(-1);}
-
-		if(pow(ainf,2)/(amax + d) >= 0.0 &&  pow(ainf,2)/(amax + d) <= sqbeta){
-			/* Found d now add it to the main diagonal */
-			fprintf(stderr, "W[KMATRIX]...\t[DPOTRI_DRIVER]"
-			"Last value of delta %f, test %f, target %f\n", d, pow(ainf,2)/(amax + d), sqbeta);
-			for(i=0; i<n; i++){*(a + n * i + i) += d;} /* On all of them ?*/
-			/* Or just one
-			*(a + n * imax + imax) += d
-			 */
-			dpotrf_(&uplo, &n, a, &lda, &info); /* Try again */
-			break;
-		}
-		fprintf(stderr, "W[KMATRIX]...\t[DPOTRI_DRIVER]"
-			"Current value of delta %f, test %f, target %f\n", d, pow(ainf,2)/(amax + d), sqbeta);
+		for(i=0; i<n; i++){*(a + n * i + i) += d;} /* On all of them ?*/
 		try_d++;
   }
 
 	if(info != 0){
-		fprintf(stderr, "W[KMATRIX]...\t[DPOTRI_DRIVER]"
-			"info is non-zero ! %d\n", info);
+		fprintf(stderr, "W[K_AUG]...\t[DPOTRI_DRIVER]"
+			"Maximum number of attempts reached ! %d\n", info);
 		free(a);
 		free(ai);
 		free(aimax);
 		exit(-1);
 	}
 	else{
-		printf("I[KMATRIX]...\t[DPOTRI_DRIVER]"
+		printf("I[K_AUG]...\t[DPOTRI_DRIVER]"
 			"Cholesky fact, succesful!. %d\n", info);
 	}
 		/* Modified Cholesky heuristic
