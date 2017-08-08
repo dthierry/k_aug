@@ -52,7 +52,8 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 		exit(-1);
 	}
 	f_jac = fopen("jacobi_debug.in", "w");
-	
+	/* for analysis with mc58 */
+	fprintf(f_jac, "%d\t%d\t%d\n", ncon, nvar, nzc_);
 
 	cgx = Cgrad; /* point to the beggining of the list */
 	/* Cgrad is an array of pointers
@@ -70,7 +71,8 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
     k = 0;
   	for(cg = cgx[i]; cg; cg=cg->next){
 	    /* moves by nz in the constraint */
-	    fprintf(f_jac, "%d\t%d\t%.g\n",cg->varno+1, i+1, Jcont[cg->goff]);
+	    /* actual jacobian (instead of gradient) */
+	    fprintf(f_jac, "%d\t%d\t%.g\n", i+1, cg->varno+1, Jcont[cg->goff]);
       Arow[j] = cg->varno+1;
       Acol[j] = i+1;
       Aij[j] = Jcont[cg->goff];
@@ -116,7 +118,7 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 	free(Jcont);
 	free(ttemp_v2);
 
-	f_jac = fopen("jacobi_debug_sorted.in", "w");	
+	f_jac = fopen("grad_debug_sorted.in", "w");	
 	for(i=0; i<j; i++){
 		fprintf(f_jac, "%d\t%d\t%.g\n", Arow[i] , Acol[i], Aij[i]);
 	}
