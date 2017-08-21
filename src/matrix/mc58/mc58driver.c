@@ -34,9 +34,9 @@ int main(void){
 
 
 	printf("Number of rows %d\tNumber of columns %d\t Non-zeroes %d\n", m, n, ne);
-	la = 40 * ne;
-	lirn = 40 * ne;
-	ljcn = 40 * ne;
+	la = 100 * ne;
+	lirn = 100 * ne;
+	ljcn = 100 * ne;
 
 
 	printf("I[[MC58DRI]]\tAllocating memory.\n");
