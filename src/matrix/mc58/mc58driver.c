@@ -9,11 +9,12 @@ extern void mc58ad_(int *M, int *N, int* NZ, int *LA, double *A, int *LIRN,
 	int *IW, int *INFO, double *RINFO, int *RANK, int *ROWS, int *COLS);
 
 int main(void){
-	int m, n, ne, la, lirn, *irn, ljcn, *jcn, liw, *iw, rank, *rows, *cols;
+	int m, n, ne, la, lirn, *irn, ljcn, *jcn, *iw, rank, *rows, *cols;
 	double *a;
+      int liw;
 	int info[20], icntl[20];
 	double rinfo[10], cntl[10];
-	int i, mmn;
+	int i, j, mmn;
 
 	FILE *f_in, *f_out;
 
@@ -34,44 +35,63 @@ int main(void){
 
 
 	printf("Number of rows %d\tNumber of columns %d\t Non-zeroes %d\n", m, n, ne);
-	la = 100 * ne;
-	lirn = 100 * ne;
-	ljcn = 100 * ne;
+	la =   3 * ne;
+	lirn = 3 * ne;
+	ljcn = 3 * ne;
 
 
-	printf("I[[MC58DRI]]\tAllocating memory.\n");
-	a = (double *)calloc(sizeof(double), la);
-	irn = (int *)calloc(sizeof(int), lirn);
-	jcn = (int *)calloc(sizeof(int), ljcn);
+	printf("I[[MC58DRI]]\tAllocating memory for A matrix with %d.\n", la);
+	a = (double *)malloc(sizeof(double)* la);
+	irn = (int *)malloc(sizeof(int)* lirn);
+	jcn = (int *)malloc(sizeof(int)* ljcn);
+      
+      memset(a, 0, sizeof(double)*la);
+      memset(irn, 0, sizeof(int)*lirn);
+      memset(jcn, 0, sizeof(int)*ljcn); 
+
 	
 	if(!a || !irn || !jcn){
 		printf("E[[MC58DRI]]\tError allocating memory.\n");
 	}
 
-	printf("E[[MC58DRI]]\tReading Jacobian matrix..\n");
+	printf("I[[MC58DRI]]\tReading Jacobian matrix..\n");
 
 	for(i=0; i<ne; i++){fscanf(f_in, "%d\t%d\t%lf", irn + i, jcn + i, a + i);}
 	fclose(f_in);
-	/*for(i=0; i<ne; i++){
-		fprintf(stderr, "%d\t%d\t%f\n", *(irn + i), *(jcn + i), *(a + i));
-	}*/
+      f_in = fopen("debug_.txt", "w");
 
+	for(i=0; i<ne; i++){
+	/*	fprintf(stderr, "%d\t%d\t%f\n", *(irn + i), *(jcn + i), *(a + i));*/
+		fprintf(f_in  , "%d\t%d\t%f\n", *(irn + i), *(jcn + i), *(a + i));
+	}
+      fclose(f_in);
+
+      
 	/* LIW ≥ 6*(M+N)+MAX(M,N) */
 	mmn = (m > n) ? m:n;
 	rows = (int *)calloc(sizeof(int), mmn);
 	cols = (int *)calloc(sizeof(int), mmn);
 	printf("I[[MC58DRI]]\tMax m n %d\n", mmn);
-	
-	liw = 6 * (m + n) + mmn + m; /* For good measure */ 
+      if (!rows || !cols){
+            printf("The memory for rows and cols was not properlly allocated");
+            exit(-1);
+      }    	
+	liw = 6 * (m + n) + mmn; /* For good measure */ 
 	printf("I[[MC58DRI]]\tCalculated liw %d\n", liw);
 	iw = (int *)calloc(sizeof(int), liw);
-	icntl[3] = 4;
+	icntl[4-1] = 4;
+      cntl[2-1] = 0.5;
+      if (!iw){
+            printf("The memory was not properly allocated \n");
+            exit(-1);
+      }
 
 	mc58id_(cntl, icntl);
+      cntl[2-1] = 0.8;
 	mc58ad_(&m, &n, &ne, &la, a, &lirn,	irn, &ljcn, jcn, cntl, icntl, &liw,
 		iw, info, rinfo, &rank, rows, cols);
-	for(i = 0; i< 10; i++){
-		printf("I[[MC58DRI]]\tINFO value %d i %d tries\n", info[0], i);
+	for(j = 0; j< 20; j++){
+		printf("I[[MC58DRI]]\tINFO value %d i %d tries\n", info[0], j);
 		if (info[0] == 0){
 			printf("I[[MC58DRI]]\tOperation successful %d\n", info[0]);
 			break;
@@ -93,7 +113,11 @@ int main(void){
 			la = ljcn;
 			lirn = ljcn;
 		}
-
+            
+            la = la * 2;
+            lirn = lirn * 2;
+            ljcn = ljcn * 2;
+            
 		free(a);
 		free(irn);
 		free(jcn);
@@ -101,11 +125,13 @@ int main(void){
 		irn = (int *)calloc(sizeof(int), lirn);
 		jcn = (int *)calloc(sizeof(int), ljcn);
 		f_in = fopen("jacobi_debug.in", "r");
+
+      	fscanf(f_in, "%d\t%d\t%d", &m, &n, &ne);
 		for(i=0; i<ne; i++){fscanf(f_in, "%d\t%d\t%lf", irn + i, jcn + i, a + i);}
 		fclose(f_in);
 		mc58ad_(&m, &n, &ne, &la, a, &lirn,	irn, &ljcn, jcn, cntl, icntl, &liw,
 			iw, info, rinfo, &rank, rows, cols);
-		}
+      }
 
 
 	f_out = fopen("mc58_out.txt", "w");
