@@ -12,7 +12,7 @@ extern void mc77id_(int *icntl, double *cntl);
 extern void mc77bd_(int *JOB, int *M, int *N, int *NNZ, int *IRN, int *JCN, double *A, int *IW, int *LIW, double *DW, int *LDW, int *ICNTL, double *CNTL, int *INFO, double *RINFO);
 
 
-int main(void){
+int main(int argc, char *argv[]){
 	int m, n, ne, la, lirn, *irn, ljcn, *jcn, *iw, rank, *rows, *cols;
 	double *a, *ascaled;
       int *irn0, *jcn0;
@@ -100,10 +100,10 @@ int main(void){
       jobmc77 = 0;
       mc77bd_(&jobmc77, &m, &n, &ne, irn, jcn, a, iwmc77, &liwmc77, dwmc77, &ldwmc77, icntlmc77, cntlmc77, infomc77, rinfomc77);  
 
-      printf("I[[MC5877DRI]]\tICNTL(7) = %d\n", icntlmc77[7-1]);
-      printf("I[[MC5877DRI]]\tICNTL(6) = %d\n", icntlmc77[6-1]);
-      printf("I[[MC5877DRI]]\tRINFO(1) = %f\n", rinfomc77[1-1]);
-      printf("I[[MC5877DRI]]\tRINFO(2) = %f\n", rinfomc77[2-1]);
+      printf("I[[MC5877DRI]]\tICNTL_MC77(7) = %d\n", icntlmc77[7-1]);
+      printf("I[[MC5877DRI]]\tICNTL_MC77(6) = %d\n", icntlmc77[6-1]);
+      printf("I[[MC5877DRI]]\tRINFO_MC77(1) = %f\n", rinfomc77[1-1]);
+      printf("I[[MC5877DRI]]\tRINFO_MC77(2) = %f\n", rinfomc77[2-1]);
 
       f_out = fopen("mc77out.txt", "w");
 
@@ -114,6 +114,12 @@ int main(void){
       }
       fclose(f_out); 
       
+      if(argc > 1){
+            printf("I[[MC5877]]\tScaling deactivated\n");
+      }
+      else{
+            printf("I[[MC5877]]\tScaling activated\n");
+
       /* MATRIX SCALING */
       for(i=0; i< ne; i++){
             irow = irn[i];
@@ -132,6 +138,7 @@ int main(void){
                   icol = jcn[i];
                   a[i] = a[i]*(1/dwmc77[irow-1]);
             }
+      }
       }
       free(dwmc77);
       free(iwmc77);
@@ -173,6 +180,7 @@ int main(void){
 	mc58id_(cntl, icntl);
       cntl[2-1] = 0.9;
       icntl[4-1] = 3;
+      icntl[8-1] = 32;
 	mc58ad_(&m, &n, &ne, &la, a, &lirn,	irn, &ljcn, jcn, cntl, icntl, &liw,
 		iw, info, rinfo, &rank, rows, cols);
 	for(j = 0; j< 1000; j++){
@@ -215,7 +223,7 @@ int main(void){
 		irn = (int *)malloc(sizeof(int)*lirn);
 		jcn = (int *)malloc(sizeof(int)*ljcn);
 
- /*           memset(a, 0, sizeof(double)*la);
+ /*         memset(a, 0, sizeof(double)*la);
             memset(irn, 0, sizeof(int)*lirn);
             memset(jcn, 0, sizeof(int)*ljcn);
   **/
@@ -226,7 +234,7 @@ int main(void){
                   jcn[i] = jcn0[i];
             }*/
 
-      f_in = fopen("debug_scaled0.txt", "w");
+      f_in = fopen("debug_scaled0.txt", "r");
       f_out = fopen("debug_scaled.txt", "w");
 	for(i=0; i<ne; i++){
 		fscanf(f_in  , "%d\t%d\t%lf\n", (irn + i), (jcn + i), (a + i));
