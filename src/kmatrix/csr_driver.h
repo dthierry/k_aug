@@ -27,8 +27,8 @@
 
 void csr_driver(int nvar, int ncon, int nzW, int nzA,
 	int *nzr_w, int *nzr_a,
-	int *Wrow, int *Wcol, real *Wij,
-	int *Arow, int *Acol, real *Aij,
+	fint *Wrow, fint *Wcol, real *Wij,
+	fint *Arow, fint *Acol, real *Aij,
 	fint **Kr, fint **Kc, real **K, fint **Kr_strt);
 
 #endif /* CSR_DRIVER */
