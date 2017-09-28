@@ -63,12 +63,15 @@ int main(int argc, char *argv[]){
       fclose(f_out);
       
       iperm = (int *)malloc(sizeof(int)*m);
+      memset(iperm, 0, sizeof(int)*m);
       iw = (int *)malloc(sizeof(int)* 5 * m); /*5 just in case */
       mc21ad_(&m, jcn, &ne, rstrt, rnz, iperm, &numnzd, iw);
             
       f_out = fopen("out_permutation.txt", "w");
       for(i=0; i < m; i++) {fprintf(f_out, "%d\n", *(iperm+i));}
       printf("I[[MC21]], number of nz in the permuted diagonal: %d\n", numnzd);
+      if( numnzd < m){printf("W[[MC21]], Warning nz in the diagonal is less than the number of rows, exactly by %d\n", m-numnzd);}
+
       fclose(f_out);
       
       free(iperm);
