@@ -56,7 +56,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 	double normb, normr;
 	double *y;
 
-	double nrm_r, nrm_x;
+	double nrm_r, nrm_x, nrm_b, nrm_y, ratiorr, ratiorc ;
 	int incx=1;
 
 	double const residual_ratio_max = 1e-10;
@@ -227,7 +227,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
   printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 		  "Reg tries %d, reg value %f.\n", try_fact, d);
 
-  iparm[7] = 1;       /* Max numbers of iterative refinement steps. */ 
+  iparm[7] = 2;       /* Max numbers of iterative refinement steps. */ 
   /*btemp = b; */
   /*xtemp = *x; */
   /*exit(1); */
@@ -248,22 +248,45 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 
  	/*printf("normb %e, normr %e\n", normb, normr);*/
  	
- 	nrm_r = dnrm2_(&n, y, &incx);
+ 	nrm_y = dnrm2_(&n, y, &incx);
  	nrm_x = dnrm2_(&n, x, &incx);
-	
+	nrm_b = dnrm2_(&n, b, &incx);
+      nrm_r = fabs(nrm_y - nrm_b);
+
  	/*printf("normr %e, normx %e\n", nrm_r, nrm_x);*/
+ 	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+			": Eucl Norm of the residuals (reported); %e \n", normr);
+
+      
+      printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+			": Eucl Norm of the rhs (reported); %e \n", normb);
 
 
  	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 			": Eucl Norm of the residuals; %e \n", nrm_r);
 
+ 	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+			": Eucl Norm of the solution; %e \n", nrm_x);
+      
+      printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+			": Eucl Norm of the rhs; %e \n", nrm_b);
+
 
 	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-				": Ratio of norm of scaled residuals; %g \n", (nrm_r/(nrm_x+nrm_r)));
-	if((nrm_r/(nrm_x+nrm_r)) < residual_ratio_max){
+				": Ratio of norm of scaled residuals; %e \n", nrm_r);
+      
+      ratiorr = (normr/(normr + normb)) ;
+      ratiorc = (nrm_r / (nrm_r + nrm_b));
+
+	if(ratiorr > residual_ratio_max){
 			printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-				": The norm of residuals is less than max ratio\n");
+				": The norm of residuals is larger than max ratio(computed)\n");
 	}
+     	if(ratiorc > residual_ratio_max){
+			printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+				": The norm of residuals is larger than max ratio(reported)\n");
+	}
+
 
  	free(y);
 	phase = -1; /* Internal memory release */
