@@ -9,6 +9,10 @@ wget http://ampl.com/netlib/ampl/solvers.tgz
 tar -zxvf solvers.tgz
 echo "Making .."
 cd ./solvers/
+echo "#include <stddef.h>" > temp
+echo "#include <sys/types.h>" >> temp
+cat asl.h >> temp
+mv temp asl.h
 make -f makefile.u
 
 
@@ -19,4 +23,6 @@ echo "
        (_    _)
        | |   \
        | |oo_/sjw \n\n done "
+
+#!/bin/bash
 
