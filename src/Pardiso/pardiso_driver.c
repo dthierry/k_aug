@@ -52,6 +52,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 	double dlast, d, dmin, dmax, d0; 
 	double km, kp, kbp;
 	int i, j, k, try_fact;
+      int reduce_pivtol=0;
 
 	double normb, normr;
 	double *y;
@@ -271,21 +272,45 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
       printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 			": Eucl Norm of the rhs; %e \n", nrm_b);
 
-
-	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-				": Ratio of norm of scaled residuals; %e \n", nrm_r);
       
       ratiorr = (normr/(normr + normb)) ;
       ratiorc = (nrm_r / (nrm_r + nrm_b));
 
+	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+				": Ratio of norm of scaled residuals (reported); %e \n", ratiorr);
+	printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+				": Ratio of norm of scaled residuals (computed); %e \n", ratiorc);
+
+
+
 	if(ratiorr > residual_ratio_max){
 			printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 				": The norm of residuals is larger than max ratio(computed)\n");
-	}
+	reduce_pivtol = 1;
+      }
      	if(ratiorc > residual_ratio_max){
 			printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 				": The norm of residuals is larger than max ratio(reported)\n");
+      reduce_pivtol = 1;
 	}
+
+      if(reduce_pivtol == 1){
+      		printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+				": Attempting to reduce residuals\n");
+                  phase = 22; /* Numerical factorization */
+                  pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum,	&nrhs,
+            	  	iparm, &msglvl, &ddum, &ddum, &error, dparm);
+                  if(error != 0){
+            	  	printf("Error...\t[NUM_FACT] %d\n", error);
+	  	            exit(2);
+                  }
+
+                  printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+            	  	"Factorization successful(new).\n");
+
+
+
+      }
 
 
  	free(y);

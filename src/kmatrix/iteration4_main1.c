@@ -29,6 +29,7 @@
 #include "get_hess_asl_aug.h"
 #include "find_inequalities.h"
 #include "assemble_rhs_rh.h"
+#include "assemble_rhs_dcdp.h"
 #include "suffix_decl_hand.h"
 #include "csr_driver.h"
 #include "sigma_compute.h"
@@ -36,7 +37,8 @@
 #include "dsyev_driver.h"
 #include "dpotri_driver.h"
 
-#define NUM_REG_SUF 5
+#define NUM_REG_SUF 8
+/* experimental! */
 
 static real not_zero = 1.84e-04;
 static int dumm = 1;
@@ -57,6 +59,8 @@ static char _no_barrieropt_[] = {"no_barrier"};
 static char _no_lambdaopt_[] = {"no_lambda"};
 static char _no_scaleopt_[]  = {"no_scale"};
 static char _not_zero[] = {"not_zero"};
+static char _computedsdp[] = {"compute_dsdp"};
+static char _computedsdp_verb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
 
 
 static int deb_kkt = 0;
@@ -77,11 +81,15 @@ static I_Known nbarrier_kw = {0, &no_barrier};
 static int no_scale = 1;
 static I_Known nscale_kw = {0, &no_scale};
 
+static int compute_dsdp = 0;
+static I_Known compute_dsdp_kw = {1, &compute_dsdp};
+
 
 /*static char dof_v[] = {"dof_v"};*/
 
 /* keywords, they must be in alphabetical order! */
 static keyword keywds[] = {
+	KW(_computedsdp, IK_val, &compute_dsdp_kw, _computedsdp_verb),
 	KW(_comp_inv, IK_val, &comp_inv_kw, _comp_inv_verb),
 	KW(_dbg_kkt, IK_val, &deb_kkt_kw, _dbg_kkt_verb),
 	KW(_dot_pr_f, IK_val, &dot_p_kw, _dot_pr_f),
@@ -117,6 +125,11 @@ int main(int argc, char **argv){
 	SufDesc *suf_zL = NULL;
 	SufDesc	*suf_zU = NULL;
 	SufDesc *f_timestamp = NULL;
+	SufDesc *dcdp = NULL;
+
+	SufDesc *var_order_suf = NULL;
+	SufDesc *con_order_suf = NULL;
+
 	real *z_L=NULL, *z_U=NULL, *sigma=NULL;
 
 	SufDesc **rhs_ptr=NULL;
@@ -164,20 +177,31 @@ int main(int argc, char **argv){
 	"All done."};
 
 	unsigned n_r_suff = NUM_REG_SUF;
-	/* Suffix names; yes, I know. */
+	/* Suffixes names. Add new suffixes names here */
 	char _sfx_1[] = {"dof_v"};
 	char _sfx_2[] = {"rh_name"};
 	char _sfx_3[] = {"ipopt_zL_in"};
 	char _sfx_4[] = {"ipopt_zU_in"};
 	char _sfx_5[] = {"f_timestamp"};
+	char _sfx_6[] = {"dcdp"};
+	char _sfx_7[] = {"var_order"};
+	char _sfx_8[] = {"con_order"};
 	int _is_not_irh_pdf=1;
 	clock_t start_c, ev_as_kkt_c, fact_kkt_c, total_c;
 	double ev_as_time, fact_time, overall_time;
 	time_t timestamp;
 	char _chr_timest[15] = ""; /* The timestamp */
 	char _file_name_[30] = ""; /* */
+	char WantModifiedJac = 0;
+	int *vModJac = NULL, *cModJac = NULL;
+
+
+
 	timestamp = time(NULL);
 	start_c = clock();
+	
+	
+
 	
 
 	Oinfo.sname = _k_;
@@ -244,6 +268,9 @@ int main(int argc, char **argv){
 	strcat(reg_suffix_name[2], _sfx_3);
 	strcat(reg_suffix_name[3], _sfx_4);
 	strcat(reg_suffix_name[4], _sfx_5);
+	strcat(reg_suffix_name[5], _sfx_6);
+	strcat(reg_suffix_name[6], _sfx_7);
+	strcat(reg_suffix_name[7], _sfx_8);
 
 	if(n_rhs > 0){
 		suf_ptr = (SufDecl *)malloc(sizeof(SufDecl)*(n_rhs + n_r_suff));
@@ -285,9 +312,15 @@ int main(int argc, char **argv){
 
 
 	if ((n_var - n_con) < 0){
+            if(deb_kkt>0){
+               	fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                	"KKT check!\n");
+            }
+            else{
 		printf("E[K_AUG]...\t[K_AUG_ASL]"
 			"nvar < ncon. This problem is not valid.\n");
 		exit(-1);
+            }
 	}
 	
 	x 		 = X0  = M1alloc(n_var*sizeof(real));
@@ -321,6 +354,10 @@ int main(int argc, char **argv){
 	suf_zU = suf_get(reg_suffix_name[3], ASL_Sufkind_var| ASL_Sufkind_real); 
 
 	f_timestamp = suf_get(reg_suffix_name[4], ASL_Sufkind_prob); 
+	dcdp = suf_get(reg_suffix_name[5], ASL_Sufkind_con);
+
+	var_order_suf = suf_get(reg_suffix_name[6], ASL_Sufkind_var);
+	con_order_suf = suf_get(reg_suffix_name[7], ASL_Sufkind_con);
 
 	z_L = (real *)malloc(sizeof(real) * n_var);
 	z_U = (real *)malloc(sizeof(real) * n_var);
@@ -380,15 +417,26 @@ int main(int argc, char **argv){
 	sigma = (real *)malloc(sizeof(real) * n_var);
 	memset(sigma, 0, sizeof(real) * n_var);
 
-	if(var_f->u.r == NULL && var_f->u.i == NULL){
-    fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
-    	"suffix empty no n_dof declared!\n");
-    if(deb_kkt>0){
-    	fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-    	"KKT check!\n");
-    }
-    else{exit(-1);}
-	}
+	/* Check if we do red_hess, deb_kkt or dsdp*/
+      if(deb_kkt>0){
+  	      fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+        	"KKT check!\n");
+      }
+      else if(compute_dsdp>0){
+  	      fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+        	"dsdp for linear C(x) - p = 0 override.\n");
+  	      if(dcdp->u.r == NULL && dcdp->u.i == NULL){
+  		      fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
+                	"suffix empty no dcdp declared!\n");
+                	exit(-1);
+        	}
+      }
+      else if(var_f->u.r == NULL && var_f->u.i == NULL){
+            fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
+         	"suffix empty no n_dof declared!\n");
+            exit(-1);
+      }   
+
 
 	compute_sigma(asl, n_var, x, suf_zL, suf_zU, z_L, z_U, sigma, not_zero);
 	
@@ -439,9 +487,92 @@ int main(int argc, char **argv){
 		"Barrier term added.\n");
 	}
 	if(deb_kkt > 0){
+		if(var_order_suf->u.i != NULL && con_order_suf->u.i != NULL){
+			WantModifiedJac = 1;
+			vModJac = var_order_suf->u.i;
+			cModJac = con_order_suf->u.i;
+			printf("I[K_AUG]...\t[K_AUG_ASL]"
+				"var_order & con_order suffixes found.\n");
+			somefile = fopen("orders_v_.txt", "w");
+			for(i=0; i<n_var; i++){fprintf(somefile, "%d\n",*(vModJac + i));}
+			fclose(somefile);
+			somefile = fopen("orders_c_.txt", "w");
+			for(i=0; i<n_con; i++){fprintf(somefile, "%d\n",*(cModJac + i));}
+			fclose(somefile);
+		}
+		else if(var_order_suf->u.i != NULL){
+			WantModifiedJac = 2;
+			vModJac = var_order_suf->u.i;
+			printf("I[K_AUG]...\t[K_AUG_ASL]"
+				"var_order suffix found.\n");
+			somefile = fopen("orders_v_.txt", "w");
+			for(i=0; i<n_var; i++){fprintf(somefile, "%d\n",*(vModJac + i));}
+			fclose(somefile);
+		}
+		else if(con_order_suf->u.i != NULL){
+			WantModifiedJac = 3;
+			cModJac = con_order_suf->u.i;
+			printf("I[K_AUG]...\t[K_AUG_ASL]"
+				"con_order suffix found.\n");
+			somefile = fopen("orders_c_.txt", "w");
+			for(i=0; i<n_con; i++){fprintf(somefile, "%d\n",*(cModJac + i));}
+			fclose(somefile);
+		}
+
+
+		if(WantModifiedJac > 0){
+			printf("I[K_AUG]...\t[K_AUG_ASL]"
+				"Write modified Jacobian file.\n");
+			printf("I[K_AUG]...\t[K_AUG_ASL]"
+				"Please verify your suffixes with the orders_x.txt files.\n");
+                  somefile = fopen("testfile.dat", "w");
+                  for(i=0; i<nzc; i++){fprintf(somefile, "%d\t%d\t%.g\n", Acol[i], Arow[i], Aij[i]);}
+
+                  fclose(somefile);
+			somefile = fopen("modified_jacobian.dat", "w");
+		/* Jacobian starts at 1 [MATLAB] */
+		/* The downside is that if you make a mistake on the suffix values, you won't know if the
+		   modified jacobian is correct. */
+		if(WantModifiedJac == 1){
+			for(i=0; i<nzc; i++){
+				fprintf(somefile, "%d\t%d\t%.g\n", *(cModJac+Acol[i]-1), *(vModJac+Arow[i]-1), Aij[i]);
+			}
+		}
+		else if(WantModifiedJac == 2){
+			for(i=0; i<nzc; i++){
+				fprintf(somefile, "%d\t%d\t%.g\n", Acol[i]+1, *(vModJac+Arow[i]-1), Aij[i]);
+			}
+		}
+		else if(WantModifiedJac == 3){
+			for(i=0; i<nzc; i++){
+				fprintf(somefile, "%d\t%d\t%.g\n", *(cModJac+Acol[i]-1), Arow[i]+1, Aij[i]);
+			}
+		}
+		fclose(somefile);
+		}
+
 		solve_result_num = 0;
 		write_sol(ter_msg, x, lambda, &Oinfo);
 		ASL_free(&asl);
+		free(c_flag);
+		free(z_L);
+		free(z_U);
+		free(sigma);
+		free(Acol);
+		free(Arow);
+		free(Aij);
+		free(Wcol);
+		free(Wrow);
+		free(Wij);
+		free(nz_row_a);
+		free(nz_row_w);
+		free(md_off_w);
+		for(i=0; i<(int)n_r_suff; i++){
+  	free(reg_suffix_name[i]);
+  	}
+		free(reg_suffix_name);
+		free(suf_ptr);
+
 		return 0;}
 	nzA = nzc; 
 	nzW = nnzw + miss_nz_w; 
@@ -486,7 +617,11 @@ int main(int argc, char **argv){
 
 	/* */
 	/*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
-  assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);
+	/* problem: all stuff associated with n_dof
+	   solution: use it again for dsdp*/
+	if(compute_dsdp>0){assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, dcdp, &hr_point);}
+	else{assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);}
+  
 
   x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
   positions_rh = (int *)malloc(n_var * sizeof(int));
@@ -551,6 +686,22 @@ int main(int argc, char **argv){
   }
   fclose(somefile);
 
+  if(var_order_suf->u.i){
+  	somefile = fopen("varorder.txt", "w");
+  	for(i=0; i<n_var; i++){fprintf(somefile, "%d\n", *(var_order_suf->u.i + i));}
+  	fclose(somefile);
+  	somefile = fopen("dxdp_.dat", "w");
+  	for(i=0; i<n_var; i++){
+  		if(*(var_order_suf->u.i + i)>0){
+  			fprintf(somefile, "%d", i);
+  			for(j=0; j<n_dof; j++){fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));}
+  			fprintf(somefile, "\n");
+  		}
+  		
+  	}
+  	fclose(somefile);
+  }
+
   somefile = fopen(_file_name_, "w"); /* For dot_driver */
   for(i=0; i<n_dof; i++){
 		for(j=0; j<K_nrows; j++){
@@ -558,58 +709,61 @@ int main(int argc, char **argv){
     }
       }
   fclose(somefile);
+  /* Skip this if dsdp */
+	if(compute_dsdp>0){}
+	else{
+		memset(positions_rh, 0, sizeof(int)*n_var);
+	  somefile = fopen("sigma_warnings.txt", "w");
+	  for(i=0; i<n_dof; i++){
+	  	j = hr_point[i];
+	  	if(((x[j] - LUv[2*j]) < not_zero) || ((LUv[2*j+1] - x[j]) < not_zero)){
+	  		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+				"Variable \"%d\" (offset %d) has an active bound; sigma = %f.\n",
+				 j, i+1, sigma[j]);
+				fprintf(somefile, "%d\t%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%f\n",
+				 j, i+1, z_L[j], z_U[j], LUv[2*j], x[j], LUv[2*j+1], sigma[j]);
+	  	}
+	  	positions_rh[j] = i;
+	  	/*printf("j %d, position %d\n", j, positions_rh[j]);*/
+	  }
+	  fclose(somefile);
 
 
-  memset(positions_rh, 0, sizeof(int)*n_var);
-  somefile = fopen("sigma_warnings.txt", "w");
-  for(i=0; i<n_dof; i++){
-  	j = hr_point[i];
-  	if(((x[j] - LUv[2*j]) < not_zero) || ((LUv[2*j+1] - x[j]) < not_zero)){
-  		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-			"Variable \"%d\" (offset %d) has an active bound; sigma = %f.\n",
-			 j, i+1, sigma[j]);
+	  somefile = fopen("sigma_super_basic.txt", "w");
+	  for(i=0; i<n_dof; i++){
+	  	j = hr_point[i];
 			fprintf(somefile, "%d\t%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%f\n",
-			 j, i+1, z_L[j], z_U[j], LUv[2*j], x[j], LUv[2*j+1], sigma[j]);
-  	}
-  	positions_rh[j] = i;
-  	/*printf("j %d, position %d\n", j, positions_rh[j]);*/
-  }
-  fclose(somefile);
+			 j, i+1, z_L[j], z_U[j], LUv[2*j], x[j], LUv[2*j+1], sigma[j]); 
+	  }
+	  fclose(somefile);
 
+	  somefile = fopen("zx.txt", "w");
+	  for(i=0; i<n_dof; i++){
+	  	j = hr_point[i];
+			fprintf(somefile, "%d\t%d\t%.g\t%.g\n",
+			 j, i+1, (LUv[2*j] - x[j]) * z_L[j], (x[j] - LUv[2*j+1]) * z_U[j]); 
+	  }
+	  fclose(somefile);
 
-  somefile = fopen("sigma_super_basic.txt", "w");
-  for(i=0; i<n_dof; i++){
-  	j = hr_point[i];
-		fprintf(somefile, "%d\t%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%f\n",
-		 j, i+1, z_L[j], z_U[j], LUv[2*j], x[j], LUv[2*j+1], sigma[j]); 
-  }
-  fclose(somefile);
+	  somefile = fopen("result_red_hess.txt", "w");
+	  /* fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i])); */
+	  for(i=0; i<n_dof; i++){
+			for(j=0; j<n_dof; j++){
+				/*if(j<i){
+					fprintf(somefile, "\t%.g", *(x_+ i * K_nrows + hr_point[j]));
+				}
+				else{
+					fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i]));
+				}*/
+				fprintf(somefile, "\t%.g", 
+					(*(x_+ j * K_nrows + hr_point[i]) + *(x_+ i * K_nrows + hr_point[j])) * 0.5 );
 
-  somefile = fopen("zx.txt", "w");
-  for(i=0; i<n_dof; i++){
-  	j = hr_point[i];
-		fprintf(somefile, "%d\t%d\t%.g\t%.g\n",
-		 j, i+1, (LUv[2*j] - x[j]) * z_L[j], (x[j] - LUv[2*j+1]) * z_U[j]); 
-  }
-  fclose(somefile);
-
-  somefile = fopen("result_red_hess.txt", "w");
-  /* fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i])); */
-  for(i=0; i<n_dof; i++){
-		for(j=0; j<n_dof; j++){
-			/*if(j<i){
-				fprintf(somefile, "\t%.g", *(x_+ i * K_nrows + hr_point[j]));
-			}
-			else{
-				fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i]));
-			}*/
-			fprintf(somefile, "\t%.g", 
-				(*(x_+ j * K_nrows + hr_point[i]) + *(x_+ i * K_nrows + hr_point[j])) * 0.5 );
-
-    }
-    fprintf(somefile, "\n");
-  }
-  fclose(somefile);
+	    }
+	    fprintf(somefile, "\n");
+	  }
+	  fclose(somefile);
+	}
+  
 
 
 

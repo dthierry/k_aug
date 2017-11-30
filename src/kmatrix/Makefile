@@ -35,12 +35,12 @@ LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
 KMATRIX = iteration4_main1.c
 
 k_aug_pard: mc30_dri \
-      get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh \
+      get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
       suffix_decl_hand csr_driver pard_dri sig_comp mu_ad dsyev_eig dpotri_driver
 	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
 	mc30_driver.o  \
 	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
-	assemble_rhs_rh.o  \
+	assemble_rhs_rh.o assemble_rhs_dcdp.o  \
 	suffix_decl_hand.o csr_driver.o pardiso_driver.o \
 	sigma_compute.o mu_adjust_primal.o dsyev_driver.o dpotri_driver.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
@@ -88,6 +88,9 @@ sens_update_driver:
 
 assemble_rhsds_rh:
 	$(CC) $(CCFLAGS) -c assemble_rhs_rh.c -I$(S)/ASL/solvers/
+
+assemble_rhsds_dcdp:
+	$(CC) $(CCFLAGS) -c assemble_rhs_dcdp.c -I$(S)/ASL/solvers/
 
 suffix_decl_hand:
 	$(CC) $(CCFLAGS) -c suffix_decl_hand.c -I$(S)/ASL/solvers/
