@@ -30,7 +30,9 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
 	/* adjust primal */
 	int i;
 	double mul, muu, mu, logmu0;
-	
+	/*If zL and zU are not declared, they will have a 0.0 value, presumably
+	  therefore mul and muu will have a 0.0 value as well.
+	*/
 
 	logmu0 = 0.0;
 	for(i=0; i<nvar; i++){
@@ -60,6 +62,8 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
 			}
 			else{
 				logmu0 = log(mu);
+				printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+					"log(mu) computed=%.g at var_i=%d\n", log(mu), i);
 			}
 		}
 	}
