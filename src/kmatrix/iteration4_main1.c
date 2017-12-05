@@ -115,8 +115,9 @@ int main(int argc, char **argv){
 	FILE *f;
 
 	/* SufDesc *some_suffix; */
-	int i, j;
+	int i, j, k;
 	int n_dof=0;
+	int n_vx=0; /* variable of interest for dxdp*/
 	int nnzw; /* let's try this */
 	real *x=NULL, *lambda=NULL;
 	char *s=NULL;
@@ -171,6 +172,7 @@ int main(int argc, char **argv){
   fint nerror;
   int nzW, nzA;
   int *hr_point = NULL;
+
   int *positions_rh = NULL;
 
   char ter_msg[] = {"I[K_AUG]...[K_AUG_ASL]"
@@ -619,7 +621,7 @@ int main(int argc, char **argv){
 	/*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
 	/* problem: all stuff associated with n_dof
 	   solution: use it again for dsdp*/
-	if(compute_dsdp>0){assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, dcdp, &hr_point);}
+	if(compute_dsdp>0){assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, &n_vx, dcdp, &hr_point, var_order_suf);}
 	else{assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);}
   
 
@@ -691,14 +693,21 @@ int main(int argc, char **argv){
   	for(i=0; i<n_var; i++){fprintf(somefile, "%d\n", *(var_order_suf->u.i + i));}
   	fclose(somefile);
   	somefile = fopen("dxdp_.dat", "w");
-  	for(i=0; i<n_var; i++){
+  	/*for(i=0; i<n_var; i++){
   		if(*(var_order_suf->u.i + i)>0){
   			fprintf(somefile, "%d", i);
   			for(j=0; j<n_dof; j++){fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));}
   			fprintf(somefile, "\n");
   		}
   		
+  	}*/
+  	for(i=0; i<n_vx; i++){
+  		j = hr_point[i]; /* The row */
+  		fprintf(somefile, "%d", j);
+  		for(k=0; k<n_dof; k++){fprintf(somefile, "\t%f", *(x_+ k * K_nrows + j));}
+  		fprintf(somefile, "\n");
   	}
+
   	fclose(somefile);
   }
 

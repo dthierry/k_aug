@@ -22,6 +22,6 @@
 #define ASSEM_RHSDCDP
 #include "asl.h"
 
-void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, 
-  SufDesc *dcdp, int **hr_point);
+void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x,
+  SufDesc *dcdp, int **hr_point, SufDesc *var_order);
 #endif /* ASSEM_RHSRH */
