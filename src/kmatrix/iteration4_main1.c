@@ -704,7 +704,7 @@ int main(int argc, char **argv){
   	for(i=0; i<n_vx; i++){
   		j = hr_point[i]; /* The row */
   		fprintf(somefile, "%d", j);
-  		for(k=0; k<n_dof; k++){fprintf(somefile, "\t%f", *(x_+ k * K_nrows + j));}
+  		for(k=0; k<n_dof; k++){fprintf(somefile, "\t%.g", *(x_+ k * K_nrows + j));}
   		fprintf(somefile, "\n");
   	}
 

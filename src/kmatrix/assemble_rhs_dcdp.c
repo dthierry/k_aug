@@ -93,7 +93,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
     /*(*hr_point)[i] = help_list[i];*/
     (*hr_point)[i] = (ordered_npdp+i)->row;
     /*printf("i %d help %d\n", i, help_list[i]);*/
-    (*rhs_dcdp)[(nvar + ncon) * i + (*hr_point)[i]] = 1.0;
+    (*rhs_dcdp)[(nvar + ncon) * i + (*hr_point)[i]] = -1.0;
   }
 
   free(help_list);
@@ -138,6 +138,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
 
   qsort(ordered_npdp, (*n_x), sizeof(ordered_npdp), comp_f0);
   (*hr_point) = (int *)realloc((*hr_point), sizeof(int)*(*n_x));
+  memset((*hr_point), 0, sizeof(int)*(*n_x));
   for(i=0; i<(*n_x); i++){(*hr_point)[i] = (ordered_npdp+i)->row;}
   /* the order will go to hr_point */
   
