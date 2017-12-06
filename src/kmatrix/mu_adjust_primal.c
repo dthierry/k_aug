@@ -34,7 +34,7 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
 	  therefore mul and muu will have a 0.0 value as well.
 	*/
 
-	logmu0 = 0.0;
+	logmu0 = -11.0;
 	for(i=0; i<nvar; i++){
 		mul = 0.0;
 		muu = 0.0;
@@ -55,18 +55,41 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
 			mu = muu;
 		}
 		if(mu>0.0){
-			if(fabs(logmu0 - log(mu)) < 1e-10){
-				printf("I[KMATRIX]...\t[KMATRIX_ASL]"
-					"log(mu) computed=%.g at var_i=%d\n", log(mu), i);
+			if(fabs(logmu0 - log(mu)) < 1){
+				printf("I[KMATRIX]...\t[ADJUST_MU]"
+					"log(mu) close to the target\t%.g at var_i=%d\n", log(mu), i);
+                        logmu0 = log(mu);
 				break;
 			}
 			else{
 				logmu0 = log(mu);
-				printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+				printf("I[KMATRIX]...\t[ADJUST_MU]"
 					"log(mu) computed=%.g at var_i=%d\n", log(mu), i);
 			}
-		}
+            }
+            else if ((fabs(x[i] - lbv[2*i]) < 1e-08) && (fabs(zL[i]) < 1e-08)){
+                  printf("I[KMATRIX]...\t[ADJUST_MU]"
+		      	 "\tWarning strict complementarity (lb) is not within tol for var:%d\n", i);
+
+            }
+            else if ((fabs(x[i] - lbv[2*i + 1]) < 1e-08) && (fabs(zU[i]) < 1e-08)){
+                  printf("I[KMATRIX]...\t[ADJUST_MU]"
+		      	 "\tWarning strict complementarity (ub) is not within tol for var:%d\n", i);
+
+            }
+
+
 	}
+      if(logmu0 == -11.0){
+            printf("I[KMATRIX]...\t[ADJUST_MU]"
+			 "\tWarning no relevant info from the problem can predict logmu\n");
+      }
+      else if(logmu0 > -11.0){
+            printf("I[KMATRIX]...\t[ADJUST_MU]"
+			 "\tWarning logmu is over the target; is this optimal?\n");
+      }
+
+	
 	/*mu = (log(mu) > -8.6) ? exp(-8.6): mu;*/
 	for(i=0; i<nvar; i++){
 
