@@ -117,7 +117,6 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
   fclose(somefile);
 
 
-  free(ordered_npdp);
 
   /* order by row, if the var_order suffix was declared*/
   if(var_order->u.i){
