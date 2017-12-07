@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
+void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double log10mu_target){
 	/* find a multiplier-primal combination that allows to compute mu*/
 	/* adjust primal */
 	int i;
@@ -34,7 +34,7 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
 	  therefore mul and muu will have a 0.0 value as well.
 	*/
 
-	logmu0 = -11.0;
+	logmu0 = log10mu_target;
 	for(i=0; i<nvar; i++){
 		mul = 0.0;
 		muu = 0.0;
@@ -55,42 +55,42 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU){
 			mu = muu;
 		}
 		if(mu>0.0){
-			if(fabs(logmu0 - log(mu)) < 1){
+			if(fabs(logmu0 - log10(mu)) < 1){
 				printf("I[KMATRIX]...\t[ADJUST_MU]"
-					"log(mu) close to the target\t%.g at var_i=%d\n", log(mu), i);
-                        logmu0 = log(mu);
+					"log10(mu) close to the target\t%.g at var_i=%d\n", log10(mu), i);
+                        logmu0 = log10(mu);
 				break;
 			}
 			else{
-				logmu0 = log(mu);
+				logmu0 = log10(mu);
 				printf("I[KMATRIX]...\t[ADJUST_MU]"
-					"log(mu) computed=%.g at var_i=%d\n", log(mu), i);
+					"log10(mu) computed=%.g at var_i=%d\n", log10(mu), i);
 			}
-            }
-            else if ((fabs(x[i] - lbv[2*i]) < 1e-08) && (fabs(zL[i]) < 1e-08)){
+      }
+      else if ((fabs(x[i] - lbv[2*i]) < 1e-08) && (fabs(zL[i]) < 1e-08)){
                   printf("I[KMATRIX]...\t[ADJUST_MU]"
 		      	 "\tWarning strict complementarity (lb) is not within tol for var:%d\n", i);
 
-            }
-            else if ((fabs(x[i] - lbv[2*i + 1]) < 1e-08) && (fabs(zU[i]) < 1e-08)){
+      }
+      else if ((fabs(x[i] - lbv[2*i + 1]) < 1e-08) && (fabs(zU[i]) < 1e-08)){
                   printf("I[KMATRIX]...\t[ADJUST_MU]"
 		      	 "\tWarning strict complementarity (ub) is not within tol for var:%d\n", i);
 
-            }
+      }
 
 
 	}
-      if(logmu0 == -11.0){
+      if(logmu0 == log10mu_target){
             printf("I[KMATRIX]...\t[ADJUST_MU]"
 			 "\tWarning no relevant info from the problem can predict logmu\n");
       }
-      else if(logmu0 > -11.0){
+      else if(logmu0 > log10mu_target){
             printf("I[KMATRIX]...\t[ADJUST_MU]"
 			 "\tWarning logmu is over the target; is this optimal?\n");
       }
 
 	
-	/*mu = (log(mu) > -8.6) ? exp(-8.6): mu;*/
+	/*mu = (log10(mu) > -8.6) ? exp(-8.6): mu;*/
 	for(i=0; i<nvar; i++){
 
 		if(zL[i]>0 && -zU[i] > 0){

@@ -25,5 +25,5 @@
 
 #include "asl.h"
 
-void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU);
+void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double log10mu_target);
 #endif /*MU_ADJ*/

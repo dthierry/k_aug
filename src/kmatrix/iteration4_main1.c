@@ -62,6 +62,12 @@ static char _not_zero[] = {"not_zero"};
 static char _computedsdp[] = {"compute_dsdp"};
 static char _computedsdp_verb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
 
+static char _no_inertia[] = {"no_inertia"};
+static char _no_inertia_verb[] = {"Skip inertia correction"};
+
+static real log10mu = -11.0;
+static char _target_log10mu[] = {"target_log10mu"};
+static char _target_log10mu_verb[] = {"Target value for log10mu"};
 
 static int deb_kkt = 0;
 static I_Known deb_kkt_kw = {1, &deb_kkt};
@@ -84,6 +90,10 @@ static I_Known nscale_kw = {0, &no_scale};
 static int compute_dsdp = 0;
 static I_Known compute_dsdp_kw = {1, &compute_dsdp};
 
+static int no_inertia = 0;
+static I_Known no_inertia_kw = {1, &no_inertia};
+
+
 
 /*static char dof_v[] = {"dof_v"};*/
 
@@ -96,10 +106,12 @@ static keyword keywds[] = {
 	KW(_e_eval, IK_val, &e_eval_kw, _e_eval),
   KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),	
   KW(_no_barrieropt_ , IK_val, &nbarrier_kw, _no_barrieropt_),
+  KW(_no_inertia, IK_val, &no_inertia_kw, _no_inertia_verb),
   KW(_no_lambdaopt_ , IK_val, &l_over_kw, _no_lambdaopt_),  
   KW(_no_scaleopt_ , IK_val, &nscale_kw, _no_scaleopt_),  
   KW(_not_zero , D_val, &not_zero, _not_zero),  
   KW(name1 , IK_val, &dumm_kw, name1),
+  KW(_target_log10mu , D_val, &log10mu, _target_log10mu_verb),
 };
 static char _solname[] = {"K_AUG"};
 static char banner[] = {"[K_AUG] written by DT\n\n"};
@@ -247,6 +259,14 @@ int main(int argc, char **argv){
 		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
 			"No n_rhs declared\n");
 	}
+
+	if (no_inertia){
+		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+			"Inertia correction skip.\n");
+	}
+
+		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+			"Target log10mu:= %.g.\n", log10mu);
 	
 	if (l_over){
 		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
@@ -408,7 +428,7 @@ int main(int argc, char **argv){
 	}
 	fclose(somefile);
 
-	mu_adjust_x(n_var, x, LUv, z_L, z_U);
+	mu_adjust_x(n_var, x, LUv, z_L, z_U, log10mu);
 	
 	somefile = fopen("primal1.txt", "w");
 	for(i=0; i< n_var; i++){
@@ -658,7 +678,7 @@ int main(int argc, char **argv){
 	}
  
   /* factorize the matrix */
-	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con);
+	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia);
     
   printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Pardiso done. \n");

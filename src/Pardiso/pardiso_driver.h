@@ -18,6 +18,6 @@ extern void pardiso_residual (int *mtype, int *n, double *a, int *ia, int *ja, d
 extern double dnrm2_(int *n, double *x, int *incx);
 
 int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
- fint nrhs, real *b, real *x, fint nvar, fint ncon);
+ fint nrhs, real *b, real *x, fint nvar, fint ncon, int no_inertia);
 
 #endif /* PARDISO_DRIVER */

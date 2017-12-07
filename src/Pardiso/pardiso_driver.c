@@ -29,7 +29,7 @@
 #include "pardiso_driver.h"
 
 int pardiso_driver(fint *ia, fint *ja, real *a, fint n, 
-	fint n_rhs, real *b, real *x, fint nvar, fint ncon){
+	fint n_rhs, real *b, real *x, fint nvar, fint ncon, int no_inertia){
 	/* do something */
 	
 	int nrhs=n_rhs;
@@ -195,7 +195,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 
 	  printf("I[K_AUG]...\t[PARDISO_DRIVER]"
 	  	"Inertia (p, n, 0): (%d, %d, %d).\n", pi, ni, zi);
-
+	  if(no_inertia){break;}
 	  if(pi != nvar || ni != ncon || zi != 0){
 	  	fprintf(stderr, "W[K_AUG]...\t[PARDISO_DRIVER]"
 	  	"Inertia check failure.\n");
@@ -226,9 +226,9 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
   phase = 33;
 
   printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-		  "Reg tries %d, reg value %f.\n", try_fact, d);
+		  "Reg tries %d, reg value %.g.\n", try_fact, d);
 
-  iparm[7] = 2;       /* Max numbers of iterative refinement steps. */ 
+  iparm[7] = 1;       /* Max numbers of iterative refinement steps. */ 
   /*btemp = b; */
   /*xtemp = *x; */
   /*exit(1); */

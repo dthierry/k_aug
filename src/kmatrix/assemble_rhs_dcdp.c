@@ -123,7 +123,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
     j=0;
     for(i=0;i<nvar;i++){if(var_order->u.i[i]>0){j++;}}
     (*n_x) = j; /* number of vars of interest */
-    ordered_npdp = (npdp_coord *)malloc(sizeof(npdp_coord)*(*n_x));
+    ordered_npdp = (npdp_coord *)realloc(ordered_npdp, sizeof(npdp_coord)*(*n_x));
     j=0;
     for(i=0;i<nvar;i++){
       if(var_order->u.i[i]>0){
