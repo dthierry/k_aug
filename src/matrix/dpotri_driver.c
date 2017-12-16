@@ -37,7 +37,7 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 	double w_mock[1], work_mock[1];
 	int lwork, lda;
 	int info=0;
-	int i, j, try_d;
+	int i, j, k, try_d;
 	int ret_val=0;
 	FILE *somefile;
 	char _file_name_[] = {"inv_"};
@@ -55,7 +55,7 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 	lwork = -1;
 
 	dmin = 10e-20;
-	dmax = 10e+6;
+	dmax = 10e+12;
 	d0 = 1e-03;
 	kbp = 100;
 	kp = 100;
@@ -83,15 +83,22 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 
 
 	
-	/* Since the inertia was previously checked I expect the eigenvalues to be positive and if there are
-	negative ones; to be very small. */
+	/* Since the inertia was previously checked I expect the eigenvalues to be positive, and, if there are
+	negative ones; very small. */
 	
 	
 
 	for(i=0; i<10; i++){
+		somefile = fopen("a0", "w");
+		for(j=0; j<n; j++){for(k=0; k<n; k++){fprintf(somefile, "%f\t", *(a + n * k + j));}fprintf(somefile, "\n");}
+		fclose(somefile);
 		dpotrf_(&uplo, &n, a, &lda, &info); /* Attempt once */
+		somefile = fopen("a1", "w");
+		for(j=0; j<n; j++){for(k=0; k<n; k++){fprintf(somefile, "%f\t", *(a + n * k + j));}fprintf(somefile, "\n");}
+		fclose(somefile);
+		break;
 		printf("I[K_AUG]...\t[DPOTRI_DRIVER]"
-			"Attempt %d Status:%d.\n", i, info);
+			"Attempt %d Status:%d, d %f.\n", i, info, d);
  	  if(info != 0 && try_d == 0){ /* Set-up stage */
 			fprintf(stderr, "E[K_AUG]...\t[DPOTRI_DRIVER]"
 				"info is non-zero ! %d\n", info);
@@ -110,11 +117,8 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 		if(d > dmax){
 			fprintf(stderr, "E[K_AUG]...\t[DPOTRI_DRIVER]"
 				"d > dmax ! %d\n", info);
-			free(a);
-			free(ai);
-			free(aimax);
-			exit(-1);}
-		for(i=0; i<n; i++){*(a + n * i + i) += d;} /* On all of them ?*/
+			break;}
+		for(j=0; j<n; j++){*(a + n * j + j) += d;} /* On all of them ?*/
 		try_d++;
   }
 

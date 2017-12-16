@@ -208,6 +208,7 @@ int main(int argc, char **argv){
 	char _file_name_[30] = ""; /* */
 	char WantModifiedJac = 0;
 	int *vModJac = NULL, *cModJac = NULL;
+	double logmu0;
 
 
 
@@ -427,8 +428,8 @@ int main(int argc, char **argv){
 		fprintf(somefile, "%.g\n", x[i]);
 	}
 	fclose(somefile);
-
-	mu_adjust_x(n_var, x, LUv, z_L, z_U, log10mu);
+  logmu0 = log10mu; /* just in case */
+	mu_adjust_x(n_var, x, LUv, z_L, z_U, log10mu, &logmu0);
 	
 	somefile = fopen("primal1.txt", "w");
 	for(i=0; i< n_var; i++){
@@ -445,13 +446,17 @@ int main(int argc, char **argv){
         	"KKT check!\n");
       }
       else if(compute_dsdp>0){
-  	      fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-        	"dsdp for linear C(x) - p = 0 override.\n");
-  	      if(dcdp->u.r == NULL && dcdp->u.i == NULL){
-  		      fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
-                	"suffix empty no dcdp declared!\n");
-                	exit(-1);
-        	}
+	      fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+      	"dsdp for linear C(x) - p = 0 override.\n");
+	      if(dcdp->u.r == NULL && dcdp->u.i == NULL){
+		      fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
+              	"suffix empty no dcdp declared!\n");
+              	exit(-1);
+      	}
+      	somefile = fopen("conorder.txt", "w");
+      	for(i=0;i<n_con;i++){fprintf(somefile, "%d\n", dcdp->u.i[i]);}
+      	fclose(somefile);
+
       }
       else if(var_f->u.r == NULL && var_f->u.i == NULL){
             fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
@@ -678,7 +683,7 @@ int main(int argc, char **argv){
 	}
  
   /* factorize the matrix */
-	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia);
+	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK, logmu0);
     
   printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Pardiso done. \n");

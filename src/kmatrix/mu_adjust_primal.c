@@ -25,16 +25,16 @@
 #include <stdlib.h>
 #include <math.h>
 
-void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double log10mu_target){
+void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double log10mu_target, double *logmu0){
 	/* find a multiplier-primal combination that allows to compute mu*/
 	/* adjust primal */
 	int i;
-	double mul, muu, mu, logmu0;
+	double mul, muu, mu;
 	/*If zL and zU are not declared, they will have a 0.0 value, presumably
 	  therefore mul and muu will have a 0.0 value as well.
 	*/
 
-	logmu0 = log10mu_target;
+	*logmu0 = log10mu_target;
 	for(i=0; i<nvar; i++){
 		mul = 0.0;
 		muu = 0.0;
@@ -55,14 +55,14 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double lo
 			mu = muu;
 		}
 		if(mu>0.0){
-			if(fabs(logmu0 - log10(mu)) < 1){
+			if(fabs(*logmu0 - log10(mu)) < 1){
 				printf("I[KMATRIX]...\t[ADJUST_MU]"
 					"log10(mu) close to the target\t%.g at var_i=%d\n", log10(mu), i);
-                        logmu0 = log10(mu);
+                        *logmu0 = log10(mu);
 				break;
 			}
 			else{
-				logmu0 = log10(mu);
+				*logmu0 = log10(mu);
 				printf("I[KMATRIX]...\t[ADJUST_MU]"
 					"log10(mu) computed=%.g at var_i=%d\n", log10(mu), i);
 			}
@@ -80,11 +80,11 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double lo
 
 
 	}
-      if(logmu0 == log10mu_target){
+      if(*logmu0 == log10mu_target){
             printf("I[KMATRIX]...\t[ADJUST_MU]"
 			 "\tWarning no relevant info from the problem can predict logmu\n");
       }
-      else if(logmu0 > log10mu_target){
+      else if(*logmu0 > log10mu_target){
             printf("I[KMATRIX]...\t[ADJUST_MU]"
 			 "\tWarning logmu is over the target; is this optimal?\n");
       }
