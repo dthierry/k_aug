@@ -80,7 +80,9 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 			if(i == j){ai[i] = *(a + n * i + j);}
 		}
 	}
-
+	somefile = fopen("inv_red_hess", "w");
+	for(j=0; j<n; j++){for(k=0; k<n; k++){fprintf(somefile, "%f\t", *(a + n * k + j));}fprintf(somefile, "\n");}
+	fclose(somefile);
 
 	
 	/* Since the inertia was previously checked I expect the eigenvalues to be positive, and, if there are

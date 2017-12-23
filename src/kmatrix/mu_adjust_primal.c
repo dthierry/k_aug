@@ -92,22 +92,19 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double lo
 	
 	/*mu = (log10(mu) > -8.6) ? exp(-8.6): mu;*/
 	for(i=0; i<nvar; i++){
-
+		if((fabs(lbv[2*i])<1e+300) && (fabs(lbv[2*i+1])<1e+300) && (fabs(lbv[2*i+1] - lbv[2*i]) < 1e-12)){
+			fprintf(stderr, "W[K_AUG]...\t[ADJUST_MU]""variable %d has lb == ub, setting barrier = 0\t %f.\n", i, fabs(lbv[2*i+1] - lbv[2*i+1]));
+			continue;}
 		if(zL[i]>0 && -zU[i] > 0){
 			if((x[i] - lbv[2*i]) * (zL[i]) < mu*0.5 ||  (x[i] - lbv[2*i + 1])*(zU[i]) < mu*0.5){
-				x[i] = ((x[i] - lbv[2*i]) * (zL[i])) < ((x[i] - lbv[2*i + 1])*(zU[i])) ? 
-				mu/(zL[i]) + lbv[2*i]: mu/(zU[i]) +lbv[2*i+1];
+				x[i] = ((x[i] - lbv[2*i]) * (zL[i])) < ((x[i] - lbv[2*i + 1])*(zU[i])) ? 	mu/(zL[i]) + lbv[2*i]: mu/(zU[i]) +lbv[2*i+1];
 			}
 		}
 		else if(zL[i] > 0){
-			if((x[i] - lbv[2*i]) * (zL[i]) < mu*0.5){
-				x[i] = mu/(zL[i]) + lbv[2*i]; 
-			}
+			if((x[i] - lbv[2*i]) * (zL[i]) < mu*0.5){x[i] = mu/(zL[i]) + lbv[2*i];}
 		}
 		else if(-zU[i] > 0){
-			if((x[i] - lbv[2*i + 1])*(zU[i]) < mu*0.5){
-				x[i] = mu/(zU[i]) + lbv[2*i + 1];
-			}
+			if((x[i] - lbv[2*i + 1])*(zU[i]) < mu*0.5){x[i] = mu/(zU[i]) + lbv[2*i + 1];}
 		}
 
 		

@@ -432,9 +432,7 @@ int main(int argc, char **argv){
 	mu_adjust_x(n_var, x, LUv, z_L, z_U, log10mu, &logmu0);
 	
 	somefile = fopen("primal1.txt", "w");
-	for(i=0; i< n_var; i++){
-		fprintf(somefile, "%.g\n", x[i]);
-	}
+	for(i=0; i< n_var; i++){fprintf(somefile, "%.g\n", x[i]);}
 	fclose(somefile);
 
 	sigma = (real *)malloc(sizeof(real) * n_var);
