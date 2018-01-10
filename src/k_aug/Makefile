@@ -21,7 +21,7 @@ PARDISOROOT = /usr/local/lib/
 OPENBLASROOT = /home/dav0/Apps/OpenBLAS/
 BLASROOT = $(S)/BLAS/BLAS-3.7.0/
 
-LAPACKROOT = $(S)/LAPACK/lapack-3.7.0/
+LAPACKROOT = $(S)/LAPACK/lapack-3.8.0/
 
 
 LMKLIB= -L${MKLROOT}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread -lm -ldl   -m64 -I${MKLROOT}/include
