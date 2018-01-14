@@ -48,7 +48,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n,
 	char *var;
 
 	double	ddum;
-	int			idum;
+	int	idum;
 	int pi, ni, zi;
 
 	double dlast, d, dmin, dmax, d0, Delta_d; 
