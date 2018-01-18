@@ -1,0 +1,23 @@
+#!/bin/bash
+rm -rf ./OpenBLAS
+git clone https://github.com/xianyi/OpenBLAS.git
+cd ./OpenBLAS
+echo "running Make.."
+make
+echo "
+            *-*,
+        ,*\/|`| \
+        \'  | |'| *,
+         \ `| | |/ )
+          | |'| , /
+          |'| |, /
+        __|_|_|_|__
+       [___________]
+        |         |
+        |         |
+        |         |
+        |_________|
+\n\nDone"
+
+
+
