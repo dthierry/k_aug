@@ -681,7 +681,7 @@ int main(int argc, char **argv){
 	}
  
   /* factorize the matrix */
-	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK, logmu0);
+	pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK, logmu0, 1);
     
   printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Pardiso done. \n");
