@@ -1,0 +1,6 @@
+#!/bin/bash
+rm -rf /scotch_6.0.4
+tar -zxvf scotch_6.0.4.tar.gz
+ln -s Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
+sed '/CFLAGS/s/$/ -DINTSIZE64/' Makefile.inc
+make esmumps
