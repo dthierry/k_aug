@@ -98,7 +98,7 @@ int dsyev_driver(long n, double *_a, long Kn, int *sb_p){
 		}
 		if(w[i] < -1e-05){
 			printf("I[K_AUG]...\t[DSYEV_DRIVER]"
-				"The matrix is indefinite.");
+				"The matrix is indefinite.\n");
 			ret_val = 1;
 			break;
 		}
