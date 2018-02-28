@@ -93,7 +93,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
     /*(*hr_point)[i] = help_list[i];*/
     (*hr_point)[i] = (ordered_npdp+i)->row;
     /*printf("i %d help %d\n", i, help_list[i]);*/
-    (*rhs_dcdp)[(nvar + ncon) * i + (*hr_point)[i]] = -1.0;
+    (*rhs_dcdp)[(nvar + ncon) * i + (*hr_point)[i]] = 1.0;
   }
 
   free(help_list);
