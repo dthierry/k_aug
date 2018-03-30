@@ -1,4 +1,4 @@
-# K\_aug with a story
+# K\_aug
 
 Basic useful feature list:
 
