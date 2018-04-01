@@ -1,4 +1,4 @@
-![](https://github.com/dthierry/k_aug/blob/master/docs/kauglogo.png)
+![](https://github.com/dthierry/k_aug/blob/master/docs/kauglogo.png =250)
 
 # k*\_aug*
 
