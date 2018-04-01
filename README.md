@@ -1,6 +1,6 @@
-![](https://github.com/dthierry/k_aug/blob/master/docs/kauglogo.png)
+<img src="/docs/kauglogo.png" alt="Drawing" width="350px"/>
 
-# k*\_aug*
+# k\_aug *(kay-ogg)*
 
 ## Basic useful feature list:
 
