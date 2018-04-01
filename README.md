@@ -1,6 +1,6 @@
-![][logo]
-[logo]: https://github.com/dthierry/k_aug/blob/master/docs/kauglogo.png
-# K\_aug
+![](https://github.com/dthierry/k_aug/blob/master/docs/kauglogo.png)
+
+# k*\_aug*
 
 ## Basic useful feature list:
 
@@ -24,6 +24,6 @@
  * AMPL cannon recognize command line options
  * 
 So far, hundreds of times tested.
-*k_aug* is part of the NMPC-MHE framework. Under BSD 3-Clause license.
+*k\_aug* is part of the NMPC-MHE framework. Under BSD 3-Clause license.
 
-David M Thierry
+by David M Thierry
