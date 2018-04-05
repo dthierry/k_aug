@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 double max_fun(int n, double *_ai, int *imax);
 
@@ -40,7 +41,7 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 	int i, j, k, try_d;
 	int ret_val=0;
 	FILE *somefile;
-	char _file_name_[] = {"inv_"};
+	char _file_name_[30] = {"inv_"};
 	double dlast, d, dmin, dmax, d0; 
 	double km, kp, kbp;
 

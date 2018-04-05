@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-
+#include <string.h>
 #include "getstub.h"
 #include "mc30_driver.h"
 #include "pardiso_driver.h"
