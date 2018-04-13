@@ -21,7 +21,7 @@
  * Blas
 
 ## Known issues
- * AMPL cannon recognize command line options
+ * AMPL can not recognize command line options
  * 
 So far, hundreds of times tested.
 *k\_aug* is part of the NMPC-MHE framework. Under BSD 3-Clause license.
