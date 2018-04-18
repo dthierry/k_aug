@@ -23,10 +23,11 @@
 #ifndef MUMPS_DRIVER
 #define MUMPS_DRIVER
 
-#include "asl.h"
-#include "dmumps_c.h" /* header that contains types and mumps structure */
+#include "../../../thirdparty/mumps512/MUMPS_5.1.2/include/dmumps_c.h" /* header that contains types and mumps structure */
+#include "../../ASL/solvers/asl.h"
 
-int mumps_driver (fint *ia, fint *ja, real *a, fint n, 
-	fint n_rhs, real *b, real *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0);
+
+int mumps_driver (fint *ia, fint *ja, double *a, fint n,
+				  fint n_rhs, double *b, double *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0);
 
 #endif /* MUMPS_DRIVER */

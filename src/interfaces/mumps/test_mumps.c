@@ -15,10 +15,12 @@
 *******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "../../ASL/solvers/asl.h"
 #include "mumps_driver.h"
 
 
-int main (int argc, char **argc){
+int main (int argc, char **argv){
 	int n=5;
 	int nnz = 12;
 	int irn[] = {1, 2, 4, 5, 2, 1, 5, 3, 2, 3, 1, 3};
@@ -30,8 +32,12 @@ int main (int argc, char **argc){
 	int nvar=5, ncon=5;
 	int no_inertia=1;
 	double logmu0 = -8.99;
+	int retval;
 
-	mumps_driver(irn, jcn, a, &n, &n_rhs, b, x, nvar, ncon, no_inertia, &nnz, &logmu0);
+	retval = mumps_driver(irn, jcn, a, n, n_rhs, b, x, nvar, ncon, no_inertia, nnz, logmu0);
 
+	if(retval==0){
+        printf("Success\n");
+	}
 	return 0;
 }

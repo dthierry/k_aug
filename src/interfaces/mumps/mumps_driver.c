@@ -30,10 +30,21 @@
 #include <stdlib.h>
 
 #include "mumps_driver.h"
+#include "../../../thirdparty/mumps512/MUMPS_5.1.2/include/dmumps_c.h"
 
-int mumps_driver(fint *ia, fint *ja, real *a, fint n, 
+/*int mumps_driver (fint *ia, fint *ja, real *a, fint n,
+	fint n_rhs, real *b, real *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0);
+ int mumps_driver(fint *ia, fint *ja, real *a, fint n,
+	fint n_rhs, real *b, real *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0){*/
+
+int mumps_driver(fint *ia, fint *ja, real *a, fint n,
 	fint n_rhs, real *b, real *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0){
-
+    /* Extra algorithmic steps:
+     * inertia checking
+     * d_r strategy
+     * d_c strategy
+     * soft-regularization
+     * */
 	DMUMPS_STRUC_C id;	/* datastructure */
 
 	id.sym = 2;	/* symmetric indefinite matrix */
