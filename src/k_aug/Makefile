@@ -12,7 +12,8 @@ all1 = k_aug
 MATRIXDIR = ../matrix
 LMATRIX = kassemble.f
 
-MC30ROOT = /home/dav0/Apps/mc30-1.0.0/build/src/
+MC30ROOT = /home/dav0/Apps/k_aug/thirdparty/mc30-1.0.0/src/
+# end with a '/'
 
 
 PARDISOROOT = /usr/local/lib/

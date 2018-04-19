@@ -138,6 +138,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
 			fprintf(f_hess, "\t%ld\t%ld\t%.g\n", i+1, i+1, 0.0);
 			(*nz_row_w)[i]++;  /* Add element to row count */
 			(*md_off_w)[i] = k++;
+			(*missing_nz)++; /* This used not to be here !*/
 		}
 	}
 	fclose(f_hess);
