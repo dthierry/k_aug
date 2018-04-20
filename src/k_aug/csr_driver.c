@@ -58,7 +58,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 	}
 
 	Kcol = (int **)malloc(sizeof(int *) * (nvar+ncon));
-	Kij  = (real**)malloc(sizeof(real *) *(nvar+ncon));
+	Kij  = (real**)malloc(sizeof(real *) * (nvar+ncon));
 	assert(Kcol != NULL);
 	assert(Kij  != NULL);
 	
@@ -97,7 +97,8 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 	/* Note that the first element of each K array is on the main
 	diagonal */
 
-	/* If Pardiso is the linear solver */
+	/* If Pardiso is the linear solver
+	 * Trailing zeroes of the lower bottom right of the kkt matrix*/
 	if(Pardiso_flag){
 		for(i=nvar; i < (ncon + nvar); i++){
 			Kcol[i] = (int *)malloc(sizeof(int));
@@ -109,6 +110,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 			rn[i]++;	
 		}	
 	}
+
 	somefile = fopen("row_start.in", "w");
 	(*Kr_strt)[0] = 1;
 	fprintf(somefile, "\t%d\n", (*Kr_strt)[0]);

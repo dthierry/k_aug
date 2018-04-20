@@ -22,12 +22,12 @@
 
 int main (int argc, char **argv){
 	int i;
-    int n = 3; /*! something interesting here */
-	int nnz = 6;
-	int irn[] = {1, 1, 1, 2, 2, 3};
-	int jcn[] = {1, 2, 3, 2, 3, 3};
-	double a[] = {5.0, 6.0, 7.0, 3.0, 2.0, 1.0};
-	double b[] = {20.0, 24.0, 9.0};
+    int n = 5; /*! something interesting here */
+	int nnz = 15;
+	int irn[] = {1,1,1,1,1,2,2,2,2,3,3,3,4,4,5};
+	int jcn[] = {1,2,3,4,5,2,3,4,5,3,4,5,4,5,5};
+	double a[] = {-175.964567079891,-102.238115178440,-28.5771231839809,-69.6397432571204,-30.1560388100335,-90.7569057739828,-53.2211446851451,-63.7143177562305,-29.0224662642854 -126.128949211508,-120.531124772196,-34.2069144087495,-154.672842479869,-35.6980644967010,58.8061810269223};
+	double b[] = {1,1,1,1,1};
 	int n_rhs = 1;
 	double *x=NULL;
 	int nvar=3, ncon=3;
@@ -35,8 +35,8 @@ int main (int argc, char **argv){
 	double logmu0 = -8.99;
 	int retval;
 
-	retval = mumps_driver(irn, jcn, a, n, n_rhs, b, x, nvar, ncon, no_inertia, nnz, logmu0);
-    for(i=0; i<3; i++){
+	retval = mumps_driver(irn, jcn, a, n, n_rhs, b, x, nvar, ncon, no_inertia, nnz);
+    for(i=0; i<n; i++){
         printf("result %8.2f\n", *(b + i));
     }
 	if(retval==0){

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 void assemble_rhs_rh(real **rhs_rh, fint nvar, fint ncon, int *n_dof, 
   SufDesc *var_f, int **hr_point){

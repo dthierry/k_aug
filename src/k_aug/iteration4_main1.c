@@ -180,46 +180,46 @@ int main(int argc, char **argv){
 	/* the rhs */
 	real *rhs_baksolve = NULL;
 
-  FILE *somefile;
-  fint nerror;
-  int nzW, nzA;
-  int *hr_point = NULL;
+    FILE *somefile;
+    fint nerror;
+    int nzW, nzA;
+    int *hr_point = NULL;
 
-  int *positions_rh = NULL;
+    int *positions_rh = NULL;
 
-  char ter_msg[] = {"I[K_AUG]...[K_AUG_ASL]"
-	"All done."};
+    char ter_msg[] = {"I[K_AUG]...[K_AUG_ASL]"
+                      "All done."};
 
-	unsigned n_r_suff = NUM_REG_SUF;
-	/* Suffixes names. Add new suffixes names here */
-	char _sfx_1[] = {"dof_v"};
-	char _sfx_2[] = {"rh_name"};
-	char _sfx_3[] = {"ipopt_zL_in"};
-	char _sfx_4[] = {"ipopt_zU_in"};
-	char _sfx_5[] = {"f_timestamp"};
-	char _sfx_6[] = {"dcdp"};
-	char _sfx_7[] = {"var_order"};
-	char _sfx_8[] = {"con_order"};
-	int _is_not_irh_pdf=1;
-	clock_t start_c, ev_as_kkt_c, fact_kkt_c, total_c;
-	double ev_as_time, fact_time, overall_time;
-	time_t timestamp;
-	char _chr_timest[15] = ""; /* The timestamp */
-	char _file_name_[30] = ""; /* */
-	char WantModifiedJac = 0;
-	int *vModJac = NULL, *cModJac = NULL;
-	double logmu0;
+    unsigned n_r_suff = NUM_REG_SUF;
+    /* Suffixes names. Add new suffixes names here */
+    char _sfx_1[] = {"dof_v"};
+    char _sfx_2[] = {"rh_name"};
+    char _sfx_3[] = {"ipopt_zL_in"};
+    char _sfx_4[] = {"ipopt_zU_in"};
+    char _sfx_5[] = {"f_timestamp"};
+    char _sfx_6[] = {"dcdp"};
+    char _sfx_7[] = {"var_order"};
+    char _sfx_8[] = {"con_order"};
+    int _is_not_irh_pdf=1;
+    clock_t start_c, ev_as_kkt_c, fact_kkt_c, total_c;
+    double ev_as_time, fact_time, overall_time;
+    time_t timestamp;
+    char _chr_timest[15] = ""; /* The timestamp */
+    char _file_name_[30] = ""; /* */
+    char WantModifiedJac = 0;
+    int *vModJac = NULL, *cModJac = NULL;
+    double logmu0;
 
 
 
-	timestamp = time(NULL);
-	start_c = clock();
-	
-	
+    timestamp = time(NULL);
+    start_c = clock();
 
-	
 
-	Oinfo.sname = _k_;
+
+
+
+    Oinfo.sname = _k_;
 	Oinfo.bsname = banner;
 	Oinfo.opname = _k_o_;
 	Oinfo.keywds = keywds;
@@ -241,45 +241,45 @@ int main(int argc, char **argv){
 	Oinfo.option_echo = 0;
 	Oinfo.nnl = 0;
 
-	/* The memory allocation for asl data structure */
-	asl = ASL_alloc(ASL_read_pfgh);
+    /* The memory allocation for asl data structure */
+    asl = ASL_alloc(ASL_read_pfgh);
 
-	s = getstops(argv, &Oinfo);
+    s = getstops(argv, &Oinfo);
 
-	if (!s) {
-		printf("W[K_AUG]...\t[K_AUG_ASL]"
-			"No input\n");
-		return 1;
-	}
-	else {
-		printf("I[K_AUG]...\t[K_AUG_ASL]"
-			"File read succesfull\n");
-				}
+    if (!s) {
+        printf("W[K_AUG]...\t[K_AUG_ASL]"
+               "No input\n");
+        return 1;
+    }
+    else {
+        printf("I[K_AUG]...\t[K_AUG_ASL]"
+               "File read succesfull\n");
+    }
 
-	if (n_rhs == 0){
-		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-			"No n_rhs declared\n");
-	}
+    if (n_rhs == 0){
+        fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                        "No n_rhs declared\n");
+    }
 
-	if (no_inertia){
-		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-			"Inertia correction skip.\n");
-	}
+    if (no_inertia){
+        fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                        "Inertia correction skip.\n");
+    }
 
-		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-			"Target log10mu:= %.g.\n", log10mu);
-	
-	if (l_over){
-		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-			"Multiplier check override.\n");
-	}
-	if (dot_prod_f){
-		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-			"Dot product preparation.\n");
-	}
+    fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                    "Target log10mu:= %.g.\n", log10mu);
+
+    if (l_over){
+        fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                        "Multiplier check override.\n");
+    }
+    if (dot_prod_f){
+        fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                        "Dot product preparation.\n");
+    }
 
 
-	/* Allocate suffix names (regular)*/
+    /* Allocate suffix names (regular)*/
 	reg_suffix_name =   (char **)malloc(sizeof(char *) * n_r_suff);
 	for(i=0; i < (int)n_r_suff; i++){
 		reg_suffix_name[i] = (char *)malloc(sizeof(char) * 16 );
@@ -603,7 +603,7 @@ int main(int argc, char **argv){
 	nzW = nnzw + miss_nz_w; 
 	/* Recomputed number of nz in the Hessian-of-Lagrangian */
 
-
+    printf("nzW %d\n", nnzw);
 	csr_driver((int)n_var, (int)n_con, nzW, nzA, nz_row_w, nz_row_a,
 		(int*)Wrow, (int*)Wcol, Wij, (int*)Arow, (int*)Acol, Aij, 
 		&Krow, &Kcol, &Kij, &Kr_strt);

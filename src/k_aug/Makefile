@@ -3,6 +3,7 @@ CC = gcc
 CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W
 FC = gfortran
 S = ..
+ROOT = ../../
 L = -lm -ldl
 A = $S/ASL/solvers/amplsolver.a
 ONAME = k_aug
@@ -12,9 +13,28 @@ all1 = k_aug
 MATRIXDIR = ../matrix
 LMATRIX = kassemble.f
 
+OPENBLASLIB = -L$(ROOT)thirdparty/openblas/OpenBLAS/ -lopenblas
+MUMPSLIB = -L/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/lib/ -ldmumps -lmumps_common
+MUMPSINC = -I/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/include/
+ASLLIB = $(ROOT)src/ASL/solvers/amplsolver.a
+ASLINC = -I/home/dav0/k2/KKT_matrix/src/ASL/solvers/
+LIBSEQ = -L/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/libseq/ -lmpiseq
+INCSEQ = -I/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/libseq/
+
+LSCOTCHDIR = /home/dav0/k2/KKT_matrix/thirdparty/scotch/whatnot/scotch_6.0.4/lib/
+LSCOTCH   = -L$(LSCOTCHDIR) -lesmumps -lscotch -lscotcherr
+LMETISDIR = /home/dav0/k2/KKT_matrix/thirdparty/metis/metis-5.1.0/build/Linux-x86_64/libmetis/
+LMETIS    = -L$(LMETISDIR) -lmetis
+
+LPORDDIR = -L/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/PORD/lib/
+LPORD    = -L$(LPORDDIR) -lpord
+
+
+
+
+
+
 MC30ROOT = /home/dav0/Apps/mc30-1.0.0/build/src/
-
-
 PARDISOROOT = /usr/local/lib/
 
 
@@ -32,7 +52,7 @@ LIBBLAS = $(BLASROOT)blas_LINUX.a
 LIBLAPACK = $(LAPACKROOT)liblapack.a
 
 LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
-KMATRIX = iteration4_main1.c
+KMATRIX = main_mumps.c
 
 k_aug_pard: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
@@ -57,6 +77,20 @@ k_aug_ma57: mc30_dri \
 	sigma_compute.o mu_adjust_primal.o dsyev_driver.o \
 	-I$(S)/HSL/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
 	 $(LIBMC30) -L/usr/local/lib/ -lcoinhsl -lmetis  $(LIBLAPACK) $(LIBBLAS)
+
+k_aug_mumps: mc30_dri \
+      get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
+      suffix_decl_hand csr_driver sig_comp mu_ad dsyev_eig dpotri_driver mumps_driver
+	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
+	mc30_driver.o  \
+	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
+	assemble_rhs_rh.o assemble_rhs_dcdp.o  \
+	suffix_decl_hand.o csr_driver.o mumps_driver.o \
+	sigma_compute.o mu_adjust_primal.o dsyev_driver.o dpotri_driver.o \
+	-I$(S)/HSL/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
+	 $(LIBMC30) $(ASLINC) $(MUMPSINC) $(ASLLIB)  \
+                	$(OPENBLASLIB) $(MUMPSLIB) $(LSCOTCH) $(LMETIS) $(LPORD) -lgfortran -lm -lpthread $(LIBSEQ)
+
 
 
 clean:
@@ -113,3 +147,7 @@ ma57_driver:
 
 dpotri_driver:
 	$(CC) $(CCFLAGS) -c $(S)/matrix/dpotri_driver.c 
+
+
+mumps_driver:
+	$(CC) $(CCFLAGS) -c ../interfaces/mumps/mumps_driver.c  $(ASLINC) $(INCSEQ)

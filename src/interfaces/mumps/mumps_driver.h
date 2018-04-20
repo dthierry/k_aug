@@ -27,7 +27,7 @@
 #include "../../ASL/solvers/asl.h"
 
 
-int mumps_driver (fint *ia, fint *ja, double *a, fint n,
-				  fint n_rhs, double *b, double *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0);
+int mumps_driver(fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
+                 int nza);
 
 #endif /* MUMPS_DRIVER */
