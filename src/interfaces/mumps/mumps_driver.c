@@ -40,6 +40,7 @@
 	fint n_rhs, real *b, real *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0){*/
 /*pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK, logmu0, 1);*/
 
+/* we need the row-starts for inertia correction */
 int
 mumps_driver(fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
              int nza) {
@@ -97,11 +98,15 @@ mumps_driver(fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double
 
     printf("inertia %d\n", id.info[12-1]);
 
+    /* inertia checking */
+
     id.job = 3; /* compute solution */
 
     dmumps_c(&id);
 
     id.job = -2; /* terminate (deallocate) job */
+    dmumps_c(&id);
+
     ierr = MPI_Finalize();
     printf("[MUMPSDRIVER]\t b %p\n", (void *)b);
     temp = b;

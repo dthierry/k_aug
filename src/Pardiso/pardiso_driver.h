@@ -1,7 +1,7 @@
 #ifndef PARDISO_DRIVER
 #define PARDISO_DRIVER
 
-#include "asl.h"
+#include "../ASL/solvers/asl.h"
 
 
 extern void pardisoinit (void   *, int    *,   int *, int *, double *, int *);
