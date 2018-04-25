@@ -123,7 +123,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
                     /* Element already there no need to count it. */
                 }
             }
-            printf("Missing nz in the Hessian of the Lag: %d\n", *missing_nz);
+            /*printf("Missing nz in the Hessian of the Lag: %d\n", *missing_nz);*/
         }
         /* IF u wanna have ineq u must do smth here */
         free(Hcont);

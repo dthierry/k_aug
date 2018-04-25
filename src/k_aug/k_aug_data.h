@@ -1,6 +1,6 @@
-//
+/*
 // Created by dav0 on 4/24/18.
-//
+*/
 
 #ifndef K_AUG_DATA_H
 #define K_AUG_DATA_H
@@ -21,5 +21,12 @@ typedef struct inertia_strategy_options{
     int jacobian_perturbed;
 } inertia_options;
 
+typedef struct inertia_perturbations{
+    double d_w;
+    double d_c;
+    double d_w_last;
+    double d_c_last;
+} inertia_perts;
 
-#endif //K_AUG_DATA_H
+
+#endif /*K_AUG_DATA_H*/

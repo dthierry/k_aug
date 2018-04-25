@@ -52,17 +52,19 @@ LIBBLAS = $(BLASROOT)blas_LINUX.a
 LIBLAPACK = $(LAPACKROOT)liblapack.a
 
 LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
-KMATRIX = main_mumps.c
+#KMATRIX = main_mumps.c
+KMATRIX = iteration4_main1.c
 
 k_aug_pard: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
-      suffix_decl_hand csr_driver pard_dri sig_comp mu_ad dsyev_eig dpotri_driver
+      suffix_decl_hand csr_driver pard_dri sig_comp mu_ad dsyev_eig dpotri_driver inertia_strategy
 	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
 	mc30_driver.o  \
 	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_rhs_rh.o assemble_rhs_dcdp.o  \
 	suffix_decl_hand.o csr_driver.o pardiso_driver.o \
 	sigma_compute.o mu_adjust_primal.o dsyev_driver.o dpotri_driver.o \
+	inertia_strategy.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
 	 $(LIBMC30) $(LIBPARDISO) $(LIBLAPACK) $(LIBBLAS)
 
@@ -148,6 +150,9 @@ ma57_driver:
 dpotri_driver:
 	$(CC) $(CCFLAGS) -c $(S)/matrix/dpotri_driver.c 
 
-
 mumps_driver:
 	$(CC) $(CCFLAGS) -c ../interfaces/mumps/mumps_driver.c  $(ASLINC) $(INCSEQ)
+
+inertia_strategy:
+	$(CC) $(CCFLAGS) -c inertia_strategy.c
+    

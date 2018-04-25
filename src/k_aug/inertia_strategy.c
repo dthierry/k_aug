@@ -1,7 +1,8 @@
 /*
  * Created by dav0 on 4/24/18.
 */
-
+/*
+ * @param row_strt*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,47 +12,62 @@
 
 
 
+
 int
-inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, double *d_w, double *d_c, double *d_w_last,
-                 double *d_c_last, inertia_params i_parm, inertia_options i_opts, int *try_n, double log10mu,
-                 int *pert_pivot, int *jac_pert) {
+inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inertia_perts *i_pert, inertia_params i_parm,
+                 inertia_options i_opts, int *try_n, double log10mu, int *pert_pivot, int *jac_pert) {
     int j, k;
-    double d_w_trial = 0.0;
+    double d_w_trial = i_pert->d_w;
 
     (*pert_pivot) = 0;
     if(i_opts.no_inertia){return 0;}
 
+    /*
+     *
+     */
+    /*
+    printf("within inertiastrat kp %g\n", i_parm.kp);
+    printf("within inertiastrat kbp %g\n", i_parm.kbp);
+    printf("within inertiastrat kc %g\n", i_parm.kc);
+    printf("within inertiastrat dcp %g\n", i_parm.dcb);
+    printf("within inertiastrat d_w0 %g\n", i_parm.d_w0);
+    printf("within inertiastrat dmin %g\n", i_parm.dmin);
+    printf("within inertiastrat dmax %g\n", i_parm.dmax);
+    */
+
+
     if(n_eig > ncon){
         fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
                         "Wrong inertia(n_eig > m).\n");
-        if((*d_w_last) == 0.0 && (*try_n) == 0){d_w_trial = i_parm.d_w0;}
-        else if ((*d_w_last) == 0.0 && (*try_n) > 0){d_w_trial = i_parm.kbp * d_w_trial;}
-        else if ((*d_w_last) > 0.0 && (*try_n) > 0){d_w_trial = i_parm.kp * d_w_trial;}
-        else{d_w_trial = (i_parm.dmin > i_parm.km * (*d_w_last)) ? i_parm.dmin: i_parm.km * (*d_w_last);}
+        if(i_pert->d_w_last == 0.0 && (*try_n) == 0){d_w_trial = i_parm.d_w0;}
+        else if (i_pert->d_w_last == 0.0 && (*try_n) > 0){d_w_trial = i_parm.kbp * d_w_trial;}
+        else if (i_pert->d_w_last > 0.0 && (*try_n) > 0){d_w_trial = i_parm.kp * d_w_trial;}
+        else{d_w_trial = (i_parm.dmin > i_parm.km * i_pert->d_w_last) ? i_parm.dmin: i_parm.km * i_pert->d_w_last;}
 
         if(d_w_trial > i_parm.dmax){
             fprintf(stderr, "E[K_AUG]...\t[INERTIA_STRATEGY]"
                             "The computed trial d_w is above maximum value.\n");
             exit(-1);
         }
-        (*d_w) = d_w_trial - (*d_w);
+        i_pert->d_w = d_w_trial - i_pert->d_w;
+
         for(j=0; j<nvar; j++){
             k = row_strt[j]-1;
-            a[k] += (*d_w); /* Add the difference */
+            a[k] += i_pert->d_w; /* Add the difference */
         }
     }
 
     else if((n_eig < ncon)||(i_opts.always_perturb_jacobian)){
-        fprintf(stderr, "W[K_AUG]...\t[PARDISO_DRIVER]"
+        fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
                         "Wrong inertia(neig < m).\n");
         if((*jac_pert) == 0){
             (*jac_pert) = 1;
-            fprintf(stderr, "W[K_AUG]...\t[PARDISO_DRIVER]"
-                            "Attempting to make (*d_c) > 0.\n");
-            (*d_c) = i_parm.dcb * pow((pow(10, log10mu)), i_parm.kc);
+            fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
+                            "Attempting to make i_pert->d_c > 0.\n");
+            i_pert->d_c = i_parm.dcb * pow((pow(10, log10mu)), i_parm.kc);
             for(j=nvar; j<nvar+ncon; j++){
                 k = row_strt[j]-1;
-                a[k] += -(*d_c);
+                a[k] += -i_pert->d_c;
             }
         }
         else{
@@ -60,18 +76,19 @@ inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, double
 
 
         if((*jac_pert) == 1){
-            fprintf(stderr, "W[K_AUG]...\t[PARDISO_DRIVER]"
-                            "(*d_c) is already > 0\nThe Jacobian might be singular.\n");}
+            fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
+                            "i_pert->d_c is already > 0\nThe Jacobian might be singular.\n");
+        }
     }
         /*
          * else if(zi!=0){
-         *         fprintf(stderr,"E[K_AUG]...\t[PARDISO_DRIVER]"
+         *         fprintf(stderr,"E[K_AUG]...\t[INERTIA_STRATEGY]"
          *                                "Failure, there is a zero eigenvalue. The jacobian is possibly singular.\n");
          *                                        exit(-1);  Would this block ever get evaluated?}*/
     else{
-        (*d_w_last) = d_w_trial;
-        (*d_c_last) = (*d_c);
-        printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+        i_pert->d_w_last = d_w_trial;
+        i_pert->d_c_last = i_pert->d_c;
+        printf("I[K_AUG]...\t[INERTIA_STRATEGY]"
                "Inertia check successful.\n");
         return 0;
     }
