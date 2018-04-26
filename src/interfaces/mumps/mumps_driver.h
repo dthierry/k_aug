@@ -25,9 +25,10 @@
 
 #include "../../../thirdparty/mumps512/MUMPS_5.1.2/include/dmumps_c.h" /* header that contains types and mumps structure */
 #include "../../ASL/solvers/asl.h"
-
+#include "../../k_aug/k_aug_data.h"
 
 int mumps_driver(fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
-                 int nza);
+                 int nza, inertia_perts *i_pert, inertia_params i_parm,
+                 inertia_options i_opts, double log10mu, fint *row_starts);
 
 #endif /* MUMPS_DRIVER */

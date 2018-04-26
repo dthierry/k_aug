@@ -51,7 +51,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
 
     double	ddum;
     int	idum;
-    int pi, ni, zi;
+    int pi, n_neig, zi;
 
     double d;
     double kc, dc, dcb;
@@ -194,7 +194,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
                 iparm, &msglvl, &ddum, &ddum, &error, dparm);
         /* inertias */
         pi = iparm[21];
-        ni = iparm[22];
+        n_neig = iparm[22];
         zi = n - iparm[21] - iparm[22];
 
         if(error != 0){
@@ -205,9 +205,9 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
         }
 
         printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-               "Inertia (p, n, 0): (%d, %d, %d).\n", pi, ni, zi);
+               "Inertia (p, n, 0): (%d, %d, %d).\n", pi, n_neig, zi);
         inertia_status =
-                inertia_strategy(ia, a, nvar, ncon, ni, inrt_pert, inrt_parms, inrt_opts, &try_fact, logmu0,
+                inertia_strategy(ia, a, nvar, ncon, n_neig, inrt_pert, inrt_parms, inrt_opts, &try_fact, logmu0,
                                  &reduce_pivtol, &jac_pert);
 
         printf("status %d\n", inertia_status);
@@ -347,10 +347,10 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
             if(ratiorr < residual_ratio_max){break;}
         }
     }
-    ni = iparm[22];
-    if(ni==ncon){
+    n_neig = iparm[22];
+    if(n_neig==ncon){
         printf("W[K_AUG]...\t[PARDISO_DRIVER]"
-               "Inertia check successful neig=%d, (neig == m).\n", ni);
+               "Inertia check successful neig=%d, (neig == m).\n", n_neig);
         return 1;
     }
 

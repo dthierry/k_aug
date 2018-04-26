@@ -23,8 +23,9 @@
 #include <time.h>
 #include <string.h>
 #include "../ASL/solvers/getstub.h"
-#include "mc30_driver.h"
-#include "pardiso_driver.h"
+#include "../ASL/solvers/asl.h"
+#include "../HSL/mc30_driver.h"
+#include "../interfaces/mumps/mumps_driver.h"
 #include "get_jac_asl_aug.h"
 #include "get_hess_asl_aug.h"
 #include "find_inequalities.h"
@@ -34,9 +35,10 @@
 #include "csr_driver.h"
 #include "sigma_compute.h"
 #include "mu_adjust_primal.h"
-#include "dsyev_driver.h"
-#include "dpotri_driver.h"
+#include "../matrix/dsyev_driver.h"
+#include "../matrix/dpotri_driver.h"
 #include "k_aug_data.h"
+#include "../Pardiso/pardiso_driver.h"
 
 
 #define NUM_REG_SUF 8

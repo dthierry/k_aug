@@ -52,13 +52,13 @@ LIBBLAS = $(BLASROOT)blas_LINUX.a
 LIBLAPACK = $(LAPACKROOT)liblapack.a
 
 LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
-#KMATRIX = main_mumps.c
-KMATRIX = iteration4_main1.c
+KMATRIX = main_mumps.c
+#KMATRIX = iteration4_main1.c
 
 k_aug_pard: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
       suffix_decl_hand csr_driver pard_dri sig_comp mu_ad dsyev_eig dpotri_driver inertia_strategy
-	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
+	$(CC) $(CCFLAGS) iteration4_main1.c -o k_aug_pardiso  $A $L \
 	mc30_driver.o  \
 	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_rhs_rh.o assemble_rhs_dcdp.o  \
@@ -82,13 +82,14 @@ k_aug_ma57: mc30_dri \
 
 k_aug_mumps: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
-      suffix_decl_hand csr_driver sig_comp mu_ad dsyev_eig dpotri_driver mumps_driver
+      suffix_decl_hand csr_driver sig_comp mu_ad dsyev_eig dpotri_driver mumps_driver inertia_strategy
 	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
 	mc30_driver.o  \
 	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_rhs_rh.o assemble_rhs_dcdp.o  \
 	suffix_decl_hand.o csr_driver.o mumps_driver.o \
 	sigma_compute.o mu_adjust_primal.o dsyev_driver.o dpotri_driver.o \
+      inertia_strategy.o \
 	-I$(S)/HSL/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
 	 $(LIBMC30) $(ASLINC) $(MUMPSINC) $(ASLLIB)  \
                 	$(OPENBLASLIB) $(MUMPSLIB) $(LSCOTCH) $(LMETIS) $(LPORD) -lgfortran -lm -lpthread $(LIBSEQ)

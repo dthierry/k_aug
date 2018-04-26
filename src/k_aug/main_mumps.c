@@ -42,6 +42,8 @@
 #include "mu_adjust_primal.h"
 #include "../matrix/dsyev_driver.h"
 #include "../matrix/dpotri_driver.h"
+#include "k_aug_data.h"
+
 
 #define NUM_REG_SUF 8
 /* experimental! */
@@ -216,12 +218,32 @@ int main(int argc, char **argv){
     int *vModJac = NULL, *cModJac = NULL;
     double logmu0;
 
+    /* inertia data-structures */
+    inertia_params inrt_parms;
+    inertia_options inrt_opts;
+    inertia_perts inrt_pert;
+
+    inrt_parms.dmin = 10e-20;
+    inrt_parms.dmax = 10e+40;
+    inrt_parms.d_w0 = 1e-08;
+    inrt_parms.kbp = 100;
+    inrt_parms.kp = 8;
+    inrt_parms.km = 1.0/3.0;
+
+    inrt_parms.dcb = 1e-08;
+    inrt_parms.kc = 0.25;
 
 
     timestamp = time(NULL);
     start_c = clock();
 
+    inrt_opts.always_perturb_jacobian = 0;
+    inrt_opts.no_inertia = no_inertia;
 
+    inrt_pert.d_c = 0.0;
+    inrt_pert.d_w = 0.0;
+    inrt_pert.d_c_last = 0.0;
+    inrt_pert.d_w_last = 0.0;
 
 
 
@@ -654,7 +676,7 @@ int main(int argc, char **argv){
     else{assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);}
 
 
-    x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
+    /*x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));*/
     positions_rh = (int *)malloc(n_var * sizeof(int));
     /*for(i=0; i<n_dof; i++){
         printf("i %d, hr %d\n", i, hr_point[i]);
@@ -693,7 +715,9 @@ int main(int argc, char **argv){
     /*free(x_);*/
     printf("I[K_AUG]\trhs %p\n", (void *)rhs_baksolve);
     printf("I[K_AUG]\tx %p\n", (void *)x);
-    mumps_driver(Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK);
+
+    mumps_driver(Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
+                 &inrt_pert, inrt_parms, inrt_opts, logmu0, Kr_strt);
 
     printf("I[K_AUG]\trhs %p\n", (void *)rhs_baksolve);
     printf("I[K_AUG]\tx %p\n", (void *)x_);
