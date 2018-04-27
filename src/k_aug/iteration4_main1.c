@@ -44,7 +44,7 @@
 #define NUM_REG_SUF 8
 /* experimental! */
 
-static real not_zero = 1.84e-04;
+static double not_zero = 1.84e-04;
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
@@ -218,13 +218,14 @@ int main(int argc, char **argv){
     inertia_params inrt_parms;
     inertia_options inrt_opts;
     inertia_perts inrt_pert;
+    linsol_opts ls_opts;
 
     inrt_parms.dmin = 10e-20;
     inrt_parms.dmax = 10e+40;
     inrt_parms.d_w0 = 1e-08;
     inrt_parms.kbp = 100;
     inrt_parms.kp = 8;
-    inrt_parms.km = 1/3;
+    inrt_parms.km = 1.0/3.0;
 
     inrt_parms.dcb = 1e-08;
     inrt_parms.kc = 0.25;
@@ -236,9 +237,15 @@ int main(int argc, char **argv){
     inrt_pert.d_w = 0.0;
     inrt_pert.d_c_last = 0.0;
     inrt_pert.d_w_last = 0.0;
+    inrt_pert.jacobian_perturbed = 0;
 
     timestamp = time(NULL);
     start_c = clock();
+
+    ls_opts.want_accurate = 1;
+    ls_opts.max_inertia_steps = 20;
+    ls_opts.max_refinement_steps = 5;
+    ls_opts.residual_ratio_max = 1e-10;
 
 
     Oinfo.sname = _k_;
@@ -704,7 +711,7 @@ int main(int argc, char **argv){
 
     printf("dw_0 %g\n", inrt_parms.d_w0);
     /* factorize the matrix */
-    pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, nzK, logmu0, 1, inrt_parms, &inrt_pert, inrt_opts);
+    pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, nzK, logmu0, 1, inrt_parms, &inrt_pert, &inrt_opts, ls_opts);
 
     printf("I[K_AUG]...\t[K_AUG_ASL]"
            "Pardiso done. \n");

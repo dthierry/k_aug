@@ -31,8 +31,8 @@
 
 
 int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, real *x, fint nvar, fint ncon, int nza,
-                   double logmu0, char PardNeverGiveUp, inertia_params inrt_parms, inertia_perts *inrt_pert,
-                   inertia_options inrt_opts) {
+                   double logmu0, inertia_params inrt_parms, inertia_perts *inrt_pert,
+                   inertia_options *inrt_opts, linsol_opts ls_opts) {
     /* do something */
 
     int nrhs= n_rhs;
@@ -51,10 +51,9 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
 
     double	ddum;
     int	idum;
-    int pi, n_neig, zi;
+    int pi=0, n_neig=0, zi=0;
 
     double d;
-    double kc, dc, dcb;
     int i, j, k, try_fact, accTryFact=0;
     int reduce_pivtol=0;
 
@@ -63,25 +62,15 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
 
     double nrm_r, nrm_x, nrm_b, nrm_y, ratiorr, ratiorc ;
     int incx=1;
-    char AlwaysPerturbJac = 0;
     char inaccurateSol = 0;
 
     double const residual_ratio_max = 1e-10;
-    FILE *somefile;
 
-    double d_w = 0.0, d_c = 0.0;
     int pivot_pert = 0, jac_pert = 0;
-    int inertia_status;
-
-
+    int inertia_status = 1;
 
     d = 0.0;
     try_fact = 0;
-
-    dcb = 1e-08;
-    kc = 0.25;
-
-
 
     error = 0;
     solver = 0;
@@ -185,7 +174,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
     phase = 22; /* Numerical factorization */
     /* check inertia
     do at least ten tries */
-    for(i=0; i<100; i++){
+    for(i=0; i<ls_opts.max_inertia_steps; i++){
         phase = 11;
         pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,
                 iparm, &msglvl, &ddum, &ddum, &error, dparm);
@@ -208,7 +197,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
                "Inertia (p, n, 0): (%d, %d, %d).\n", pi, n_neig, zi);
         inertia_status =
                 inertia_strategy(ia, a, nvar, ncon, n_neig, inrt_pert, inrt_parms, inrt_opts, &try_fact, logmu0,
-                                 &reduce_pivtol, &jac_pert);
+                                 &reduce_pivtol);
 
         printf("status %d\n", inertia_status);
         printf("tryfact %d\n", try_fact);
@@ -217,7 +206,7 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
         printf("dwlast %g\n", inrt_pert->d_w_last);
         printf("dclast %g\n", inrt_pert->d_c_last);
         printf("red pvtol %d\n", reduce_pivtol);
-        printf("jac pert %d\n", jac_pert);
+        printf("jac pert %d\n", inrt_pert->jacobian_perturbed);
 
         if(inertia_status == 0){break;}
 
@@ -232,6 +221,14 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
                 exit(-1);
             }
         }
+    }
+    if(inertia_status == 1){
+        fprintf(stderr, "E[K_AUG]...\t[PARDISO_DRIVER]\n"
+                        "\t\tCould not fix the inertia of the problem.\n"
+                        "\t\tTry re-writing the problem or give a different point or change \"max_inertia_steps\"\n"
+                        "\t\tError: exiting now.\n\n"
+        );
+        exit(-1);
     }
     phase = 33;
 
@@ -253,6 +250,8 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
     printf("I[K_AUG]...\t[PARDISO_DRIVER]"
            "Solve completed x\n\n");
 
+
+    /* Attempt to compute accuracy of the solution. */
     y = (double *)malloc(sizeof(double) * n * nrhs);
 
     pardiso_residual (&mtype, &n, a, ia, ja, b, x, y, &normb, &normr);
@@ -288,76 +287,93 @@ int pardiso_driver(fint *ia, fint *ja, real *a, fint n, fint n_rhs, real *b, rea
     printf("I[K_AUG]...\t[PARDISO_DRIVER]"
            ": Ratio of norm of scaled residuals (computed); %e \n", ratiorc);
 
-    if(ratiorr > residual_ratio_max){
-        printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-               ": The norm of residuals is larger than max ratio(computed)\n");
-        inaccurateSol = 1;
-    }
-    if(ratiorc > residual_ratio_max){
+    if(ratiorc > ls_opts.residual_ratio_max){
         printf("I[K_AUG]...\t[PARDISO_DRIVER]"
                ": The norm of residuals is larger than max ratio(reported)\n");
         inaccurateSol = 1;
     }
-
-    if((inaccurateSol == 1)&&(PardNeverGiveUp)){
-        iparm[7] = 0;       /* Max numbers of iterative refinement steps. */
+    if(ratiorc > ls_opts.residual_ratio_max){
         printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-               ": Attempting to reduce residuals\n");
-        while(accTryFact < 1){
-            accTryFact++;
-            /*
-            currPivotPert--;
-            iparm[10-1] = currPivotPert;
-            if(currPivotPert < -2){
-                fprintf(stderr,"E[K_AUG]...\t[PARDISO_DRIVER]"
-                       "Failure, pivot perturbation is at its maximum.\n");
-                return 1;
-            }*/
-            JacPerturbed = 1;
-            fprintf(stderr, "W[K_AUG]...\t[PARDISO_DRIVER]"
-                            "Attempting to make dc > 0.\n");
-            dc = dcb*pow((pow(10, logmu0)),kc);
-            for(j=nvar; j<nvar+ncon; j++){
-                k = ia[j]-1;
-                a[k] += -dc;
-            }
+               ": The norm of residuals is larger than max ratio(computed)\n");
+        inaccurateSol = 1;
+    }
 
-            phase = 11;
-            pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,
-                    iparm, &msglvl, &ddum, &ddum, &error, dparm);
-
-            phase = 22; /* Numerical factorization */
-            pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum,	&nrhs,
-                    iparm, &msglvl, &ddum, &ddum, &error, dparm);
-            if(error != 0){
-                printf("Fatal error...\t[NUM_FACT] %d\n", error);
-                exit(2);
+    if(inaccurateSol == 0) {
+        printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+               "Accuracy at an acceptable level.\n\n");
+    }
+    /* Attempt to get a better solution. */
+    if(ls_opts.want_accurate == 1){
+        if(inaccurateSol == 1){
+            for(i=0; i<ls_opts.max_refinement_steps; i++){
+                iparm[7] = 0;       /* Max numbers of iterative refinement steps. */
+                printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+                       ": Attempting to reduce residuals\n\n");
+                if(inrt_pert->jacobian_perturbed == 0) {
+                    printf("W[K_AUG]...\t[PARDISO_DRIVER]"
+                           "Attempting to make dc > 0. (Jacobian regularization)\n");
+                    inrt_opts->always_perturb_jacobian = 1;
+                    inertia_status = inertia_strategy(ia, a, nvar, ncon, n_neig, inrt_pert, inrt_parms, inrt_opts,
+                                                      &try_fact, logmu0,
+                                                      &reduce_pivtol); /*Perform correction*/
+                }
+                else{
+                    currPivotPert--;  /* Higher is less */
+                    printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+                           "Asking for better accuracy.\n");
+                    iparm[10-1] = currPivotPert;
+                    if(currPivotPert < 2){
+                        fprintf(stderr, "E[K_AUG]...\t[PARDISO_DRIVER]"
+                                        "Failure, pivot perturbation is at it maximum.\n");
+                        exit(-1);
+                    }
+                }
+                /* Analysis, solve, backsolve and residuals all over-again */
+                phase = 11;
+                pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs,
+                        iparm, &msglvl, &ddum, &ddum, &error, dparm);
+                phase = 22; /* Numerical factorization */
+                pardiso(pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum,	&nrhs,
+                        iparm, &msglvl, &ddum, &ddum, &error, dparm);
+                if(error != 0){
+                    printf("Fatal error...\t[NUM_FACT] %d\n", error);
+                    exit(2);
+                }
+                phase = 33;
+                pardiso (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs, iparm, &msglvl, b, x, &error,  dparm);
+                if (error != 0) {
+                    printf("\nERROR during solution: %d\n", error);
+                    exit(3);
+                }
+                pardiso_residual (&mtype, &n, a, ia, ja, b, x, y, &normb, &normr);
+                ratiorr = (normr/(normr + normb));
+                printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+                       "Accuracy improvement tries %d, Perturbation val %.g, Resitual_ratio %.g.\n", i, exp(-log(10) * currPivotPert), ratiorr);
+                if(ratiorr < ls_opts.residual_ratio_max){
+                    printf("I[K_AUG]...\t[PARDISO_DRIVER]"
+                           "Accuracy at acceptable level.\n\n"
+                    );
+                    break;}
             }
-            phase = 33;
-            pardiso (pt, &maxfct, &mnum, &mtype, &phase, &n, a, ia, ja, &idum, &nrhs, iparm, &msglvl, b, x, &error,  dparm);
-            if (error != 0) {
-                printf("\nERROR during solution: %d", error);
-                exit(3);
-            }
-            pardiso_residual (&mtype, &n, a, ia, ja, b, x, y, &normb, &normr);
-
-            ratiorr = (normr/(normr + normb));
-            printf("I[K_AUG]...\t[PARDISO_DRIVER]"
-                   "Accuracy improvement tries %d, Perturbation val %.g, Resitual_ratio %.g.\n", accTryFact, exp(-log(10) * currPivotPert), ratiorr);
-            if(ratiorr < residual_ratio_max){break;}
         }
     }
+
+    if(ratiorr > ls_opts.residual_ratio_max){
+        fprintf(stderr, "E[K_AUG]...\t[PARDISO_DRIVER]\n\n"
+               "\t\tCould not fix the accuracy of the problem.\n"
+               "\t\tTry re-writing the problem or give a different point or change \"max_refinement_steps\"\n"
+               "\t\tWarning: results might be incorrect.\n"
+               "\t\tCurrent residual ratio %g; Max residual ratio %g.\n\n", ratiorr, ls_opts.residual_ratio_max
+        );}
+
     n_neig = iparm[22];
     if(n_neig==ncon){
         printf("W[K_AUG]...\t[PARDISO_DRIVER]"
-               "Inertia check successful neig=%d, (neig == m).\n", n_neig);
-        return 1;
+               "Inertia check OK neig=%d, (neig == m).\n", n_neig);
     }
-
 
     free(y);
     phase = -1; /* Internal memory release */
-
     pardiso (pt, &maxfct, &mnum, &mtype, &phase, &n, &ddum, ia, ja,
              &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error,  dparm);
 

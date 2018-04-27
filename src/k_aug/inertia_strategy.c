@@ -15,12 +15,12 @@
 
 int
 inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inertia_perts *i_pert, inertia_params i_parm,
-                 inertia_options i_opts, int *try_n, double log10mu, int *pert_pivot, int *jac_pert) {
+                 inertia_options *i_opts, int *try_n, double log10mu, int *pert_pivot) {
     int j, k;
     double d_w_trial = i_pert->d_w;
 
-    (*pert_pivot) = 0;
-    if(i_opts.no_inertia){return 0;}
+    (*pert_pivot) = 0; /* Initialize this little guy always. */
+    if(i_opts->no_inertia){return 0;}
 
     /*
      *
@@ -34,8 +34,7 @@ inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inerti
     printf("within inertiastrat dmin %g\n", i_parm.dmin);
     printf("within inertiastrat dmax %g\n", i_parm.dmax);
     */
-
-
+    /* always check this first */
     if(n_eig > ncon){
         fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
                         "Wrong inertia(n_eig > m).\n");
@@ -57,11 +56,18 @@ inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inerti
         }
     }
 
-    else if((n_eig < ncon)||(i_opts.always_perturb_jacobian)){
-        fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
-                        "Wrong inertia(neig < m).\n");
-        if((*jac_pert) == 0){
-            (*jac_pert) = 1;
+    else if((n_eig < ncon)||(i_opts->always_perturb_jacobian == 1)){
+        if(i_opts->always_perturb_jacobian == 1){
+            fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
+                            "Always perturb jacobian is on.\n");
+        }
+        else{fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
+                             "Wrong inertia(neig < m).\n");
+        }
+
+
+        if(i_pert->jacobian_perturbed == 0){
+            i_pert->jacobian_perturbed = 1;
             fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
                             "Attempting to make i_pert->d_c > 0.\n");
             i_pert->d_c = i_parm.dcb * pow((pow(10, log10mu)), i_parm.kc);
@@ -72,12 +78,10 @@ inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inerti
         }
         else{
             (*pert_pivot) = 1; /* Ask to change the pivot tolerance */
-        }
+            i_pert->jacobian_perturbed = 1;
 
-
-        if((*jac_pert) == 1){
             fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
-                            "i_pert->d_c is already > 0\nThe Jacobian might be singular.\n");
+                            "d_c is already > 0\nThe Jacobian might be singular. Asking for better accuracy..\n");
         }
     }
         /*

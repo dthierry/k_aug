@@ -27,8 +27,9 @@
 #include "../../ASL/solvers/asl.h"
 #include "../../k_aug/k_aug_data.h"
 
-int mumps_driver(fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
-                 int nza, inertia_perts *i_pert, inertia_params i_parm,
-                 inertia_options i_opts, double log10mu, fint *row_starts);
+
+int mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
+                 int nza, inertia_perts *inrt_pert, inertia_params inrt_parms,
+                 inertia_options *inrt_opts, double log10mu, linsol_opts ls_opts);
 
 #endif /* MUMPS_DRIVER */

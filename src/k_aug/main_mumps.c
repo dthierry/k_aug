@@ -48,7 +48,7 @@
 #define NUM_REG_SUF 8
 /* experimental! */
 
-static real not_zero = 1.84e-04;
+static double not_zero = 1.84e-04;
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
 static int n_rhs = 0;
@@ -222,6 +222,7 @@ int main(int argc, char **argv){
     inertia_params inrt_parms;
     inertia_options inrt_opts;
     inertia_perts inrt_pert;
+    linsol_opts ls_opts;
 
     inrt_parms.dmin = 10e-20;
     inrt_parms.dmax = 10e+40;
@@ -244,7 +245,15 @@ int main(int argc, char **argv){
     inrt_pert.d_w = 0.0;
     inrt_pert.d_c_last = 0.0;
     inrt_pert.d_w_last = 0.0;
+    inrt_pert.jacobian_perturbed = 0;
 
+    ls_opts.want_accurate = 1;
+    ls_opts.max_inertia_steps = 20;
+    ls_opts.max_refinement_steps = 5;
+    ls_opts.residual_ratio_max = 1e-10;
+    ls_opts.max_memory_al_steps = 10;
+    ls_opts.pivot_tol0 = 1e-06;
+    ls_opts.pivtol_max = 0.5;
 
 
     Oinfo.sname = _k_;
@@ -676,7 +685,7 @@ int main(int argc, char **argv){
     else{assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);}
 
 
-    /*x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));*/
+    x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
     positions_rh = (int *)malloc(n_var * sizeof(int));
     /*for(i=0; i<n_dof; i++){
         printf("i %d, hr %d\n", i, hr_point[i]);
@@ -709,19 +718,11 @@ int main(int argc, char **argv){
     }
 
     /* factorize the matrix */
-    /* int mumps_driver(fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
-                 int nza) */
-    printf("nzW %d\n", nnzw);
-    /*free(x_);*/
-    printf("I[K_AUG]\trhs %p\n", (void *)rhs_baksolve);
-    printf("I[K_AUG]\tx %p\n", (void *)x);
 
-    mumps_driver(Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
-                 &inrt_pert, inrt_parms, inrt_opts, logmu0, Kr_strt);
+    mumps_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
+                 &inrt_pert, inrt_parms, &inrt_opts, logmu0, ls_opts);
 
-    printf("I[K_AUG]\trhs %p\n", (void *)rhs_baksolve);
-    printf("I[K_AUG]\tx %p\n", (void *)x_);
-    x_ = rhs_baksolve;
+    /*x_ = rhs_baksolve;*/
     printf("I[K_AUG]...\t[K_AUG_ASL]"
            "Pardiso done. \n");
     fact_kkt_c = clock();
@@ -889,7 +890,7 @@ int main(int argc, char **argv){
     free(nz_row_a);
     free(md_off_w);
     free(rhs_baksolve);
-    /*free(x_);*/
+    free(x_);
     free(hr_point);
     free(dp_);
     free(s_star);
