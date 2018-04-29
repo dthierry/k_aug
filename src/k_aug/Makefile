@@ -94,6 +94,19 @@ k_aug_mumps: mc30_dri \
 	 $(LIBMC30) $(ASLINC) $(MUMPSINC) $(ASLLIB)  \
                 	$(OPENBLASLIB) $(MUMPSLIB) $(LSCOTCH) $(LMETIS) $(LPORD) -lgfortran -lm -lpthread $(LIBSEQ)
 
+k_aug_ldl: mc30_dri \
+      get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
+      suffix_decl_hand csr_driver pard_dri_new sig_comp mu_ad dsyev_eig dpotri_driver inertia_strategy
+	$(CC) $(CCFLAGS) tstldl.c -o k_aug_ldl  $A $L \
+	mc30_driver.o  \
+	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
+	assemble_rhs_rh.o assemble_rhs_dcdp.o  \
+	suffix_decl_hand.o csr_driver.o new_pardiso_driver.o \
+	sigma_compute.o mu_adjust_primal.o dsyev_driver.o dpotri_driver.o \
+	inertia_strategy.o \
+	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
+	 $(LIBMC30) $(LIBLAPACK) $(LIBBLAS) -ldl -lgomp
+
 
 
 clean:
@@ -157,3 +170,5 @@ mumps_driver:
 inertia_strategy:
 	$(CC) $(CCFLAGS) -c inertia_strategy.c
     
+pard_dri_new:
+	$(CC) $(CCFLAGS) -c $(S)/Pardiso/new_pardiso_driver.c
