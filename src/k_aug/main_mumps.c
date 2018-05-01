@@ -521,7 +521,7 @@ int main(int argc, char **argv){
     /*constraints flags */
     find_ineq_con(n_con, LUrhs, c_flag); /* Find the inequality constraints */
 
-    /* Row and colum for the triplet format A matrix */
+    /* Row and column for the triplet format A matrix */
     /* size of the number of nonzeroes in the constraint jacobian */
     Acol = (fint *)malloc(sizeof(fint)*nzc);
     Arow = (fint *)malloc(sizeof(fint)*nzc);

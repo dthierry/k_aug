@@ -1,7 +1,7 @@
 #ifndef GET_JAC_AUG
 #define GET_JAC_AUG
 
-#include "asl.h"
+#include "../ASL/solvers/asl.h"
 
 typedef struct temp_v2{
 	fint c;
@@ -9,7 +9,7 @@ typedef struct temp_v2{
 }temp_v2;
 
 int compf_v2(const void *t1, const void *t2);
-void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij, 
+int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 	int nvar, int ncon, fint nzc_, fint *nerror, int **nz_row_a);
 
 
