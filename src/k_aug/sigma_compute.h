@@ -22,7 +22,7 @@
 #ifndef COMP_SIGMA
 #define COMP_SIGMA
 
-#include "asl.h"
+#include "../ASL/solvers/asl.h"
 #define HUGE_NUMBER 1e300
 
 

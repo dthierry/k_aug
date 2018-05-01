@@ -123,8 +123,8 @@ static keyword keywds[] = {
 };
 static char _solname[] = {"K_AUG"};
 static char banner[] = {"[K_AUG] written by DT\n\n"};
-static char _k_[] = {"K_augmented"};
-static char _k_o_[] = {"K_augmented_options"};
+static char _k_[] = {"k_aug"};
+static char _k_o_[] = {"k_aug_options"};
 static Option_Info Oinfo;
 
 

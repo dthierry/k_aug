@@ -32,18 +32,11 @@ LMETIS    = -L$(LMETISDIR) -lmetis
 LPORDDIR = -L$(current_dir)/../../thirdparty/mumps/MUMPS/PORD/lib/
 LPORD    = -L$(LPORDDIR) -lpord
 
-
-
-
-
-
 MC30ROOT = $(current_dir)/../../thirdparty/hsl/mc30/mc30-1.0.0/src/
 PARDISOROOT = /usr/local/lib/
 
-
-OPENBLASROOT = /home/dav0/Apps/OpenBLAS/
+OPENBLASROOT = $(current_dir)/../../thirdparty/openblas/OpenBlas/
 BLASROOT = $(S)/BLAS/BLAS-3.7.0/
-
 LAPACKROOT = $(S)/LAPACK/lapack-3.8.0/
 
 
@@ -109,7 +102,6 @@ k_aug_ldl: mc30_dri \
 	inertia_strategy.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
 	 $(LIBMC30) $(LIBLAPACK) $(LIBBLAS) -ldl -lgomp
-
 
 
 clean:

@@ -119,8 +119,8 @@ static keyword keywds[] = {
 };
 static char _solname[] = {"K_AUG"};
 static char banner[] = {"[K_AUG] written by DT\n\n"};
-static char _k_[] = {"K_augmented"};
-static char _k_o_[] = {"K_augmented_options"};
+static char _k_[] = {"k_aug"};
+static char _k_o_[] = {"k_aug_options"};
 static Option_Info Oinfo;
 
 
@@ -711,7 +711,7 @@ int main(int argc, char **argv){
 
     printf("dw_0 %g\n", inrt_parms.d_w0);
     /* factorize the matrix */
-    pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, nzK, logmu0, 1, inrt_parms, &inrt_pert, &inrt_opts, ls_opts);
+    pardiso_driver(Kr_strt, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, nzK, logmu0, inrt_parms, &inrt_pert, &inrt_opts, ls_opts);
 
     printf("I[K_AUG]...\t[K_AUG_ASL]"
            "Pardiso done. \n");

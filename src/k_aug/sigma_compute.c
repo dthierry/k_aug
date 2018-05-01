@@ -20,7 +20,7 @@
 ** @return something
 *******************************************************************************/
 
-#include "asl.h"
+#include "sigma_compute.h"
 #include <stdio.h>
 #include <stdlib.h>
 #define HUGE_NUMBER 1e300
