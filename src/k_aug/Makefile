@@ -13,20 +13,23 @@ all1 = k_aug
 MATRIXDIR = ../matrix
 LMATRIX = kassemble.f
 
-OPENBLASLIB = -L$(ROOT)thirdparty/openblas/OpenBLAS/ -lopenblas
-MUMPSLIB = -L/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/lib/ -ldmumps -lmumps_common
-MUMPSINC = -I/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/include/
-ASLLIB = $(ROOT)src/ASL/solvers/amplsolver.a
-ASLINC = -I/home/dav0/k2/KKT_matrix/src/ASL/solvers/
-LIBSEQ = -L/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/libseq/ -lmpiseq
-INCSEQ = -I/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/libseq/
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))
 
-LSCOTCHDIR = /home/dav0/k2/KKT_matrix/thirdparty/scotch/whatnot/scotch_6.0.4/lib/
+OPENBLASLIB = -L$(ROOT)thirdparty/openblas/OpenBLAS/ -lopenblas
+MUMPSLIB = -L$(current_dir)/../../thirdparty/mumps/MUMPS/lib/ -ldmumps -lmumps_common
+MUMPSINC = -I/$(current_dir)/../../thirdparty/mumps/MUMPS/include/
+ASLLIB = $(ROOT)src/ASL/solvers/amplsolver.a
+ASLINC = -I$(current_dir)/../src/ASL/solvers/
+LIBSEQ = -L$(current_dir)/../../thirdparty/mumps/MUMPS/libseq/ -lmpiseq
+INCSEQ = -I$(current_dir)/../../thirdparty/mumps/MUMPS/libseq/
+
+LSCOTCHDIR = $(current_dir)/../../thirdparty/scotch/scotch/lib/
 LSCOTCH   = -L$(LSCOTCHDIR) -lesmumps -lscotch -lscotcherr
-LMETISDIR = /home/dav0/k2/KKT_matrix/thirdparty/metis/metis-5.1.0/build/Linux-x86_64/libmetis/
+LMETISDIR = $(current_dir)/../../thirdparty/metis/metis/build/Linux-x86_64/libmetis/
 LMETIS    = -L$(LMETISDIR) -lmetis
 
-LPORDDIR = -L/home/dav0/k2/KKT_matrix/thirdparty/mumps512/MUMPS_5.1.2/PORD/lib/
+LPORDDIR = -L$(current_dir)/../../thirdparty/mumps/MUMPS/PORD/lib/
 LPORD    = -L$(LPORDDIR) -lpord
 
 
@@ -34,7 +37,7 @@ LPORD    = -L$(LPORDDIR) -lpord
 
 
 
-MC30ROOT = /home/dav0/Apps/mc30-1.0.0/build/src/
+MC30ROOT = $(current_dir)/../../thirdparty/hsl/mc30/mc30-1.0.0/src/
 PARDISOROOT = /usr/local/lib/
 
 
@@ -52,8 +55,8 @@ LIBBLAS = $(BLASROOT)blas_LINUX.a
 LIBLAPACK = $(LAPACKROOT)liblapack.a
 
 LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
-KMATRIX = main_mumps.c
-#KMATRIX = iteration4_main1.c
+K_AUG = main_mumps.c
+#K_AUG = iteration4_main1.c
 
 k_aug_pard: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
@@ -83,7 +86,7 @@ k_aug_ma57: mc30_dri \
 k_aug_mumps: mc30_dri \
       get_jac_asl get_hess_asl find_ineq get_grad_f assemble_rhsds_rh assemble_rhsds_dcdp \
       suffix_decl_hand csr_driver sig_comp mu_ad dsyev_eig dpotri_driver mumps_driver inertia_strategy
-	$(CC) $(CCFLAGS) $(KMATRIX) -o $(ONAME)  $A $L \
+	$(CC) $(CCFLAGS) $(K_AUG) -o $(ONAME)  $A $L \
 	mc30_driver.o  \
 	get_jac_asl_aug.o get_hess_asl_aug.o find_inequalities.o get_grad_f.o \
 	assemble_rhs_rh.o assemble_rhs_dcdp.o  \

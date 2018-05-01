@@ -64,10 +64,10 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
       }
     }
 
-  printf("I[KMATRIX]...\t[ASSM_RHS_DCDP]"
+  printf("I[K_AUG]...\t[ASSM_RHS_DCDP]"
     "According to the suffixes declared len p is %d \n", *(n_p));
   if((*n_p) <= (0)){
-    printf("E[KMATRIX]...\t[ASSM_RHS_DCDP]"
+    printf("E[K_AUG]...\t[ASSM_RHS_DCDP]"
       "No valid number of n_p declared\n");
     exit(-1);
   }

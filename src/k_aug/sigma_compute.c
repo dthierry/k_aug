@@ -32,7 +32,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_z
 	FILE *s_file;
 	/*
 	if(!(suf_zL->u.r)){
-		fprintf(stderr, "W[KMATRIX]...\t[KMATRIX_ASL]"
+		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
     	"No ipopt_zL_out suffix declared, setting zL = 0.\n");
 		
 	}
@@ -42,7 +42,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_z
 		}
 	}
 	if(!(suf_zU->u.r)){
-		fprintf(stderr, "W[KMATRIX]...\t[KMATRIX_ASL]"
+		fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
     	"No ipopt_zU_out suffix declared, setting zU = 0.\n");
 		
 	}

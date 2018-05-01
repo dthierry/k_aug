@@ -22,33 +22,33 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
     if (nobj == 0){
         ow = 1; /* set the objective weight to zero */
         *n_nz_w = sphsetup(0, ow, 1, 1);
-        printf("I[KMATRIX]...\t[GET_HESS_ASL]"
+        printf("I[K_AUG]...\t[GET_HESS_ASL]"
                "No objective declared\n");
     }
     else{
         ow = 1; /* set the objective weight to one */
         *n_nz_w = sphsetup(0, ow, 1, 1);
-        printf("I[KMATRIX]...\t[GET_HESS_ASL]"
+        printf("I[K_AUG]...\t[GET_HESS_ASL]"
                "Objective found\n");
     }
 
-    printf("I[KMATRIX]...\t[GET_HESS_ASL]"
+    printf("I[K_AUG]...\t[GET_HESS_ASL]"
            "Nonzeroes in the sparse hessian %d\n", (*n_nz_w));
 
     /* determine the kind of problem (min/max) */
     if (nobj > 0){
         if (nobj > 1){
-            printf("W[KMATRIX]...\t[GET_HESS_ASL]"
+            printf("W[K_AUG]...\t[GET_HESS_ASL]"
                    "The problem contains multiple obj_fun, will use the 1st one\n");
         }
         if(objtype[0]){
-            printf("I[KMATRIX]...\t[GET_HESS_ASL]"
+            printf("I[K_AUG]...\t[GET_HESS_ASL]"
                    "Maximization problem detected\n");
             /* set weight to -1 */
             ow = -1;
         }
         else{
-            printf("I[KMATRIX]...\t[GET_HESS_ASL]"
+            printf("I[K_AUG]...\t[GET_HESS_ASL]"
                    "Minimization problem detected\n");
             ow = 1;
         }
@@ -56,7 +56,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
 
     /* evaluate the objective function first  */
     obj_val = objval(0, x, nerror);
-    printf("I[KMATRIX]...\t[GET_HESS_ASL]"
+    printf("I[K_AUG]...\t[GET_HESS_ASL]"
            "Current objective %f\n", obj_val);
     c_body = (real *)malloc(sizeof(real) * ncon);
     /* need to evaluate the constraint-body first */
@@ -129,7 +129,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
         free(Hcont);
     }
     else{
-        printf("W[KMATRIX]...\t[GET_HESS_ASL]"
+        printf("W[K_AUG]...\t[GET_HESS_ASL]"
                "No non-zeroes in the hessian. Appending 0s at main-diag\n");
         /* No nz_ in the hessian; still want elements in md*/
         for (i = 0; i < nvar; i++)
@@ -162,7 +162,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
     }
     fclose(f_hess);
 
-    printf("I[KMATRIX]...\t[GET_HESS_ASL]"
+    printf("I[K_AUG]...\t[GET_HESS_ASL]"
            "Missing nz in the Hessian of the Lag: %d\n", *missing_nz);
 
     /*comparision

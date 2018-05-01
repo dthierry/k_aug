@@ -31,8 +31,8 @@
 
 #include "mumps_driver.h"
 
-#include "../../../thirdparty/mumps512/MUMPS_5.1.2/libseq/mpi.h"
-#include "../../../thirdparty/mumps512/MUMPS_5.1.2/include/dmumps_c.h"
+#include "../../../thirdparty/mumps/MUMPS/libseq/mpi.h"
+#include "../../../thirdparty/mumps/MUMPS/include/dmumps_c.h"
 #include "../../k_aug/inertia_strategy.h"
 
 /*int mumps_driver (fint *ia, fint *ja, real *a, fint n,
