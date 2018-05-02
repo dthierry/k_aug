@@ -6,6 +6,6 @@ echo "running Make.."
 make
 echo "
 \n\nDone"
-
+cd ..
 
 

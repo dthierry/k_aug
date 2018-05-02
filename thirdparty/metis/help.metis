@@ -37,3 +37,5 @@ sed -i '/#define REALTYPEWIDTH 32/c\#define REALTYPEWIDTH 64' metis.h
 cd ../
 make config
 make
+cd ..
+

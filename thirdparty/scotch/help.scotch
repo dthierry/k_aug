@@ -36,3 +36,4 @@ cd src
 ln -s ./Make.inc/Makefile.inc.x86-64_pc_linux2 Makefile.inc
 sed '/CFLAGS/s/$/ -DINTSIZE64/' Makefile.inc
 make esmumps
+cd ..
