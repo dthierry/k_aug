@@ -39,7 +39,7 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 	/* Jacobian */
 	/* check if there are non-zeroes in the Jacobian */
 	if(nzc_ <= 0){
-		printf("E[KMATRIX]...\t[GET_JAC_ASL]"
+		printf("E[K_AUG]...\t[GET_JAC_ASL]"
 			"The jacobian has no structural non-zeroes; exiting\n");
 		exit(-1);
 	}
@@ -48,7 +48,7 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 	jacval(x, Jcont, nerror);
 
 	if(*nerror != 0){
-		printf("E[KMATRIX]...\t[GET_JAC_ASL]nerror points to %ld\n", *nerror);
+		printf("E[K_AUG]...\t[GET_JAC_ASL]nerror points to %ld\n", *nerror);
 		exit(-1);
 	}
 	f_jac = fopen("jacobi_debug.in", "w");
@@ -64,7 +64,7 @@ void get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
 	for(i = 0; i < ncon; i++) {
     /* moves by constraint */
     if(cgx == NULL){
-    	fprintf(stderr, "E[KMATRIX]...\t[GET_JAC_ASL]"
+    	fprintf(stderr, "E[K_AUG]...\t[GET_JAC_ASL]"
     		"NULL GRADIENT DETECTED CONSTRAINT %d\n", i);
     	exit(-1);
     }

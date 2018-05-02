@@ -80,7 +80,7 @@ static keyword keywds[] = {
   KW(_not_zero , D_val, &not_zero, _not_zero),  
   KW(name1 , IK_val, &dumm_kw, name1),
 };
-static char banner[] = {"[KMATRIX] written by DT\n\n"};
+static char banner[] = {"[K_AUG] written by DT\n\n"};
 static char _k_[] = {"K_augmented"};
 static char _k_o_[] = {"K_augmented_options"};
 static Option_Info Oinfo;
@@ -145,7 +145,7 @@ int main(int argc, char **argv){
   int *hr_point = NULL;
   int *positions_rh = NULL;
 
-  char ter_msg[] = {"I[KMATRIX]...[KMATRIX_ASL]"
+  char ter_msg[] = {"I[K_AUG]...[K_AUG_ASL]"
 	"All done it seems."};
 
 	unsigned n_r_suff = NUM_REG_SUF;
@@ -185,26 +185,26 @@ int main(int argc, char **argv){
 	s = getstops(argv, &Oinfo);
 
 	if (!s) {
-		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("W[K_AUG]...\t[K_AUG_ASL]"
 			"No input\n");
 		return 1;
 	}
 	else {
-		printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("I[K_AUG]...\t[K_AUG_ASL]"
 			"File read succesfull\n");
 				}
 
 	if (n_rhs == 0){
-		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("W[K_AUG]...\t[K_AUG_ASL]"
 			"No n_rhs declared\n");
 	}
 	
 	if (l_over){
-		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("W[K_AUG]...\t[K_AUG_ASL]"
 			"Multiplier check override.\n");
 	}
 	if (dot_prod_f){
-		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("W[K_AUG]...\t[K_AUG_ASL]"
 			"Dot product preparation.\n");
 	}
 
@@ -236,7 +236,7 @@ int main(int argc, char **argv){
 	}
 
 
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	printf("I[K_AUG]...\t[K_AUG_ASL]"
 	"Number of Right hand sides %d\n", n_rhs);
 	
 	
@@ -250,18 +250,18 @@ int main(int argc, char **argv){
 	f = jac0dim(s, (fint)strlen(s));
 
 
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Number of Right hand sides: %d\n", n_rhs);
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Number of variables       : %d\n", n_var);
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Number of constraints     : %d\n", n_con);
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Number of valid n_dof     : %d\n", n_var - n_con );
 
 
 	if ((n_var - n_con) < 0){
-		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("E[K_AUG]...\t[K_AUG_ASL]"
 			"nvar < ncon. This problem is not valid.\n");
 		exit(-1);
 	}
@@ -276,7 +276,7 @@ int main(int argc, char **argv){
 	
 	/* NEED TO FIX THIS	*/
 	if(lambda==NULL && l_over == 0){
-		printf("E[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("E[K_AUG]...\t[K_AUG_ASL]"
 	"Constraint Multipliers not declared(suffix dual), abort\n");
 		for(i=0; i < (int)n_r_suff; i++){free(reg_suffix_name[i]);}
 		free(reg_suffix_name);
@@ -304,7 +304,7 @@ int main(int argc, char **argv){
 
 
 	if(!(suf_zL->u.r)){
-		fprintf(stderr, "W[KMATRIX_ASL]...\t[KMATRIX_ASL]"
+		fprintf(stderr, "W[K_AUG_ASL]...\t[K_AUG_ASL]"
     	"No ipopt_zL_out suffix declared, setting zL = 0.\n");
 	}
 	else{
@@ -313,7 +313,7 @@ int main(int argc, char **argv){
 		}
 	}
 	if(!(suf_zU->u.r)){
-		fprintf(stderr, "W[KMATRIX_ASL]...\t[KMATRIX_ASL]"
+		fprintf(stderr, "W[K_AUG_ASL]...\t[K_AUG_ASL]"
     	"No ipopt_zU_out suffix declared, setting zU = 0.\n");
 	}
 	else{
@@ -341,7 +341,7 @@ int main(int argc, char **argv){
 	memset(sigma, 0, sizeof(real) * n_var);
 
 	if(var_f->u.r == NULL && var_f->u.i == NULL){
-    fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
+    fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
     	"suffix empty no n_dof declared!\n");
     exit(-1);
 	}
@@ -355,7 +355,7 @@ int main(int argc, char **argv){
 		for(i=0; i < n_rhs; i++){
 	   *(rhs_ptr + i)= suf_get(rhs_name[i], ASL_Sufkind_con|ASL_Sufkind_real);
 	  	if((*(rhs_ptr + i))->u.r == NULL){
-			  fprintf(stderr, "E[KMATRIX]...\t[KMATRIX_ASL]"
+			  fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
 			  	"No rhs values declared for rhs_%d.\n", i);
 			  exit(-1);
 	  	}
@@ -377,7 +377,7 @@ int main(int argc, char **argv){
 	assemble csr or coordinate
 	 */ 
 	nerror = 0;
-	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+	printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Nonzeroes in the sparse Jacobian %d\n", nzc);
 
 	get_jac_asl_aug (asl, x, Acol, Arow, Aij, n_var, n_con, nzc, &nerror, &nz_row_a);
@@ -391,7 +391,7 @@ int main(int argc, char **argv){
 			j = md_off_w[i];
 			Wij[j] += sigma[i];
 		}
-		printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+		printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Barrier term added.\n");
 	}
 	
@@ -467,7 +467,7 @@ int main(int argc, char **argv){
  		fclose(somefile);
   }
   else{
-  	printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+  	printf("W[K_AUG]...\t[K_AUG_ASL]"
 			"The scaling has been skipped. \n");
 	}
  
@@ -476,7 +476,7 @@ int main(int argc, char **argv){
 	
 	ma57_driver(K_nrows, nzK, Krow, Kcol, Kij, n_dof, rhs_baksolve, x_);
       
-  printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+  printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"\n");
 
   /* */
@@ -517,7 +517,7 @@ int main(int argc, char **argv){
   for(i=0; i<n_dof; i++){
   	j = hr_point[i];
   	if(((x[j] - LUv[2*j]) < not_zero) || ((LUv[2*j+1] - x[j]) < not_zero)){
-  		printf("W[KMATRIX]...\t[KMATRIX_ASL]"
+  		printf("W[K_AUG]...\t[K_AUG_ASL]"
 			"Variable \"%d\" (offset %d) has an active bound; sigma = %f.\n",
 			 j, i+1, sigma[j]);
 			fprintf(somefile, "%d\t%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%f\n",
@@ -574,7 +574,7 @@ int main(int argc, char **argv){
 
   suf_iput(reg_suffix_name[1], ASL_Sufkind_var, positions_rh);
   if(dot_prod_f != 0){
-  	printf("I[KMATRIX]...\t[KMATRIX_ASL]"
+  	printf("I[K_AUG]...\t[K_AUG_ASL]"
 		"Dot product preparation phase.\n");
   }
   solve_result_num = 0;
