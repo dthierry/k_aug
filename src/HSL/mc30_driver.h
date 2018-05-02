@@ -17,7 +17,7 @@
 #define _MC30DRIVER_
 
 
-#include "asl.h"
+#include "../../thirdparty/asl/solvers/asl.h"
 
 extern void mc30ad_(fint *nr, fint *nz, real *a, fint *irn, fint *icn, real *s, real *w, fint *lp, fint *ifail);
 

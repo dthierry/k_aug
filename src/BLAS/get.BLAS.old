@@ -1,0 +1,22 @@
+#!/bin/bash
+echo "If os=mac pls edit this file"
+# activate the following line if os=mac, deactivate wget line
+# curl "http://ampl.com/netlib/ampl/solvers.tgz" -o solvers.tgz
+
+rm solvers.*
+rm -rf solvers
+wget http://www.netlib.org/blas/blas-3.7.0.tgz 
+tar -zxvf blas-3.7.0.tgz
+echo "Making .."
+cd ./BLAS-3.7.0/
+make all
+
+
+echo "
+    ___o .--.
+   /___| |OO|
+  /'   |_|  |_
+       (_    _)
+       | |   \
+       | |oo_/sjw \n\n done "
+

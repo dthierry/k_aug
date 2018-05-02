@@ -24,7 +24,7 @@
 #define MUMPS_DRIVER
 
 #include "../../../thirdparty/mumps/MUMPS/include/dmumps_c.h" /* header that contains types and mumps structure */
-#include "../../ASL/solvers/asl.h"
+#include "../../../thirdparty/asl/solvers/asl.h"
 #include "../../k_aug/k_aug_data.h"
 
 

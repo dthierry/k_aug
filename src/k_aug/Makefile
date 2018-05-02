@@ -5,7 +5,7 @@ FC = gfortran
 S = ..
 ROOT = ../../
 L = -lm -ldl
-A = $S/ASL/solvers/amplsolver.a
+
 ONAME = k_aug
 
 
@@ -16,11 +16,13 @@ LMATRIX = kassemble.f
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))
 
-OPENBLASLIB = -L$(ROOT)thirdparty/openblas/OpenBLAS/ -lopenblas
-MUMPSLIB = -L$(current_dir)/../../thirdparty/mumps/MUMPS/lib/ -ldmumps -lmumps_common
-MUMPSINC = -I/$(current_dir)/../../thirdparty/mumps/MUMPS/include/
-ASLLIB = $(ROOT)src/ASL/solvers/amplsolver.a
-ASLINC = -I$(current_dir)/../src/ASL/solvers/
+A = $(current_dir)/../../thirdparty/asl/solvers/amplsolver.a
+
+OPENBLASLIB = -L$(current_dir)/../../thirdparty/openblas/OpenBLAS/ -lopenblas
+MUMPSLIB =    -L$(current_dir)/../../thirdparty/mumps/MUMPS/lib/ -ldmumps -lmumps_common
+MUMPSINC =    -I/$(current_dir)/../../thirdparty/mumps/MUMPS/include/
+ASLLIB =      $(current_dir)/../../thirdparty/asl/solvers/amplsolver.a
+ASLINC = $(current_dir)/../../thirdparty/asl/solvers/
 LIBSEQ = -L$(current_dir)/../../thirdparty/mumps/MUMPS/libseq/ -lmpiseq
 INCSEQ = -I$(current_dir)/../../thirdparty/mumps/MUMPS/libseq/
 
@@ -32,18 +34,11 @@ LMETIS    = -L$(LMETISDIR) -lmetis
 LPORDDIR = -L$(current_dir)/../../thirdparty/mumps/MUMPS/PORD/lib/
 LPORD    = -L$(LPORDDIR) -lpord
 
-
-
-
-
-
-MC30ROOT = $(current_dir)/../../thirdparty/hsl/mc30/mc30-1.0.0/src/
+MC30ROOT = $(current_dir)/../../thirdparty/hsl/mc30/mc30/src/
 PARDISOROOT = /usr/local/lib/
 
-
-OPENBLASROOT = /home/dav0/Apps/OpenBLAS/
+OPENBLASROOT = $(current_dir)/../../thirdparty/openblas/OpenBlas/
 BLASROOT = $(S)/BLAS/BLAS-3.7.0/
-
 LAPACKROOT = $(S)/LAPACK/lapack-3.8.0/
 
 
@@ -109,7 +104,6 @@ k_aug_ldl: mc30_dri \
 	inertia_strategy.o \
 	-I$(S)/HSL/ -I$(S)/Pardiso/ -I$(S)/matrix/ -I$(S)/ASL/solvers/\
 	 $(LIBMC30) $(LIBLAPACK) $(LIBBLAS) -ldl -lgomp
-
 
 
 clean:

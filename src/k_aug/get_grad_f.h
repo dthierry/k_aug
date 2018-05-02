@@ -1,7 +1,7 @@
 #ifndef GET_GRAD_F
 #define GET_GRAD_F
 
-#include "asl.h"
+#include "../../thirdparty/asl/solvers/asl.h"
 
 void get_grad_f(ASL *asl, real *x, int nvar, real *gf, fint *nerror);
 

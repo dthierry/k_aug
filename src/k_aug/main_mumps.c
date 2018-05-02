@@ -27,8 +27,8 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include "../ASL/solvers/getstub.h"
-#include "../ASL/solvers/asl.h"
+#include "../../thirdparty/asl/solvers/getstub.h"
+#include "../../thirdparty/asl/solvers/asl.h"
 #include "../HSL/mc30_driver.h"
 #include "../interfaces/mumps/mumps_driver.h"
 #include "get_jac_asl_aug.h"
@@ -123,8 +123,8 @@ static keyword keywds[] = {
 };
 static char _solname[] = {"K_AUG"};
 static char banner[] = {"[K_AUG] written by DT\n\n"};
-static char _k_[] = {"K_augmented"};
-static char _k_o_[] = {"K_augmented_options"};
+static char _k_[] = {"k_aug"};
+static char _k_o_[] = {"k_aug_options"};
 static Option_Info Oinfo;
 
 
@@ -521,7 +521,7 @@ int main(int argc, char **argv){
     /*constraints flags */
     find_ineq_con(n_con, LUrhs, c_flag); /* Find the inequality constraints */
 
-    /* Row and colum for the triplet format A matrix */
+    /* Row and column for the triplet format A matrix */
     /* size of the number of nonzeroes in the constraint jacobian */
     Acol = (fint *)malloc(sizeof(fint)*nzc);
     Arow = (fint *)malloc(sizeof(fint)*nzc);
