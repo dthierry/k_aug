@@ -27,8 +27,8 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include "../ASL/solvers/getstub.h"
-#include "../ASL/solvers/asl.h"
+#include "../../thirdparty/asl/solvers/getstub.h"
+#include "../../thirdparty/asl/solvers/asl.h"
 #include "../HSL/mc30_driver.h"
 #include "../interfaces/mumps/mumps_driver.h"
 #include "get_jac_asl_aug.h"

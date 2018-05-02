@@ -22,7 +22,7 @@
 #ifndef SUF_DECL_HAND
 #define SUF_DECL_HAND
 
-#include "../ASL/solvers/asl.h"
+#include "../../thirdparty/asl/solvers/asl.h"
 
 void suffix_decl_hand(SufDecl *suf_ptr, char **ptr_name, char **rhs_name, unsigned n_reg_suf, int n_rhs);
 

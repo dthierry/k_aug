@@ -5,10 +5,10 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-g -Wall -ansi -pedantic-errors -Wall -W")
 #set( PROJECT_LINK_LIBS amplsolver.a )
 
-include_directories(src/ASL/solvers thirdparty/mumps/MUMPS/include thirdparty/mumps/MUMPS/libseq)
+include_directories(thirdparty/asl/solvers thirdparty/mumps/MUMPS/include thirdparty/mumps/MUMPS/libseq)
 
-link_directories(src/ASL/solvers thirdparty/metis/metis/build/Linux-x86_64/libmetis thirdparty/scotch/scotch/lib
-        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/hsl/mc30/mc30-1.0.0/src
+link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/Linux-x86_64/libmetis thirdparty/scotch/scotch/lib
+        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/hsl/mc30/mc30/src
         thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq)
 
 

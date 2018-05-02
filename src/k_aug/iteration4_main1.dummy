@@ -23,7 +23,7 @@
 #include <time.h>
 #include <string.h>
 #include "../ASL/solvers/getstub.h"
-#include "../ASL/solvers/asl.h"
+#include "../../thirdparty/asl/solvers/asl.h"
 #include "../HSL/mc30_driver.h"
 #include "../interfaces/mumps/mumps_driver.h"
 #include "get_jac_asl_aug.h"
@@ -246,6 +246,9 @@ int main(int argc, char **argv){
     ls_opts.max_inertia_steps = 20;
     ls_opts.max_refinement_steps = 5;
     ls_opts.residual_ratio_max = 1e-10;
+    ls_opts.max_memory_al_steps = 10;
+    ls_opts.pivot_tol0 = 1e-06;
+    ls_opts.pivtol_max = 0.5;
 
 
     Oinfo.sname = _k_;

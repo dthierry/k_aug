@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../ASL/solvers/asl.h"
+#include "../../../thirdparty/asl/solvers/asl.h"
 #include "mumps_driver.h"
 
 
