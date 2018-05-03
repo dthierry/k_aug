@@ -1,0 +1,36 @@
+//
+// Created by dav0 on 5/2/18.
+//
+#include "config_kaug.h"
+#include "mc19_driver.h"
+#include <string.h>
+#include <stdio.h>
+//int mc30driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s)
+int mc19driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *r, real *c){
+    real *w;
+    int i;
+    FILE *somefile;
+     /* Working array */
+    w = (real *)malloc(sizeof(real) * n * 5);
+    memset(w, 0, n * 5 * sizeof(real));
+    memset(r, 0, n * sizeof(real));
+    memset(c, 0, n * sizeof(real));
+
+    /* Call mc19 */
+    mc19ad_(&n, &nz, a, irn, icn, r, c, w);
+
+#ifndef PRINT_VERBOSE
+    somefile = fopen("mc19_results.txt", "w");
+    for(i=0; i<n; i++){
+        fprintf(somefile, "%.g\t\t%.g\n", r[i], c[i]);
+    }
+    fclose(somefile);
+#endif
+
+    free(w);
+
+    return 0;
+
+
+
+}

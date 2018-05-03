@@ -29,7 +29,7 @@
 #include <string.h>
 #include "../../thirdparty/asl/solvers/getstub.h"
 #include "../../thirdparty/asl/solvers/asl.h"
-#include "../HSL/mc30_driver.h"
+
 #include "../interfaces/mumps/mumps_driver.h"
 #include "get_jac_asl_aug.h"
 #include "get_hess_asl_aug.h"
@@ -42,9 +42,13 @@
 #include "mu_adjust_primal.h"
 #include "../matrix/dsyev_driver.h"
 #include "../matrix/dpotri_driver.h"
+
+#include "../interfaces/hsl/mc19_driver.h"
 #include "k_aug_data.h"
-
-
+#include "config_kaug.h"
+#ifdef USE_MC30
+#include "../HSL/mc30_driver.h"
+#endif
 #define NUM_REG_SUF 8
 /* experimental! */
 
@@ -166,6 +170,8 @@ int main(int argc, char **argv){
     fint K_nrows;
 
     real *S_scale=NULL;
+    real *C_scale=NULL;
+
     fint nzK;
 
     fint *Wc_t=NULL, *Wr_t=NULL;
@@ -651,11 +657,17 @@ int main(int argc, char **argv){
     ev_as_kkt_c = clock();
 
     S_scale = (real *)calloc(sizeof(real), K_nrows);
+    C_scale = (real *)calloc(sizeof(real), K_nrows);
+
+#ifdef USE_MC30
     mc30driver(K_nrows, nzK, Kij, Krow, Kcol, S_scale);
+#else
+    /* mc19driver(K_nrows, nzK, Kij, Krow, Kcol, S_scale, C_scale); */
+#endif
+
 
     /* */
     /* by [rhs][n] */
-
     s_star			 = (real *)calloc(K_nrows, sizeof(real));
     /* array that contains the primal dual update */
 
@@ -676,7 +688,6 @@ int main(int argc, char **argv){
     }
     fclose(somefile);
 
-
     /* */
     /*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
     /* problem: all stuff associated with n_dof
@@ -684,18 +695,18 @@ int main(int argc, char **argv){
     if(compute_dsdp>0){assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, &n_vx, dcdp, &hr_point, var_order_suf);}
     else{assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);}
 
-
     x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
     positions_rh = (int *)malloc(n_var * sizeof(int));
     /*for(i=0; i<n_dof; i++){
         printf("i %d, hr %d\n", i, hr_point[i]);
     }*/
 
-
     /* scale matrix & rhs*/
     if(no_scale > 0){
+#ifdef USE_MC30
         for(i=0; i< nzK; i++){
             Kij[i] = Kij[i] * exp(S_scale[Kcol[i]-1]) * exp(S_scale[Krow[i]-1]);
+            /* Kij[i] = Kij[i] * exp((S_scale[Krow[i]-1] + C_scale[Kcol[i]-1])/2.); */
         }
         for(i=0; i< n_dof; i++){
             for(j=0; j < K_nrows; j++){
@@ -711,12 +722,14 @@ int main(int argc, char **argv){
             fprintf(somefile, "\n");
         }
         fclose(somefile);
+#endif
     }
     else{
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
                         "The scaling has been skipped. \n");
     }
 
+    free(C_scale);
     /* factorize the matrix */
 
     mumps_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
@@ -727,7 +740,7 @@ int main(int argc, char **argv){
            "Pardiso done. \n");
     fact_kkt_c = clock();
 
-
+#ifndef PRINT_VERBOSE
     somefile = fopen("result_lin_sol.txt", "w");
     for(i=0; i<K_nrows; i++){
         fprintf(somefile, "\t%d", i);
@@ -738,9 +751,10 @@ int main(int argc, char **argv){
     }
 
     fclose(somefile);
-
+#endif
     somefile = fopen("result_unscaled.txt", "w");
     if(no_scale > 0){
+#ifdef USE_MC30
         for(i=0; i<K_nrows; i++){
             for(j=0; j<n_dof; j++){
                 *(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) * exp(S_scale[i]);
@@ -748,6 +762,7 @@ int main(int argc, char **argv){
             }
             fprintf(somefile, "\n");
         }
+#endif
     }
     fclose(somefile);
 
@@ -799,8 +814,7 @@ int main(int argc, char **argv){
             /*printf("j %d, position %d\n", j, positions_rh[j]);*/
         }
         fclose(somefile);
-
-
+#ifndef PRINT_VERBOSE
         somefile = fopen("sigma_super_basic.txt", "w");
         for(i=0; i<n_dof; i++){
             j = hr_point[i];
@@ -816,7 +830,7 @@ int main(int argc, char **argv){
                     j, i+1, (LUv[2*j] - x[j]) * z_L[j], (x[j] - LUv[2*j+1]) * z_U[j]);
         }
         fclose(somefile);
-
+#endif
         somefile = fopen("result_red_hess.txt", "w");
         /* fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i])); */
         for(i=0; i<n_dof; i++){
@@ -838,13 +852,13 @@ int main(int argc, char **argv){
 
 
 
-
+#ifndef PRINT_VERBOSE
     somefile = fopen("result_primal_dual.txt", "w");
-
     for(i=0; i<K_nrows; i++){
         fprintf(somefile, "\t%f\n", s_star[i]);
     }
     fclose(somefile);
+#endif
 
     suf_iput(reg_suffix_name[1], ASL_Sufkind_var, positions_rh);
 

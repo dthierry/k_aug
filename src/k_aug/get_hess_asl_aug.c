@@ -1,3 +1,4 @@
+#include "config_kaug.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -69,9 +70,9 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
 
     (*md_off_w) = (int *)calloc(sizeof(int), nvar);
     (*nz_row_w) = (int *)calloc(sizeof(int), nvar);
-
+#ifndef PRINT_VERBOSE
     f_hess = fopen("hess_debug.in", "w");
-
+#endif
     k = 0;
     (*missing_nz) = 0;
     /* Hessian of the Lagrange function matrix */
@@ -92,7 +93,9 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
                 (*Wij)[k] = 0.0;
                 (*Wcol)[k] = i + 1;
                 (*Wrow)[k] = i + 1;
+#ifndef PRINT_VERBOSE
                 fprintf(f_hess, "\t%ld\t%ld\t%.g\n", i+1, i+1, 0.0);
+#endif
                 (*md_off_w)[i] = k++;
                 (*missing_nz)++;
                 (*nz_row_w)[i]++; /* Add element to row count */
@@ -104,7 +107,9 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
                     (*Wcol)[k] = i + 1;
                     (*Wrow)[k] = sputinfo->hrownos[j] + 1;
                     (*nz_row_w)[sputinfo->hrownos[j]]++;  /* Add element to row count */
+#ifndef PRINT_VERBOSE
                     fprintf(f_hess, "\t%ld\t%ld\t%.g\n", sputinfo->hrownos[j] + 1, i+1, Hcont[j]);
+#endif
                     k++;
                 }
                 /* Last check */
@@ -114,7 +119,9 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
                     (*Wcol)[k] = i + 1;
                     (*Wrow)[k] = i + 1;
                     (*nz_row_w)[i]++;  /* Add element to row count */
+#ifndef PRINT_VERBOSE
                     fprintf(f_hess, "\t%ld\t%ld\t%.g\n", i+1, i+1, 0.0);
+#endif
                     (*md_off_w)[i] = k++;
                     (*missing_nz)++;
                 }
@@ -137,20 +144,24 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
             (*Wij)[k] = 0.0;
             (*Wcol)[k] = i + 1;
             (*Wrow)[k] = i + 1;
+#ifndef PRINT_VERBOSE
             fprintf(f_hess, "\t%ld\t%ld\t%.g\n", i+1, i+1, 0.0);
+#endif
             (*nz_row_w)[i]++;  /* Add element to row count */
             (*md_off_w)[i] = k++;
             (*missing_nz)++;
         }
     }
+#ifndef PRINT_VERBOSE
     fclose(f_hess);
+#endif
     free(c_body);
     /*printf("k-1 %d\n", k-1);
     printf("n_nz_w %d\n", (*n_nz_w));
     printf("n_nz_w+nvar %d\n", (*n_nz_w) + nvar);
     printf("missing_nz %d\n", missing_nz);*/
     assert(k-1 <= ((*n_nz_w) + nvar));
-
+#ifndef PRINT_VERBOSE
     f_hess = fopen("md_positions.in", "w");
     for(i=0; i< nvar; i++){
         fprintf(f_hess, "i %d\t%d\n", i, (*md_off_w)[i]);
@@ -161,7 +172,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
         fprintf(f_hess, "i %d\t%d\n", i, (*nz_row_w)[i]);
     }
     fclose(f_hess);
-
+#endif
     printf("I[K_AUG]...\t[GET_HESS_ASL]"
            "Missing nz in the Hessian of the Lag: %d\n", *missing_nz);
 

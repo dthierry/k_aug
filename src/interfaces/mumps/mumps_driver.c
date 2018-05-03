@@ -75,10 +75,10 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
     id.comm_fortran = -654654;	/* i have no idea of what this is */
     id.par = 1;	/* the host is not involved */
 
-    id.icntl[0] = -1;
-    id.icntl[1] = -1;
-    id.icntl[2] = -1;
-    id.icntl[3] = 0;
+    id.icntl[1-1] = -1;
+    id.icntl[2-1] = -1;
+    id.icntl[3-1] = -1;
+    id.icntl[4-1] = -1;
 
     id.job = -1;  /* initial job */
 
@@ -93,8 +93,8 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
         id.rhs = b;
         id.nrhs = 1;
         id.lrhs = n;
-        id.icntl[4-1] = 1;  /* Printing level */
-        id.icntl[14-1] = 50; /* Memory factor */
+        id.icntl[4 - 1] = -10;  /* Printing level */
+        id.icntl[14 - 1] = 50; /* Memory factor */
         id.icntl[11 - 1] = 1;  /* Error analysis */
     }
 

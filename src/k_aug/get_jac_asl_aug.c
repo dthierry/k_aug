@@ -3,7 +3,7 @@
 	GET NUMBER OF NZ BY ROW ** done
 	NEED TO PASS NVAR & NCON ** done
 	*/
-
+#include "config_kaug.h"
 #include "get_jac_asl_aug.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,9 +58,11 @@ int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
         printf("E[K_AUG]...\t[GET_JAC_ASL]nerror points to %ld\n", *nerror);
         exit(-1);
     }
+#ifndef PRINT_VERBOSE
     f_jac = fopen("jacobi_debug.in", "w");
     /* for analysis with mc58 */
     fprintf(f_jac, "%d\t%d\t%d\n", ncon, nvar, nzc_);
+#endif
 
     cgx = Cgrad; /* point to the beggining of the list */
     /* Cgrad is an array of pointers
@@ -79,7 +81,9 @@ int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
         for(cg = cgx[i]; cg; cg=cg->next){
             /* moves by nz in the constraint */
             /* actual jacobian (instead of gradient) */
+#ifndef PRINT_VERBOSE
             fprintf(f_jac, "%d\t%d\t%.g\n", i+1, cg->varno+1, Jcont[cg->goff]);
+#endif
             Arow[j] = cg->varno+1;
             Acol[j] = i+1;
             Aij[j] = Jcont[cg->goff];
@@ -117,8 +121,10 @@ int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
             memset(ttemp_v2, 0, sizeof(temp_v2)* k);
         }
     }
-
+#ifndef PRINT_VERBOSE
     fclose(f_jac);
+#endif
+#ifndef PRINT_VERBOSE
     somefile = fopen("anz_p_row.in", "w");
     for(i=0; i<nvar; i++){fprintf(somefile, "%d\n", (*nz_row_a)[i]);}
     fclose(somefile);
@@ -130,6 +136,7 @@ int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
         fprintf(f_jac, "%d\t%d\t%.g\n", Arow[i] , Acol[i], Aij[i]);
     }
     fclose(f_jac);
+#endif
     return 0;
 
 }

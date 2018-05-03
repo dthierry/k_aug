@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+tar -zxvf mc19-1.0.0.tar.gz
+mv mc19-1.0.0 mc19
+cd mc19
+./configure
+make
+cd ..
+echo "All done.\n"
