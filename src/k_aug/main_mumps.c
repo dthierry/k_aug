@@ -43,7 +43,7 @@
 #include "../matrix/dsyev_driver.h"
 #include "../matrix/dpotri_driver.h"
 
-#include "../interfaces/hsl/mc19_driver.h"
+/*#include "../interfaces/hsl/mc19_driver.h"*/
 #include "k_aug_data.h"
 #include "config_kaug.h"
 #ifdef USE_MC30

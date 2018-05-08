@@ -2,7 +2,7 @@
 // Created by dav0 on 5/2/18.
 //
 #include "config_kaug.h"
-#include "mc19_driver.h"
+#include "mc19_driver.dummy_header"
 #include <string.h>
 #include <stdio.h>
 //int mc30driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s)

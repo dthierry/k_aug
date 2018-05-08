@@ -20,7 +20,7 @@ include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers
 
 link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/Linux-x86_64/libmetis thirdparty/scotch/scotch/lib
         thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
-        thirdparty/hsl/mc30/mc30/src)
+        thirdparty/hsl/mc30/mc30/src thirdparty/hsl/mc19/mc19/src)
 
 if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
@@ -39,12 +39,12 @@ add_executable(k_aug ${SOURCES})
 
 
 if (USE_MC30)
-    target_link_libraries(k_aug amplsolver m dl openblas gfortran dmumps mumps_common pthread esmumps scotch scotcherr
-            metis pord mpiseq mc30 gfortran)
+    target_link_libraries(k_aug amplsolver m dl openblas mc19 gfortran dmumps mumps_common pthread esmumps scotch scotcherr
+            metis pord mpiseq mc30)
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
-    target_link_libraries(k_aug amplsolver m dl openblas gfortran dmumps mumps_common pthread esmumps scotch scotcherr
-            metis pord mpiseq gfortran)
+    target_link_libraries(k_aug amplsolver m dl openblas mc19 gfortran dmumps mumps_common pthread esmumps scotch scotcherr
+            metis pord mpiseq)
 
 endif(USE_MC30)
 
