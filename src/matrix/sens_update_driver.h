@@ -1,7 +1,7 @@
 #ifndef SENS_UPDT_DRI
 #define SENS_UPDT_DRI
 
-#include "asl.h"
+#include "../../thirdparty/asl/solvers/asl.h"
 /*
  dgemv(character TRANS, integer M, integer N, double precision ALPHA, double precision, dimension(lda,*) 	A, integer LDA, double precision, dimension(*) 	X)
  integer INCX, double precision BETA, double precision, dimension(*) Y,integer INCY

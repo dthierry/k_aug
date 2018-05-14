@@ -9,7 +9,7 @@ set(k_aug_version_mayor 1)
 set(k_aug_version_minor 0)
 
 set(USE_PARDISO 0)
-set(USE_MC30 1)
+set(USE_MC30 0)
 set(PRINT_VERBOSE 0)
 
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
