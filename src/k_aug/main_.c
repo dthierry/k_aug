@@ -252,7 +252,7 @@ int main(int argc, char **argv){
     timestamp = time(NULL);
     start_c = clock();
 
-    inrt_opts.always_perturb_jacobian = 1;
+    inrt_opts.always_perturb_jacobian = 0;
     inrt_opts.no_inertia = no_inertia;
 
     inrt_pert.d_c = 0.0;
@@ -708,7 +708,6 @@ int main(int argc, char **argv){
     }
 
     somefile = fopen("primal_dual.txt", "w");
-
     for(i=0; i<K_nrows; i++){
         fprintf(somefile, "\t%f\n", s_star[i]);
     }
@@ -744,15 +743,19 @@ int main(int argc, char **argv){
                         *(rhs_baksolve + i*K_nrows + j) * exp(S_scale[j]);
             }
         }
+#ifndef PRINT_VERBOSE
+        f = fopen("scale_facts.txt", "w");
         somefile = fopen("rhs_sens_scaled", "w");
         for(j=0; j < K_nrows; j++){
             for(i=0; i < n_dof; i++){
+                fprintf(f, "%.g\n", S_scale[j]);
                 fprintf(somefile, "\t%f\t", *(rhs_baksolve + i*K_nrows + j) );
             }
             fprintf(somefile, "\n");
         }
         fclose(somefile);
-//#endif
+        fclose(f);
+#endif
     }
     else{
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"

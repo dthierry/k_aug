@@ -31,7 +31,6 @@ int mc30driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
 	
 	real *w;
 	fint ifail, lp;
-	FILE *somefile;
 	int i;
 	/* working array */
 	w = (real *)malloc(sizeof(real) * n * 4);
@@ -49,11 +48,6 @@ int mc30driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
 	
 	free(w);
 
-	somefile = fopen("scale_facts.txt", "w");
-	for(i=0; i < n; i++){
-		fprintf(somefile, "%f\n", s[i]);
-	}
-	fclose(somefile);
 
 	return 0;
 }
