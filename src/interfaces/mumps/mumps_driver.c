@@ -61,9 +61,7 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
     int n_neig=0;
     int inertia_status=1;
     int reduce_pivtol;
-    int jac_pert=0;
     int try_fact=0;
-    int memory_not_ok = 0;
     double trial_pivtol = ls_opts.pivot_tol0;
     double ratiorr = 0.0;
     int inaccurateSol = 0;
@@ -109,18 +107,26 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
             printf("I[K_AUG]...\t[MUMPS_DRIVER]"
                    "Reallocating Memory\n\n");
             id.icntl[14-1] = id.icntl[14-1] * 2 ;
-            if(id.icntl[14-1] > 200){exit(-1);}
+            if(id.icntl[14-1] > 200){
+                fprintf(stderr, "W[K_AUG]...\t[MUMPS_DRIVER]"
+                                "icntl 14 > 200\n");
+//                exit(-1);
+            }
             i--;  /* This does not count for the overall loop */
             j++;
             if (j > ls_opts.max_memory_al_steps) {
                 fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
                                 "Reallocating Memory:Failed\n");
+                exit(-1);
             }
             continue;  /* Try again. */
         }
         else if (id.infog[0]<0) {
             printf("ERROR! (PROC %d) STATUS RETURN: \tINFOG(1)= %d\n\t\t\t\tINFOG(2)= %d\n",
                    myid, id.infog[0], id.infog[1]);
+            if (id.infog[0] == -10){
+                ; /* This one is problematic */
+            }
             exit(-1);
         }
 

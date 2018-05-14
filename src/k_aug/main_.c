@@ -43,12 +43,15 @@
 #include "../matrix/dsyev_driver.h"
 #include "../matrix/dpotri_driver.h"
 
-/*#include "../interfaces/hsl/mc19_driver.h"*/
+
 #include "k_aug_data.h"
 #include "config_kaug.h"
 #ifdef USE_MC30
 #include "../HSL/mc30_driver.h"
+#else
+#include "../interfaces/hsl/mc19_driver.h"
 #endif
+
 #define NUM_REG_SUF 8
 /* experimental! */
 
@@ -73,6 +76,9 @@ static char _no_scaleopt_[]  = {"no_scale"};
 static char _not_zero[] = {"not_zero"};
 static char _computedsdp[] = {"compute_dsdp"};
 static char _computedsdp_verb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
+
+static char _square_override[] = {"square_problem"};
+static char _square_override_noverb[] = {"If nvar = neq, assume there are no bounds and sigma = 0"};
 
 static char _no_inertia[] = {"no_inertia"};
 static char _no_inertia_verb[] = {"Skip inertia correction"};
@@ -105,7 +111,8 @@ static I_Known compute_dsdp_kw = {1, &compute_dsdp};
 static int no_inertia = 0;
 static I_Known no_inertia_kw = {1, &no_inertia};
 
-
+static int square_override = 0;
+static I_Known square_override_kw = {1, &square_override};
 
 /*static char dof_v[] = {"dof_v"};*/
 
@@ -123,10 +130,12 @@ static keyword keywds[] = {
         KW(_no_scaleopt_ , IK_val, &nscale_kw, _no_scaleopt_),
         KW(_not_zero , D_val, &not_zero, _not_zero),
         KW(name1 , IK_val, &dumm_kw, name1),
+        KW(_square_override, IK_val, &square_override_kw, _square_override_noverb),
         KW(_target_log10mu , D_val, &log10mu, _target_log10mu_verb),
 };
+
 static char _solname[] = {"K_AUG"};
-static char banner[] = {"[K_AUG] written by DT\n\n"};
+static char banner[] = {"[K_AUG] written by D.T. @2018\n\n"};
 static char _k_[] = {"k_aug"};
 static char _k_o_[] = {"k_aug_options"};
 static Option_Info Oinfo;
@@ -170,7 +179,6 @@ int main(int argc, char **argv){
     fint K_nrows;
 
     real *S_scale=NULL;
-    real *C_scale=NULL;
 
     fint nzK;
 
@@ -244,7 +252,7 @@ int main(int argc, char **argv){
     timestamp = time(NULL);
     start_c = clock();
 
-    inrt_opts.always_perturb_jacobian = 0;
+    inrt_opts.always_perturb_jacobian = 1;
     inrt_opts.no_inertia = no_inertia;
 
     inrt_pert.d_c = 0.0;
@@ -388,6 +396,16 @@ int main(int argc, char **argv){
             exit(-1);
         }
     }
+    else if (n_var == n_con){
+        fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                        "This problem has no degrees of freedom\n"
+                        "Pass the option square_override for the desired behaviour\n");
+        if(deb_kkt>0){
+            fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
+                            "KKT check!\n");
+        }
+    }
+
 
     x 		 = X0  = M1alloc(n_var*sizeof(real));
     lambda = pi0 = M1alloc(n_con*sizeof(real));
@@ -395,7 +413,6 @@ int main(int argc, char **argv){
     /* need to do part of changing sign for y */
 
     pfgh_read(f, ASL_findgroups);
-
 
     /* NEED TO FIX THIS	*/
     if(lambda==NULL && l_over == 0){
@@ -465,18 +482,23 @@ int main(int argc, char **argv){
     strcat(_file_name_, _chr_timest);
     strcat(_file_name_, ".in");
     fprintf(stderr, "I[K_AUG]...\t[K_AUG_ASL] Filename for dot_sens %s\n", _file_name_);
-
+#ifndef PRINT_VERBOSE
     somefile = fopen("primal0.txt", "w");
     for(i=0; i< n_var; i++){
         fprintf(somefile, "%.g\n", x[i]);
     }
     fclose(somefile);
-    logmu0 = log10mu; /* just in case */
-    mu_adjust_x(n_var, x, LUv, z_L, z_U, log10mu, &logmu0);
+#endif
+    logmu0 = log10mu;
+    if (!square_override){
+        mu_adjust_x(n_var, x, LUv, z_L, z_U, log10mu, &logmu0);
+    }
 
+#ifndef PRINT_VERBOSE
     somefile = fopen("primal1.txt", "w");
     for(i=0; i< n_var; i++){fprintf(somefile, "%.g\n", x[i]);}
     fclose(somefile);
+#endif
 
     sigma = (real *)malloc(sizeof(real) * n_var);
     memset(sigma, 0, sizeof(real) * n_var);
@@ -505,8 +527,9 @@ int main(int argc, char **argv){
         exit(-1);
     }
 
-
-    compute_sigma(asl, n_var, x, suf_zL, suf_zU, z_L, z_U, sigma, not_zero);
+    if(!square_override) {
+        compute_sigma(asl, n_var, x, suf_zL, suf_zU, z_L, z_U, sigma, not_zero);
+    }
 
 
     /* Is this gonna work? */
@@ -657,12 +680,15 @@ int main(int argc, char **argv){
     ev_as_kkt_c = clock();
 
     S_scale = (real *)calloc(sizeof(real), K_nrows);
-    C_scale = (real *)calloc(sizeof(real), K_nrows);
 
 #ifdef USE_MC30
+    printf("I[K_AUG]...\t[K_AUG_ASL]"
+           "MC30 scaling...\n");
     mc30driver(K_nrows, nzK, Kij, Krow, Kcol, S_scale);
 #else
-    /* mc19driver(K_nrows, nzK, Kij, Krow, Kcol, S_scale, C_scale); */
+    printf("I[K_AUG]...\t[K_AUG_ASL]"
+           "MC19 scaling...\n");
+    mc19driver(K_nrows, nzK, Kij, Krow, Kcol, S_scale);
 #endif
 
 
@@ -692,8 +718,12 @@ int main(int argc, char **argv){
     /*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
     /* problem: all stuff associated with n_dof
        solution: use it again for dsdp*/
-    if(compute_dsdp>0){assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, &n_vx, dcdp, &hr_point, var_order_suf);}
-    else{assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);}
+    if(compute_dsdp>0){
+        assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, &n_vx, dcdp, &hr_point, var_order_suf);
+    }
+    else{
+        assemble_rhs_rh(&rhs_baksolve, n_var, n_con, &n_dof, var_f, &hr_point);
+    }
 
     x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
     positions_rh = (int *)malloc(n_var * sizeof(int));
@@ -703,7 +733,7 @@ int main(int argc, char **argv){
 
     /* scale matrix & rhs*/
     if(no_scale > 0){
-#ifdef USE_MC30
+//#ifdef USE_MC30
         for(i=0; i< nzK; i++){
             Kij[i] = Kij[i] * exp(S_scale[Kcol[i]-1]) * exp(S_scale[Krow[i]-1]);
             /* Kij[i] = Kij[i] * exp((S_scale[Krow[i]-1] + C_scale[Kcol[i]-1])/2.); */
@@ -722,14 +752,13 @@ int main(int argc, char **argv){
             fprintf(somefile, "\n");
         }
         fclose(somefile);
-#endif
+//#endif
     }
     else{
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
                         "The scaling has been skipped. \n");
     }
 
-    free(C_scale);
     /* factorize the matrix */
 
     mumps_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
@@ -737,7 +766,7 @@ int main(int argc, char **argv){
 
     /*x_ = rhs_baksolve;*/
     printf("I[K_AUG]...\t[K_AUG_ASL]"
-           "Pardiso done. \n");
+           "Linear solver done. \n");
     fact_kkt_c = clock();
 
 #ifndef PRINT_VERBOSE
@@ -754,7 +783,7 @@ int main(int argc, char **argv){
 #endif
     somefile = fopen("result_unscaled.txt", "w");
     if(no_scale > 0){
-#ifdef USE_MC30
+//#ifdef USE_MC30
         for(i=0; i<K_nrows; i++){
             for(j=0; j<n_dof; j++){
                 *(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) * exp(S_scale[i]);
@@ -762,7 +791,7 @@ int main(int argc, char **argv){
             }
             fprintf(somefile, "\n");
         }
-#endif
+//#endif
     }
     fclose(somefile);
 
