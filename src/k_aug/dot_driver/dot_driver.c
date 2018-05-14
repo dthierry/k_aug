@@ -23,7 +23,7 @@
 *******************************************************************************/
 
 #include "../../../thirdparty/asl/solvers/asl.h"
-#include "getstub.h"
+#include "../../../thirdparty/asl/solvers/getstub.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
