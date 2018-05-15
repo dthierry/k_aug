@@ -1,0 +1,17 @@
+//
+// Created by dav0 on 5/2/18.
+//
+
+#ifndef K_AUG_CONFIG_KAUG_H
+#define K_AUG_CONFIG_KAUG_H
+
+#define k_aug_version_major @k_aug_version_major@
+#define k_aug_version_minor @k_aug_version_minor@
+
+#cmakedefine USE_PARDISO
+#cmakedefine USE_MC30
+#cmakedefine PRINT_VERBOSE
+
+
+
+#endif /* K_AUG_CONFIG_KAUG_H */

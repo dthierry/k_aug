@@ -23,10 +23,13 @@
 #ifndef MUMPS_DRIVER
 #define MUMPS_DRIVER
 
-#include "asl.h"
-#include "dmumps_c.h" /* header that contains types and mumps structure */
+#include "../../../thirdparty/mumps/MUMPS/include/dmumps_c.h" /* header that contains types and mumps structure */
+#include "../../../thirdparty/asl/solvers/asl.h"
+#include "../../k_aug/k_aug_data.h"
 
-int mumps_driver (fint *ia, fint *ja, real *a, fint n, 
-	fint n_rhs, real *b, real *x, fint nvar, fint ncon, int no_inertia, int nza, double logmu0);
+
+int mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
+                 int nza, inertia_perts *inrt_pert, inertia_params inrt_parms,
+                 inertia_options *inrt_opts, double log10mu, linsol_opts ls_opts);
 
 #endif /* MUMPS_DRIVER */

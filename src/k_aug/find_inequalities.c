@@ -24,7 +24,7 @@ void find_ineq_con(fint ncon_,real *LBC, int *c_flag){
 			if(LBC[2*i]!=0.0){c_flag[i] = -2;}
 		}
 		else if (LBC[2*i] <= -1e300 && LBC[2*i+1] >= 1e300){
-			printf("I[KMATRIX]...\t[FIND_INEQUALITIES]"
+			printf("I[K_AUG]...\t[FIND_INEQUALITIES]"
 				"-inf <= c(x) <= +inf detected\b");
 			c_flag[i] = 299;
 		}
@@ -34,7 +34,7 @@ void find_ineq_con(fint ncon_,real *LBC, int *c_flag){
 			if(LBC[2*i]!=0.0){c_flag[i] = -3;}
 		}
 	}
-	printf("I[KMATRIX]...\t[FIND_INEQUALITIES]"
+	printf("I[K_AUG]...\t[FIND_INEQUALITIES]"
 				"summary: eq: %d, leq: %d, geq: %d \n", eq_con, leq_con, geq_con);
 }
 

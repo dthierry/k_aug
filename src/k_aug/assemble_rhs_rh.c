@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 void assemble_rhs_rh(real **rhs_rh, fint nvar, fint ncon, int *n_dof, 
   SufDesc *var_f, int **hr_point){
@@ -33,7 +34,7 @@ void assemble_rhs_rh(real **rhs_rh, fint nvar, fint ncon, int *n_dof,
   int *help_list;
 
   if((nvar-ncon) <= 0){
-    fprintf(stderr, "E[KMATRIX]...\t[ASSM_RHS_RH]"
+    fprintf(stderr, "E[K_AUG]...\t[ASSM_RHS_RH]"
         "n_var <= n_con, exiting... \n");
     exit(-1);
   }
@@ -54,19 +55,19 @@ void assemble_rhs_rh(real **rhs_rh, fint nvar, fint ncon, int *n_dof,
       }
     }
 
-  printf("I[KMATRIX]...\t[ASSM_RHS_RH]"
+  printf("I[K_AUG]...\t[ASSM_RHS_RH]"
     "According to the suffixes declared dof is %d \n", *(n_dof));
   if((*n_dof) > (nvar - ncon)){
-    printf("E[KMATRIX]...\t[ASSM_RHS_RH]"
+    printf("E[K_AUG]...\t[ASSM_RHS_RH]"
       "No valid number of n_dof declared\n");
     exit(-1);
   }
   else if ((*n_dof) < (nvar - ncon) ){
-    printf("I[KMATRIX]...\t[ASSM_RHS_RH]"
+    printf("I[K_AUG]...\t[ASSM_RHS_RH]"
       "n_dof is less than n_var - n_con \n");
   }
   else if ((*n_dof) == (nvar - ncon) ){
-    printf("I[KMATRIX]...\t[ASSM_RHS_RH]"
+    printf("I[K_AUG]...\t[ASSM_RHS_RH]"
       "n_dof exactly n_var - n_con \n");
   }
 

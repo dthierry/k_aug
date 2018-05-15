@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -e
+rm -f mc30
+tar -zxvf mc30-1.0.0.tar.gz
+mv mc30-1.0.0 mc30
+cd mc30
+./configure
+make
+cd ..
+echo "All Done \n"
+
