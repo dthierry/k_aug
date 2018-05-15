@@ -190,3 +190,4 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
     close(f_hess);*/
 
 }
+
