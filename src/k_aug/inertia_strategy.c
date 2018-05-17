@@ -18,7 +18,7 @@ inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inerti
                  inertia_options *i_opts, int *try_n, double log10mu, int *pert_pivot) {
     int j, k;
     double d_w_trial = i_pert->d_w;
-
+    char *dummy;
     (*pert_pivot) = 0; /* Initialize this little guy always. */
     if(i_opts->no_inertia){return 0;}
 
@@ -64,8 +64,6 @@ inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inerti
         else{fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
                              "Wrong inertia(neig < m).\n");
         }
-
-
         if(i_pert->jacobian_perturbed == 0){
             i_pert->jacobian_perturbed = 1;
             fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"

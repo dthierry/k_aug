@@ -65,7 +65,6 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
     double trial_pivtol = ls_opts.pivot_tol0;
     double ratiorr = 0.0;
     int inaccurateSol = 0;
-
     ierr = MPI_Init(NULL, NULL);
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
@@ -96,6 +95,8 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
         id.icntl[11 - 1] = 1;  /* Error analysis */
     }
 
+    if(inrt_opts->always_perturb_jacobian == 1){fprintf(stderr, "always pert is on before fact\n");}
+
     /* inertia checking */
     j = 0;
     for(i=0; i<ls_opts.max_inertia_steps; i++){
@@ -112,7 +113,7 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
                                 "icntl 14 > 200\n");
 //                exit(-1);
             }
-            i--;  /* This does not count for the overall loop */
+            i--;  /* This does not count  for the overall loop */
             j++;
             if (j > ls_opts.max_memory_al_steps) {
                 fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
@@ -134,7 +135,6 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
                "n_neig = %d\n", id.info[12-1]);
         /* Get the number of negative eigenvalues */
         n_neig = id.info[12-1];
-
         inertia_status =
                 inertia_strategy(row_starts, a, nvar, ncon, n_neig, inrt_pert, inrt_parms, inrt_opts, &try_fact, log10mu,
                                  &reduce_pivtol);
