@@ -24,15 +24,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
+#define HUGE_NUMBER 1e300
 
 void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double log10mu_target, double *logmu0){
     /* find a multiplier-primal combination that allows to compute mu*/
     /* adjust primal */
     int i;
     double mul, muu, mu=0.0;
+    double bound_relax_factor = 1e-08;
+    double const *brf_ptr = &bound_relax_factor;
+
+    double machine_epsi = DBL_EPSILON;
+    double brl = 0, bru = 0;
     /*If zL and zU are not declared, they will have a 0.0 value, presumably
       therefore mul and muu will have a 0.0 value as well.
     */
+
+    for(i=0; i<nvar; i++){
+
+        if (lbv[2*i] == lbv[2*i + 1]){ continue;}
+        if (lbv[2*i] > -HUGE_NUMBER){
+            brl = *brf_ptr * ((1 > fabs(lbv[2*i])) ? 1 : fabs(lbv[2*i]));
+            lbv[2*i] = lbv[2*i] - brl;
+        }
+        if (lbv[2*i + 1] < HUGE_NUMBER){
+            bru = *brf_ptr * ((1 > fabs(lbv[2*i + 1])) ? 1 : fabs(lbv[2*i + 1]));
+            lbv[2*i + 1] = lbv[2*i + 1] + bru;
+        }
+    }
+
 
     *logmu0 = log10mu_target;
     for(i=0; i<nvar; i++){
@@ -92,6 +113,8 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double lo
 
 
     /*mu = (log10(mu) > -8.6) ? exp(-8.6): mu;*/
+    /* obsolete! */
+    /*
     for(i=0; i<nvar; i++){
         if((fabs(lbv[2*i])<1e+300) && (fabs(lbv[2*i+1])<1e+300) && (fabs(lbv[2*i+1] - lbv[2*i]) < 1e-12)){
             fprintf(stderr, "W[K_AUG]...\t[ADJUST_MU]""variable %d has lb == ub, setting barrier = 0\t %f.\n", i, fabs(lbv[2*i+1] - lbv[2*i+1]));
@@ -107,7 +130,26 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double lo
         else if(-zU[i] > 0){
             if((x[i] - lbv[2*i + 1])*(zU[i]) < mu*0.5){x[i] = mu/(zU[i]) + lbv[2*i + 1];}
         }
-
+    }*/
+    for(i=0; i<nvar;i++){
+        if (lbv[2*i] == lbv[2*i + 1]){ continue;}
+        if (lbv[2*i] > -HUGE_NUMBER) {
+            if(i == 714){
+                printf("my birthday\n");
+            }
+            if (fabs(x[i] - lbv[2 * i]) < machine_epsi * mu) {
+                brl = (pow(machine_epsi,3.0 / 4.0)) * ((1 > fabs(lbv[2 * i])) ? 1 : fabs(lbv[2 * i]));
+                lbv[2 * i] = lbv[2 * i] - brl;
+                printf("brl %f\n", brl);
+            }
+        }
+        if (lbv[2*i + 1] < HUGE_NUMBER){
+            if (fabs(-x[i] + lbv[2 * i + 1]) < machine_epsi * mu) {
+                bru = (pow(machine_epsi, 3.0 / 4.0)) * ((1 > fabs(lbv[2*i + 1])) ? 1 : fabs(lbv[2*i + 1]));
+                lbv[2*i + 1] = lbv[2*i + 1] + bru;
+                printf("bru %f\n", bru);
+            }
+        }
 
     }
 

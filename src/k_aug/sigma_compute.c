@@ -24,13 +24,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 
 #define HUGE_NUMBER 1e300
 
 
-void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_zU, real *z_L, real *z_U, real *sigma, real not_zero){
+void compute_sigma(ASL *asl, fint nvar, real *x, real *z_L, real *z_U, real *sigma, double logmu){
     int i, j=0;
-    real sl, su;
+    real sl=0, su=0;
+    double machine_epsi = DBL_EPSILON;
     FILE *s_file;
     /*
     if(!(suf_zL->u.r)){
@@ -58,7 +60,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_z
         if(LUv[2*i] < -HUGE_NUMBER){
             sl = 0.0;
         }
-        else if(fabs(x[i] - LUv[2*i]) < 1e-013){
+        else if (fabs(x[i] - LUv[2 * i]) < machine_epsi * exp(logmu)){
             fprintf(stderr, "E[K_AUG]...\t[SIGMA_COMPUTE]"
                             "is x[%d] = xlb?\n", i);
             j++; /* Should we fix sl or su to something else instead:? */
@@ -70,7 +72,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_z
         if(LUv[2*i + 1] > HUGE_NUMBER){
             su = 0.0;
         }
-        else if(fabs(x[i] - LUv[2*i+1]) < 1e-013){
+        else if (fabs(-x[i] + LUv[2 * i + 1]) < machine_epsi * exp(logmu)){
             fprintf(stderr, "E[K_AUG]...\t[SIGMA_COMPUTE]"
                             "is x[%d] = xlb?\n", i);
             j++; /* Should we fix sl or su to something else instead:? */
@@ -96,7 +98,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_z
         fprintf(stderr, "E[K_AUG]...\t[SIGMA_COMPUTE]"
                         "Unresolved sigma values, is the mu computation succesful? or is this a square problem?\n"
                         "Check the sigma_out file with the PRINT_VERBOSE (cmake) option set to 0\n");
-        exit(-1);
+        /*exit(-1);*/
     }
 }
 

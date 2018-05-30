@@ -26,6 +26,6 @@
 #define HUGE_NUMBER 1e300
 
 
-void compute_sigma(ASL *asl, fint nvar, real *x, SufDesc *suf_zL, SufDesc *suf_zU, real *z_L, real *z_U, real *sigma, real not_zero);
+void compute_sigma(ASL *asl, fint nvar, real *x, real *z_L, real *z_U, real *sigma, double logmu);
 
 #endif /* COMP_SIGMA */

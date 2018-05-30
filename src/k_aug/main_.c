@@ -528,7 +528,7 @@ int main(int argc, char **argv){
     }
 
     if(!square_override) {
-        compute_sigma(asl, n_var, x, suf_zL, suf_zU, z_L, z_U, sigma, not_zero);
+        compute_sigma(asl, n_var, x, z_L, z_U, sigma, logmu0);
     }
 
 
@@ -670,8 +670,8 @@ int main(int argc, char **argv){
     /* Recomputed number of nz in the Hessian-of-Lagrangian */
 
 
-    csr_driver((int)n_var, (int)n_con, nzW, nzA, nz_row_w, nz_row_a,
-               (int*)Wrow, (int*)Wcol, Wij, (int*)Arow, (int*)Acol, Aij,
+    csr_driver(n_var, n_con, nzW, nzA, nz_row_w, nz_row_a,
+               Wrow, Wcol, Wij, Arow, Acol, Aij,
                &Krow, &Kcol, &Kij, &Kr_strt);
 
     K_nrows = n_var + n_con; /* Number of rows of the KKT matrix (no ineq) */
