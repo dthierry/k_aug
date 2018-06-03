@@ -82,7 +82,11 @@ void dpotri_driver(int n, double *_a, long Kn, int *sb_p, char *_chr_timest){
 		}
 	}
 	somefile = fopen("inv_red_hess", "w");
-	for(j=0; j<n; j++){for(k=0; k<n; k++){fprintf(somefile, "%f\t", *(a + n * k + j));}fprintf(somefile, "\n");}
+	for(j=0; j<n; j++){
+        for(k=0; k<n; k++){
+            fprintf(somefile, "%.10g\t", *(a + n * k + j));
+        }
+        fprintf(somefile, "\n");}
 	fclose(somefile);
 
 	
