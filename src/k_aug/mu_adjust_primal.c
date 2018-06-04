@@ -134,9 +134,6 @@ void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double lo
     for(i=0; i<nvar;i++){
         if (lbv[2*i] == lbv[2*i + 1]){ continue;}
         if (lbv[2*i] > -HUGE_NUMBER) {
-            if(i == 714){
-                printf("my birthday\n");
-            }
             if (fabs(x[i] - lbv[2 * i]) < machine_epsi * mu) {
                 brl = (pow(machine_epsi,3.0 / 4.0)) * ((1 > fabs(lbv[2 * i])) ? 1 : fabs(lbv[2 * i]));
                 lbv[2 * i] = lbv[2 * i] - brl;
