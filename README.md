@@ -26,20 +26,20 @@
  * In some systems zlib might be required. For example, in ubuntu one can get it by using `sudo apt install zlib1g-dev`. On a mac `brew install zlib` reportedly works.
 
 ## Installation
- -1 Be sure to have a steady internet connection. Enter thirdparty directory and run the get.X or help.X scripts in the following order: 
-  -1 `ASL`
-  -2 `OpenBlas`
-  -3 `Metis`
-  -4 `Scotch`
-  -5 `Mumps`
- -2 Download and place the .tar.gz file of mc19 into the thirdparty/hsl/mc19 directory and then run `help.mc19`
- -3 At the root directory use cmake to generate the makefile e.g. `cmake CMakeLists.txt`
- -4 Run `make`
- -5 Check the bin directory to find the `k_aug` executable
+ 1. Be sure to have a steady internet connection. Enter thirdparty directory and run the get.X or help.X scripts in the following order: 
+    1. `ASL`
+    2. `OpenBlas`
+    3. `Metis`
+    4. `Scotch`
+    5. `Mumps`
+ 2. Download and place the .tar.gz file of mc19 into the thirdparty/hsl/mc19 directory and then run `help.mc19`
+ 3. At the root directory use cmake to generate the makefile e.g. `cmake CMakeLists.txt`
+ 4. Run `make`
+ 5. Check the bin directory to find the `k_aug` executable
 
 ## Known issues
  * AMPL can not recognize command line options
- * 
+ 
 So far, hundreds of times tested.
 `k\_aug` is part of the NMPC-MHE framework. Under BSD 3-Clause license.
 
