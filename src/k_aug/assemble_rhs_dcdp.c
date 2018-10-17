@@ -54,14 +54,15 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
 
     for (i = 0; i < ncon; i++) {
         temp = dcdp->u.i[i]; /* Retrieve value of suffix*/
+        /* Fortran-style */
         /* Find non-zero */
         if (temp != 0) {
-            if (temp > ncon) {/* error */
+            if ((temp - 1) > ncon) {/* error */
                 printf("E[K_AUG]...\t[ASSM_RHS_DCDP]"
                        "The suffix at %d is greater than n_con e.g. %d\n", i, ncon);
                 exit(-1);
 
-            } else if (temp <= 0) {/* error again*/
+            } else if ((temp - 1) <= 0) {/* error again*/
                 printf("E[K_AUG]...\t[ASSM_RHS_DCDP]"
                        "The suffix at %d is negative (%d)\n", i, temp);
                 exit(-1);
