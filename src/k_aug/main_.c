@@ -468,7 +468,13 @@ int main(int argc, char **argv){
         }
     }
 
-    strcat(_file_name_, "dot_in_");
+
+    if (compute_dsdp>0){
+        strcat(_file_name_, "dsdp_in_");
+    }
+    else{
+        strcat(_file_name_, "dot_in_");
+    }
     if(!(f_timestamp->u.i)){
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
                         "No f_timestamp suffix declared, Fallback to default writing mode.\n");
@@ -510,7 +516,7 @@ int main(int argc, char **argv){
     }
     else if(compute_dsdp>0){
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-                        "dsdp for linear C(x) - p = 0 override.\n");
+                        "dsdp for linear C(x) + I*p = 0 override.\n");
         if(dcdp->u.r == NULL && dcdp->u.i == NULL){
             fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
                             "suffix empty no dcdp declared!\n");
@@ -820,7 +826,7 @@ int main(int argc, char **argv){
 
         fclose(somefile);
     }
-
+    /* This should write the dsdp file as well. */
     somefile = fopen(_file_name_, "w"); /* For dot_driver */
     for(i=0; i<n_dof; i++){
         for(j=0; j<K_nrows; j++){
