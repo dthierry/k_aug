@@ -29,15 +29,38 @@ else(USE_MC30)
     link_directories(thirdparty/hsl/mc19/mc19/src)
 endif(USE_MC30)
 
+set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/assemble_rhs_dcdp.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/assemble_rhs_rh.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/csr_driver.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/dot_driver.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/find_inequalities.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/get_jac_asl_aug.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/get_hess_asl_aug.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/inertia_strategy.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/mu_adjust_primal.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/sigma_compute.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/suffix_decl_hand.c
+        ${PROJECT_SOURCE_DIR}/src/interfaces/hsl/mc19_driver.c
+        ${PROJECT_SOURCE_DIR}/src/interfaces/mumps/mumps_driver.c
+        ${PROJECT_SOURCE_DIR}/src/matrix/dsyev_driver.c
+        ${PROJECT_SOURCE_DIR}/src/matrix/dpotri_driver.c
+        )
+
 
 if (USE_MC30)
     file(GLOB SOURCES "src/k_aug/*.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/HSL/*.c")
     message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
 else(USE_MC30)
-    file(GLOB SOURCES "src/k_aug/*.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/interfaces/hsl/*.c")
+    #file(GLOB SOURCES "src/k_aug/*.c" "src/k_aug/dot_driver/dot_driver.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/interfaces/hsl/*.c")
+    #file(SOURCES SRC_FILES)
 endif(USE_MC30)
 
-add_executable(k_aug ${SOURCES})
+add_executable(k_aug ${SRC_FILES})
+#add_executable(dot_sens "src/k_aug/dot_driver/dot_driver.c")
+add_executable(dot_sens src/k_aug/dot_driver/dot_driver.c)
+#add_library(amplsolver STATIC IMPORTED)
+#set_target_properties(amplsolver PROPERTIES IMPORTED_LOCATION thirdparty/asl/amplsolver.a)
 
 
 if (USE_MC30)
@@ -50,6 +73,7 @@ else(USE_MC30)
 
 endif(USE_MC30)
 
+target_link_libraries(dot_sens amplsolver m dl openblas gfortran)
 
 set_target_properties( k_aug
         PROPERTIES
@@ -58,10 +82,10 @@ set_target_properties( k_aug
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
-message("${USE_MC30}")
+#message("${USE_MC30}")
 
-get_cmake_property(_variableNames VARIABLES)
-list (SORT _variableNames)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
+#get_cmake_property(_variableNames VARIABLES)
+#list (SORT _variableNames)
+foreach (var ${SRC_FILES})
+    message("YE " ${SRC_FILES})
 endforeach()

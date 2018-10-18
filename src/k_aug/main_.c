@@ -67,6 +67,8 @@ static char _comp_inv_verb[] = {"Compute the inv(inv(red_hess)) i.e. the Red. He
 static char _dbg_kkt[] = {"deb_kkt"};
 static char _dbg_kkt_verb[] = {"Override dof checking, for debugging purposes"};
 static char _dot_pr_f[] = {"dot_prod"};
+static char _dsdpmode[] = {"dsdp_mode"};
+static char _dsdp_mode_nverb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
 static char name1[] = {"smth"};
 static char _e_eval[] = {"eig_rh"};
 static char _n_rhsopt_[] = {"n_rhs"};
@@ -74,8 +76,6 @@ static char _no_barrieropt_[] = {"no_barrier"};
 static char _no_lambdaopt_[] = {"no_lambda"};
 static char _no_scaleopt_[]  = {"no_scale"};
 static char _not_zero[] = {"not_zero"};
-static char _computedsdp[] = {"compute_dsdp"};
-static char _computedsdp_verb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
 
 static char _square_override[] = {"square_problem"};
 static char _square_override_noverb[] = {"If nvar = neq, assume there are no bounds and sigma = 0"};
@@ -105,8 +105,8 @@ static I_Known nbarrier_kw = {0, &no_barrier};
 static int no_scale = 1;
 static I_Known nscale_kw = {0, &no_scale};
 
-static int compute_dsdp = 0;
-static I_Known compute_dsdp_kw = {1, &compute_dsdp};
+static int dsdp_mode = 0;
+static I_Known dsdp_mode_kw = {1, &dsdp_mode};
 
 static int no_inertia = 0;
 static I_Known no_inertia_kw = {1, &no_inertia};
@@ -118,10 +118,10 @@ static I_Known square_override_kw = {1, &square_override};
 
 /* keywords, they must be in alphabetical order! */
 static keyword keywds[] = {
-        KW(_computedsdp, IK_val, &compute_dsdp_kw, _computedsdp_verb),
         KW(_comp_inv, IK_val, &comp_inv_kw, _comp_inv_verb),
         KW(_dbg_kkt, IK_val, &deb_kkt_kw, _dbg_kkt_verb),
         KW(_dot_pr_f, IK_val, &dot_p_kw, _dot_pr_f),
+        KW(_dsdpmode, IK_val, &dsdp_mode_kw, _dsdp_mode_nverb),
         KW(_e_eval, IK_val, &e_eval_kw, _e_eval),
         KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),
         KW(_no_barrieropt_ , IK_val, &nbarrier_kw, _no_barrieropt_),
@@ -134,7 +134,7 @@ static keyword keywds[] = {
         KW(_target_log10mu , D_val, &log10mu, _target_log10mu_verb),
 };
 
-static char _solname[] = {"K_AUG"};
+
 static char banner[] = {"[K_AUG] written by D.T. @2018\n\n"};
 static char _k_[] = {"k_aug"};
 static char _k_o_[] = {"k_aug_options"};
@@ -237,7 +237,7 @@ int main(int argc, char **argv){
     inertia_options inrt_opts;
     inertia_perts inrt_pert;
     linsol_opts ls_opts;
-
+    putenv("OMP_NUM_THREADS=1");
     inrt_parms.dmin = 10e-20;
     inrt_parms.dmax = 10e+40;
     inrt_parms.d_w0 = 1e-08;
@@ -469,7 +469,7 @@ int main(int argc, char **argv){
     }
 
 
-    if (compute_dsdp>0){
+    if (dsdp_mode > 0) {
         strcat(_file_name_, "dsdp_in_");
     }
     else{
@@ -513,8 +513,7 @@ int main(int argc, char **argv){
     if(deb_kkt>0){
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
                         "KKT check!\n");
-    }
-    else if(compute_dsdp>0){
+    } else if (dsdp_mode > 0) {
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
                         "dsdp for linear C(x) + I*p = 0 override.\n");
         if(dcdp->u.r == NULL && dcdp->u.i == NULL){
@@ -723,7 +722,7 @@ int main(int argc, char **argv){
     /*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
     /* problem: all stuff associated with n_dof
        solution: use it again for dsdp*/
-    if(compute_dsdp>0){
+    if (dsdp_mode > 0) {
         assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, &n_vx, dcdp, &hr_point, var_order_suf);
     }
     else{
@@ -835,7 +834,7 @@ int main(int argc, char **argv){
     }
     fclose(somefile);
     /* Skip this if dsdp */
-    if(compute_dsdp>0){}
+    if (dsdp_mode > 0) {}
     else{
         memset(positions_rh, 0, sizeof(int)*n_var);
         somefile = fopen("sigma_warnings.txt", "w");
@@ -926,7 +925,11 @@ int main(int argc, char **argv){
     printf("I[K_AUG]...\t[K_AUG_ASL]Timings.."
            "Ev&Assem %g, Fact %g, Overall %g.\n",
            ev_as_time, fact_time, overall_time);
-    somefile = fopen("timings_k_aug.txt", "w");
+    if (dsdp_mode > 0) {
+        somefile = fopen("timings_k_aug_dsdp.txt", "a");
+    } else {
+        somefile = fopen("timings_k_aug.txt", "a");
+    }
     fprintf(somefile, "%g\t%g\t%g\n", ev_as_time, fact_time, overall_time);
     fclose(somefile);
     /*exit(0);*/

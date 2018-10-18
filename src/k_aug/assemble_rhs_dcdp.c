@@ -62,7 +62,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
                        "The suffix at %d is greater than n_con e.g. %d\n", i, ncon);
                 exit(-1);
 
-            } else if ((temp - 1) <= 0) {/* error again*/
+            } else if ((temp - 1) < 0) {/* error again*/
                 printf("E[K_AUG]...\t[ASSM_RHS_DCDP]"
                        "The suffix at %d is negative (%d)\n", i, temp);
                 exit(-1);
@@ -103,7 +103,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
         /*(*hr_point)[i] = help_list[i];*/
         (*hr_point)[i] = (ordered_npdp + i)->row;
         /*printf("i %d help %d\n", i, help_list[i]);*/
-        (*rhs_dcdp)[(nvar + ncon) * i + (*hr_point)[i]] = 1.0;
+        (*rhs_dcdp)[(nvar + ncon) * i + (*hr_point)[i]] = -1.0;
     }
 
     free(help_list);

@@ -1,5 +1,5 @@
 CC = gcc
-CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
+CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -ggdb
 FC = gfortran
 S = ../..
 L = -lm -ldl -lgfortran

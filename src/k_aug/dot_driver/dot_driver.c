@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
+#include <string.h>
 
 void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname);
 
@@ -72,15 +74,15 @@ int main(int argc, char **argv) {
 
 
     char ter_msg[] = {"I[[DOT_SENS]]...\t[MAIN]"
-                      "All done."};
+                      "stay чики брики!"};
 
-    char _sname[] = {"[[DOT_SENS]]"};
+    char _sname[] = {"⚔✠dot_sens✠⚔"};
     clock_t start_c, end_c;
     double cpu_timing;
     time_t timestamp;
     char _chr_timest[15] = "";
     char _file_name_[30] = ""; /*  */
-
+    char version[] = {"1.0 \'чувак\'"};
 
     start_c = clock();
     timestamp = time(NULL);
@@ -91,7 +93,7 @@ int main(int argc, char **argv) {
     Oinfo.keywds = keywds;
     Oinfo.n_keywds = nkeywds;
     Oinfo.flags = 0;
-    Oinfo.version = NULL;
+    Oinfo.version = version;
     Oinfo.usage = NULL;
     Oinfo.kwf = NULL;
     Oinfo.feq = NULL;
@@ -141,12 +143,12 @@ int main(int argc, char **argv) {
 
     (suf_ptr + 3)->name = _suf4; /* dcdp */
     (suf_ptr + 3)->table = 0;
-    (suf_ptr + 3)->kind = ASL_Sufkind_con | ASL_Sufkind_input;
+    (suf_ptr + 3)->kind = ASL_Sufkind_con;
     (suf_ptr + 3)->nextra = 0;
 
     (suf_ptr + 4)->name = _suf5; /* DeltaP */
     (suf_ptr + 4)->table = 0;
-    (suf_ptr + 4)->kind = ASL_Sufkind_con | ASL_Sufkind_input;
+    (suf_ptr + 4)->kind = ASL_Sufkind_con | ASL_Sufkind_real;
     (suf_ptr + 4)->nextra = 0;
 
 
@@ -157,11 +159,11 @@ int main(int argc, char **argv) {
     ncon = n_con;
     n_srow = nvar + ncon;
     printf("I[[DOT_SENS]]...\t[MAIN]"
-           "Number of variables %d\n", (int) nvar);
+           "Number of variables %d\n", nvar);
     printf("I[[DOT_SENS]]...\t[MAIN]"
-           "Number of constraints %d\n", (int) ncon);
+           "Number of constraints %d\n", ncon);
     printf("I[[DOT_SENS]]...\t[MAIN]"
-           "Number of rows (primal-dual) %d\n", (int) n_srow);
+           "Number of rows (primal-dual) %d\n", n_srow);
 
     /* Primal and dual */
     X0 = M1alloc(sizeof(double) * nvar);
@@ -172,8 +174,8 @@ int main(int argc, char **argv) {
     suf1 = suf_get(_suf1, ASL_Sufkind_var); /* rh_name */
     suf2 = suf_get(_suf2, ASL_Sufkind_con); /* npdp */
     suf3 = suf_get(_suf3, ASL_Sufkind_prob);
-    suf4 = suf_get(_suf4, ASL_Sufkind_prob); /* dcdp starts at 1 instead of 0th */
-    suf5 = suf_get(_suf5, ASL_Sufkind_prob); /* DeltaP */
+    suf4 = suf_get(_suf4, ASL_Sufkind_con); /* dcdp starts at 1 instead of 0th */
+    suf5 = suf_get(_suf5, ASL_Sufkind_con); /* DeltaP */
     if (dsdp_mode_active) {
         printf("\n\nI[[DOT_SENS]]...\t[MAIN]"
                "dsdp_mode_active\n\n");
@@ -184,7 +186,7 @@ int main(int argc, char **argv) {
             ASL_free(&asl);
             exit(-1);
         }
-        if (!(suf5->u.i)) {
+        if (!(suf5->u.r)) {
             printf("E[[DOT_SENS]]...\t[MAIN]"
                    "No \"%s\" suffix declared. Exiting.\n\n", _suf5);
             ASL_free(&asl);
@@ -228,6 +230,7 @@ int main(int argc, char **argv) {
 
     /* we branch on strategies
     */
+    putenv("OMP_NUM_THREADS=1");
     if (dsdp_mode_active) {
         dsdp_strategy(asl, n_srow, nvar, suf4, suf5, _file_name_);
     } else {
@@ -247,7 +250,13 @@ int main(int argc, char **argv) {
 
     printf("I[[DOT_SENS]]...\t[MAIN]Timing.."
            "%g sec.\n", cpu_timing);
-    f_out = fopen("timings_dot_driver.txt", "w");
+
+    if (dsdp_mode_active) {
+        f_out = fopen("timings_dot_driver_dsdp.txt", "a");
+    } else {
+        f_out = fopen("timings_dot_driver.txt", "a");
+    }
+
     fprintf(f_out, "%g\n", cpu_timing);
     fclose(f_out);
     ASL_free(&asl);
@@ -262,11 +271,15 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
     double *s_hat_T = NULL;
 
     char t = 'T';
-    double ALPHA = -1.0;
+    double ALPHA = -1.0; /*This guy requires a minus here. */
     /*int LDA = 10;*/
     int INCX = 1;
     double BETA = 1.0;
     int INCY = 1;
+    char *tl, *someptr = NULL;
+
+    tl = (char *) calloc(100, sizeof(char));
+
 
     npdp = (double *) malloc(sizeof(double) * n_srow);
     memset(npdp, 0, sizeof(double) * n_srow);
@@ -275,12 +288,12 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
         *(npdp + nvar + i) = suf2->u.r[i];
     }
 
-    u_arr = (int *)malloc(sizeof(int) * nvar); /* This guy points to the E^T s*. To the required rows to be precise */
+    u_arr = (int *) malloc(sizeof(int) * nvar); /* This guy points to the E^T s*. To the required rows to be precise */
     memset(u_arr, 0, sizeof(int) * nvar);
     _n_dof = 0; /* count_dof */
     for (i = 0; i < nvar; i++) {
         if (*((suf1->u.i) + i) != 0) {
-            u_arr[_n_dof] = (int) i;
+            u_arr[_n_dof] = i;
             _n_dof++;
         }
     }
@@ -305,14 +318,18 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
     }
 
     s_hat_T = (double *) malloc(sizeof(double) * n_srow * _n_dof);
+    memset(s_hat_T, 0, sizeof(double) * n_srow * _n_dof);
 
     for (i = 0; i < _n_dof; i++) {
         for (j = 0; j < n_srow; j++) {
-            fscanf(rh_txt, "%lf", (s_hat_T + n_srow * i + j));
+            fscanf(rh_txt, "%s", tl);
+            *(s_hat_T + n_srow * i + j) = strtod(tl, &someptr);
         }
     }
+
+
     fclose(rh_txt);
-    dgemv_(&t, (fint *) &n_srow, (fint *) &_n_dof, &ALPHA, s_hat_T, (fint *) &n_srow, npdp, &INCX, &BETA, u_star,
+    dgemv_(&t, &n_srow, &_n_dof, &ALPHA, s_hat_T, &n_srow, npdp, &INCX, &BETA, u_star,
            &INCY);
     /*sens_update_driver_dot((fint) n_srow, (fint) _n_dof, s_hat_T, npdp, u_star);*/
 
@@ -331,26 +348,28 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
     free(u_arr);
     free(npdp);
     free(s_hat_T);
+    free(tl);
 }
 
 void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname) {
-
     int i, j, _n_p = 0, ncon = (n_srow - nvar), temp;
     double *dpvect = NULL, *s_star0 = NULL, *s_star = NULL;
-    FILE *s_txt = NULL;
+    FILE *s_txt = NULL, *f_out = NULL;
     double *s_ = NULL;
     char t = 'N';
-    double ALPHA = -1.0;
+    double ALPHA = 1.0;
     /*int LDA = 10;*/
     int INCX = 1;
     double BETA = 1.0;
     int INCY = 1;
+    char *tl, *someptr;
 
+    tl = (char *) calloc(100, sizeof(char));
 
     dpvect = (double *) calloc(n_srow, sizeof(double));
     s_star = (double *) calloc(n_srow, sizeof(double));
     s_star0 = (double *) calloc(n_srow, sizeof(double));
-
+    assert(dpvect);
     /* load solution */
     for (i = 0; i < nvar; i++) {
         s_star[i] = asl->i.X0_[i];
@@ -377,9 +396,16 @@ void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *D
             }
             /* put to dpvect temp starts at 1*/
             dpvect[temp - 1] = DeltaP_suf->u.r[i];
+
             _n_p++;
         }
     }
+
+    f_out = fopen("delta_p.out", "w");
+    for (i = 0; i < _n_p; i++) {
+        fprintf(f_out, "%.g\n", dpvect[i]);
+    }
+    fclose(f_out);
 
     /* */
     printf("I[[DOT_SENS]]...\t[DSDP_STRATEGY]"
@@ -400,17 +426,26 @@ void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *D
 
     for (i = 0; i < _n_p; i++) {
         for (j = 0; j < n_srow; j++) {
-            fscanf(s_txt, "%lf", (s_ + n_srow * i + j));
+            fscanf(s_txt, "%s", tl);
+            *(s_ + n_srow * i + j) = strtod(tl, &someptr);
+            /* Convert to float in a safe-ish way */
         }
     }
     fclose(s_txt);
 
-    dgemv_(&t, (fint *) &n_srow, (fint *) &_n_p, &ALPHA, s_, (fint *) &n_srow, dpvect, &INCX, &BETA, s_star, &INCY);
+    dgemv_(&t, &n_srow, &_n_p, &ALPHA, s_, &n_srow, dpvect, &INCX, &BETA, s_star, &INCY);
     /* */
     for (i = 0; i < n_var; i++) { asl->i.X0_[i] = s_star[i]; } /* update primal */
+
+    f_out = fopen("dot_out.out", "w");
+    for (i = 0; i < n_srow; i++) {
+        fprintf(f_out, "%.g\t%.g\t%.g\n", s_star0[i], s_star[i], s_star0[i] - s_star[i]);
+    }
+    fclose(f_out);
 
     free(dpvect);
     free(s_star0);
     free(s_star);
     free(s_);
+    free(tl);
 }
