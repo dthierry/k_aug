@@ -69,7 +69,7 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     id.sym = 2;	/* symmetric indefinite matrix */
-    id.comm_fortran = -654654;	/* i have no idea of what this is */
+    id.comm_fortran = -654654;    /* david: i have no idea of what this is :P */
     id.par = 1;	/* the host is not involved */
 
     id.icntl[1-1] = -1;
@@ -106,11 +106,16 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
         dmumps_c(&id);
         if(id.infog[0] == -9) {
             printf("I[K_AUG]...\t[MUMPS_DRIVER]"
-                   "Reallocating Memory\n\n");
+                   "Reallocating Memory (%d)\n\n", id.icntl[14-1]);
             id.icntl[14-1] = id.icntl[14-1] * 2 ;
             if(id.icntl[14-1] > 200){
                 fprintf(stderr, "W[K_AUG]...\t[MUMPS_DRIVER]"
                                 "icntl 14 > 200\n");
+                n_neig = 0000;
+                inertia_status =
+                        inertia_strategy(row_starts, a, nvar, ncon, n_neig, inrt_pert, inrt_parms, inrt_opts, &try_fact, log10mu,
+                                         &reduce_pivtol);
+
 //                exit(-1);
             }
             i--;  /* This does not count  for the overall loop */
@@ -127,8 +132,24 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
                    myid, id.infog[0], id.infog[1]);
             if (id.infog[0] == -10){
                 ; /* This one is problematic */
+                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                                "The KKT matrix is numerically singular. Assume delta_c > 0\n");
+                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                                "%d last known inertia\n", id.info[12 - 1]);
+                if (inrt_pert->jacobian_perturbed == 1) {
+                    fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                                    "Failure, the KKT matrix has been already perturbed\n");
+                    exit(-1);
+                }
+
+                /*n_neig = id.info[12-1];*/
+                n_neig = 000000;
+                inertia_status =
+                        inertia_strategy(row_starts, a, nvar, ncon, n_neig, inrt_pert, inrt_parms, inrt_opts, &try_fact, log10mu,
+                                         &reduce_pivtol);
+
             }
-            exit(-1);
+            /*exit(-1);*/
         }
 
         printf("I[K_AUG]...\t[MUMPS_DRIVER]"
