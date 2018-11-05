@@ -106,7 +106,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 		}
 		for(i=nvar; i < (nvar+ncon); i++)	{
 			Kcol[i][0] = i + 1;
-			Kij [i][0] = 0.0;
+			Kij [i][0] = 0E+00;
 			rn[i]++;	
 		}	
 	}
