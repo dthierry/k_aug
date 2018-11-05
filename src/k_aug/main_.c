@@ -930,7 +930,7 @@ int main(int argc, char **argv){
     } else {
         somefile = fopen("timings_k_aug.txt", "a");
     }
-    fprintf(somefile, "%g\t%g\t%g\n", ev_as_time, fact_time, overall_time);
+    fprintf(somefile, "%d\t%g\t%g\t%g\n", n_var, ev_as_time, fact_time, overall_time);
     fclose(somefile);
     /*exit(0);*/
     free(positions_rh);

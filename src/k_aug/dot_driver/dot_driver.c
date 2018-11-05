@@ -28,9 +28,10 @@
 #include <assert.h>
 #include <string.h>
 
-void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname);
+void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname,
+                   double *cpudp);
 
-void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2, const char *fname);
+void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2, const char *fname, double *cpudp);
 
 extern void
 dgemv_(char *TRANS, fint *M, fint *N, real *ALPHA, real *A, fint *LDA, real *X, fint *INCX, real *BETA, real *Y,
@@ -83,6 +84,7 @@ int main(int argc, char **argv) {
     char _chr_timest[15] = "";
     char _file_name_[30] = ""; /*  */
     char version[] = {"1.0 \'чувак\'"};
+    double cpudp = 0;
 
     start_c = clock();
     timestamp = time(NULL);
@@ -232,9 +234,9 @@ int main(int argc, char **argv) {
     */
     putenv("OMP_NUM_THREADS=1");
     if (dsdp_mode_active) {
-        dsdp_strategy(asl, n_srow, nvar, suf4, suf5, _file_name_);
+        dsdp_strategy(asl, n_srow, nvar, suf4, suf5, _file_name_, &cpudp);
     } else {
-        npdp_strategy(asl, n_srow, nvar, suf1, suf2, _file_name_);
+        npdp_strategy(asl, n_srow, nvar, suf1, suf2, _file_name_, &cpudp);
     }
 
     suf_iput(_suf3, ASL_Sufkind_prob | ASL_Sufkind_iodcl, (int *) &timestamp);
@@ -257,14 +259,15 @@ int main(int argc, char **argv) {
         f_out = fopen("timings_dot_driver.txt", "a");
     }
 
-    fprintf(f_out, "%g\n", cpu_timing);
+    fprintf(f_out, "%d\t%g\t%g\n", n_var, cpu_timing, cpudp);
     fclose(f_out);
     ASL_free(&asl);
     return 0;
 
 }
 
-void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2, const char *fname) {
+void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2, const char *fname,
+                   double *cpudp) {
     int i, j, _n_dof, ncon = (n_srow - nvar), *u_arr = NULL;
     double *npdp = NULL, *u_star = NULL, *u_star0 = NULL;
     FILE *rh_txt = NULL, *f_out = NULL;
@@ -277,6 +280,7 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
     double BETA = 1.0;
     int INCY = 1;
     char *tl, *someptr = NULL;
+    clock_t startd, endd;
 
     tl = (char *) calloc(100, sizeof(char));
 
@@ -329,9 +333,11 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
 
 
     fclose(rh_txt);
+    startd = clock();
     dgemv_(&t, &n_srow, &_n_dof, &ALPHA, s_hat_T, &n_srow, npdp, &INCX, &BETA, u_star,
            &INCY);
-    /*sens_update_driver_dot((fint) n_srow, (fint) _n_dof, s_hat_T, npdp, u_star);*/
+    endd = clock();
+    *cpudp = (double) (endd - startd) / (double) CLOCKS_PER_SEC; /* I wanted to measure this directly */
 
     f_out = fopen("dot_out.out", "w");
 
@@ -351,7 +357,8 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
     free(tl);
 }
 
-void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname) {
+void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname,
+                   double *cpudp) {
     int i, j, _n_p = 0, ncon = (n_srow - nvar), temp;
     double *dpvect = NULL, *s_star0 = NULL, *s_star = NULL;
     FILE *s_txt = NULL, *f_out = NULL;
@@ -363,6 +370,8 @@ void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *D
     double BETA = 1.0;
     int INCY = 1;
     char *tl, *someptr;
+    clock_t startd, endd;
+
 
     tl = (char *) calloc(100, sizeof(char));
 
@@ -433,9 +442,12 @@ void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *D
     }
     fclose(s_txt);
 
+    startd = clock();
     dgemv_(&t, &n_srow, &_n_p, &ALPHA, s_, &n_srow, dpvect, &INCX, &BETA, s_star, &INCY);
-    /* */
+    endd = clock();
+    *cpudp = (double) (endd - startd) / (double) CLOCKS_PER_SEC; /* I wanted to measure this directly */
     for (i = 0; i < n_var; i++) { asl->i.X0_[i] = s_star[i]; } /* update primal */
+
 
     f_out = fopen("dot_out.out", "w");
     for (i = 0; i < n_srow; i++) {
