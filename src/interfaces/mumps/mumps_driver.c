@@ -69,7 +69,7 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
     ierr = MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
     id.sym = 2;	/* symmetric indefinite matrix */
-    id.comm_fortran = -654654;	/* i have no idea of what this is */
+    id.comm_fortran = -654654;    /* david: i have no idea of what this is :P */
     id.par = 1;	/* the host is not involved */
 
     id.icntl[1-1] = -1;
@@ -132,7 +132,16 @@ mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs,
                    myid, id.infog[0], id.infog[1]);
             if (id.infog[0] == -10){
                 ; /* This one is problematic */
-                printf("%d last inertia\n", id.info[12-1]);
+                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                                "The KKT matrix is numerically singular. Assume delta_c > 0\n");
+                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                                "%d last known inertia\n", id.info[12 - 1]);
+                if (inrt_pert->jacobian_perturbed == 1) {
+                    fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                                    "Failure, the KKT matrix has been already perturbed\n");
+                    exit(-1);
+                }
+
                 /*n_neig = id.info[12-1];*/
                 n_neig = 000000;
                 inertia_status =
