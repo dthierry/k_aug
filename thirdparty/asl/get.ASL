@@ -33,8 +33,8 @@ echo "#include <sys/types.h>" >> temp
 cat asl.h >> temp
 mv temp asl.h
 
-if [[ "$(uname -s)" = CYWGIN* ]]; then
-    sed -i 's|a.out|a.exe|g' mymakefile.u
+if [[ "$(uname -s)" = CYGWIN* ]]; then
+    sed -i 's|a.out|a.exe|g' makefile.u
     echo "WINDOWS"
 elif [[ "$(uname -s)" = Linux* ]]; then
     echo "LINUX"
