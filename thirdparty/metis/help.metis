@@ -32,8 +32,11 @@ rm -rf metis
 mv metis-${metis_ver} metis
 cd metis
 cd include
-sed -i '/#define IDXTYPEWIDTH 32/c\#define IDXTYPEWIDTH 64' metis.h
-sed -i '/#define REALTYPEWIDTH 32/c\#define REALTYPEWIDTH 64' metis.h
+#sed -i '/#define IDXTYPEWIDTH 32/c\#define IDXTYPEWIDTH 64' metis.h
+#sed -i '/#define REALTYPEWIDTH 32/c\#define REALTYPEWIDTH 64' metis.h
+sed -i.bu 's|IDXTYPEWIDTH 32|IDXTYPEWIDTH 64|g' metis.h
+sed -i.bu 's|REALTYPEWIDTH 32|REALTYPEWIDTH 64|g' metis.h
+rm metis.h.bu
 cd ../
 make config
 make
