@@ -45,6 +45,8 @@ mv MUMPS_${mumps_ver} MUMPS
 
 cd MUMPS
 cp Make.inc/Makefile.debian.SEQ ./Makefile.inc
+os=$(uname -s)
+ar=$(uname -m)
 
 if [[ "$(uname -s)" = CYGWIN* ]]; then
     echo "WINDOWS"
@@ -52,7 +54,7 @@ if [[ "$(uname -s)" = CYGWIN* ]]; then
     sed -i '1s|^|mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))\n|' Makefile.inc 
     sed -i 's|LSCOTCHDIR = /usr/lib|LSCOTCHDIR = $(current_dir)/../../scotch/scotch/lib|g' Makefile.inc
     sed -i 's|ISCOTCH   = -I/usr/include/scotch|ISCOTCH = -I$(current_dir)/../../scotch/scotch/include|g' Makefile.inc
-    sed -i 's|LMETISDIR = /usr/lib|LMETISDIR = $(current_dir)/../../metis/metis/build/Linux-x86_64/libmetis|g' Makefile.inc
+    sed -i 's|LMETISDIR = /usr/lib|LMETISDIR = $(current_dir)/../../metis/metis/build//libmetis|g' Makefile.inc
     sed -i 's|IMETIS    = -I/usr/include/metis|IMETIS = -I$(current_dir)/../../metis/metis/include|g' Makefile.inc
     sed -i 's|LAPACK = -llapack|LAPACK = $(current_dir)/../../openblas/OpenBLAS/libopenblas.dll.a|g' Makefile.inc
     sed -i 's|LIBBLAS = -lblas|LIBBLAS = $(current_dir)/../../openblas/OpenBLAS/libopenblas.dll.a|g' Makefile.inc
