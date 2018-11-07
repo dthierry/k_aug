@@ -47,7 +47,6 @@ cd MUMPS
 cp Make.inc/Makefile.debian.SEQ ./Makefile.inc
 
 if [[ "$(uname -s)" = CYGWIN* ]]; then
-    sed -i 's|a.out|a.exe|g' mymakefile.u
     echo "WINDOWS"
     sed -i '1s|^|current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))\n|' Makefile.inc 
     sed -i '1s|^|mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))\n|' Makefile.inc 
