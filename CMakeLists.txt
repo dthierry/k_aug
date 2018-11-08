@@ -3,6 +3,7 @@ project(k_aug C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-g -Wall -ansi -pedantic-errors -Wall -W")
+message(STATUS "\nWelcome to k_aug.\n\n I hope you already have the dependencies.\n\n")
 #set( PROJECT_LINK_LIBS amplsolver.a )
 execute_process(COMMAND uname -s OUTPUT_VARIABLE OS)
 
@@ -14,7 +15,7 @@ execute_process(COMMAND uname -m OUTPUT_VARIABLE AR)
 string(REGEX REPLACE "\n$" "" OS2 "${OS}")
 string(REGEX REPLACE "\n$" "" AR2 "${AR}")
 set(newvar2 ${OS2}-${AR2})
-message(STATUS "newvar2 :" ${newvar2})
+message(STATUS "Your current OS and ARCH:" ${newvar2})
 if (${OS} MATCHES "CYGWIN")
 	message(STATUS "CYGWIN DETECTED !!!!!!!!!!!!!!")
 endif (${OS} MATCHES "CYGWIN")
@@ -46,31 +47,46 @@ else(USE_MC30)
     link_directories(thirdparty/hsl/mc19/mc19/src)
 endif(USE_MC30)
 
+set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/assemble_rhs_dcdp.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/assemble_rhs_rh.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/csr_driver.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/dot_driver.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/find_inequalities.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/get_jac_asl_aug.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/get_hess_asl_aug.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/inertia_strategy.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/mu_adjust_primal.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/sigma_compute.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/suffix_decl_hand.c
+        ${PROJECT_SOURCE_DIR}/src/interfaces/hsl/mc19_driver.c
+        ${PROJECT_SOURCE_DIR}/src/interfaces/mumps/mumps_driver.c
+        ${PROJECT_SOURCE_DIR}/src/matrix/dsyev_driver.c
+        ${PROJECT_SOURCE_DIR}/src/matrix/dpotri_driver.c
+        )
+
+
 if (USE_MC30)
     file(GLOB SOURCES "src/k_aug/*.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/HSL/*.c")
     message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
 else(USE_MC30)
-    file(GLOB SOURCES "src/k_aug/*.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/interfaces/hsl/*.c")
+    #file(GLOB SOURCES "src/k_aug/*.c" "src/k_aug/dot_driver/dot_driver.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/interfaces/hsl/*.c")
+    #file(SOURCES SRC_FILES)
 endif(USE_MC30)
 
-get_property(test_LINK_DIRECTORIES DIRECTORY PROPERTY LINK_DIRECTORIES)
-message(STATUS " :" ${test_LINK_DIRECTORIES})
-add_executable(k_aug ${SOURCES})
+add_executable(k_aug ${SRC_FILES})
+#add_executable(dot_sens "src/k_aug/dot_driver/dot_driver.c")
+add_executable(dot_sens src/k_aug/dot_driver/dot_driver.c)
 
 if (USE_MC30)
-    target_link_libraries(k_aug amplsolver m dl openblas gfortran dmumps mumps_common pthread esmumps scotch scotcherr
-            metis pord mpiseq mc30 gfortran)
+    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas)
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
-	#	target_link_libraries(k_aug amplsolver m dl  ${PROJECT_SOURCE_DIR}/thirdparty/openblas/OpenBLAS/cygopenblas_haswellp-r0.3.4.dev.a gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran)
-	#		target_link_libraries(k_aug amplsolver m dl ${PROJECT_SOURCE_DIR}/thirdparty/openblas/OpenBLAS/libopenblas.dll.a gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran)
-	#		target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran)
-	#		target_link_libraries(k_aug amplsolver m dl ${PROJECT_SOURCE_DIR}/thirdparty/openblas/OpenBLAS/libopenblas.dll.a gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran ${PROJECT_SOURCE_DIR}/thirdparty/openblas/OpenBLAS/libopenblas.dll.a)
-		# CYGWIN: are you f-ing kidding me?!
-		target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas)
-
-
+	# CYGWIN: are you kidding me?!
+	target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas)
 endif(USE_MC30)
+
+target_link_libraries(dot_sens amplsolver m dl openblas gfortran)
 
 set_target_properties( k_aug
         PROPERTIES
@@ -79,5 +95,5 @@ set_target_properties( k_aug
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
-message("${USE_MC30}")
+
 

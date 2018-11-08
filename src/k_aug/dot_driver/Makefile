@@ -1,5 +1,5 @@
 CC = gcc
-CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings
+CCFLAGS = -g -Wall -ansi -pedantic-errors -Wall -W -Wconversion -Wshadow -Wcast-qual -Wwrite-strings -ggdb
 FC = gfortran
 S = ../..
 L = -lm -ldl -lgfortran
@@ -16,10 +16,7 @@ OPENBLASLIB = -L$(current_dir)/../../../thirdparty/openblas/OpenBLAS/ -lopenblas
 LIBMC30 = ${MC30ROOT}libmc30.a -lgfortran -lm -lquadmath
 SRC = dot_driver.c
 
-_dot_drivers: sens_update_driver
-	$(CC) $(CCFLAGS) $(SRC) -o $(ONAME) -I$(S)/ASL/solvers/ -I$(S)/matrix/ $A sens_update_driver_dot.o $(OPENBLASLIB) $L
-
-sens_update_driver:
-	$(CC) $(CCFLAGS) -c $(S)/matrix/sens_update_driver_dot.c -I$(S)/ASL/solvers/ 
+_dot_drivers:
+	$(CC) $(CCFLAGS) $(SRC) -o $(ONAME) -I$(S)/ASL/solvers/ -I$(S)/matrix/ $A $(OPENBLASLIB) $L
 
 
