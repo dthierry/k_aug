@@ -3,7 +3,7 @@ project(k_aug C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-g -Wall -ansi -pedantic-errors -Wall -W")
-message(STATUS "\nWelcome to k_aug.\n\n I hope you already have the dependencies.\n\n")
+message(STATUS "\nWelcome to k_aug.\n\n I hope you have already compiled the dependencies.\n\n")
 #set( PROJECT_LINK_LIBS amplsolver.a )
 execute_process(COMMAND uname -s OUTPUT_VARIABLE OS)
 
@@ -17,7 +17,7 @@ string(REGEX REPLACE "\n$" "" AR2 "${AR}")
 set(newvar2 ${OS2}-${AR2})
 message(STATUS "Your current OS and ARCH:" ${newvar2})
 if (${OS} MATCHES "CYGWIN")
-	message(STATUS "CYGWIN DETECTED !!!!!!!!!!!!!!")
+	message(STATUS "\n\nCYGWIN DETECTED:\n Make sure openblas is in the PATH after compilation")
 endif (${OS} MATCHES "CYGWIN")
 
 set(k_aug_version_mayor 1)
@@ -94,6 +94,8 @@ set_target_properties( k_aug
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
+
+message(STATUS "\n\nPlease run make.")
 
 
 
