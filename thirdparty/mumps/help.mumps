@@ -45,12 +45,49 @@ mv MUMPS_${mumps_ver} MUMPS
 
 cd MUMPS
 cp Make.inc/Makefile.debian.SEQ ./Makefile.inc
-sed -i '1s|^|current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))\n|' Makefile.inc 
-sed -i '1s|^|mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))\n|' Makefile.inc 
-sed -i 's|LSCOTCHDIR = /usr/lib|LSCOTCHDIR = $(current_dir)/../../scotch/scotch/lib|g' Makefile.inc
-sed -i 's|ISCOTCH   = -I/usr/include/scotch|ISCOTCH = -I$(current_dir)/../../scotch/scotch/include|g' Makefile.inc
-sed -i 's|LMETISDIR = /usr/lib|LMETISDIR = $(current_dir)/../../metis/metis/build/Linux-x86_64/libmetis|g' Makefile.inc
-sed -i 's|IMETIS    = -I/usr/include/metis|IMETIS = -I$(current_dir)/../../metis/metis/include|g' Makefile.inc
-sed -i 's|LAPACK = -llapack|LAPACK = $(current_dir)/../../openblas/OpenBLAS/libopenblas.a|g' Makefile.inc
-sed -i 's|LIBBLAS = -lblas|LIBBLAS = $(current_dir)/../../openblas/OpenBLAS/libopenblas.a|g' Makefile.inc
+os=$(uname -s)
+ar=$(uname -m)
+metis_dir="$os-$ar"
+echo $metis_dir
+if [[ "$(uname -s)" = CYGWIN* ]]; then
+    echo "WINDOWS"
+    sed -i '1s|^|current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))\n|' Makefile.inc 
+    sed -i '1s|^|mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))\n|' Makefile.inc 
+    sed -i 's|LSCOTCHDIR = /usr/lib|LSCOTCHDIR = $(current_dir)/../../scotch/scotch/lib|g' Makefile.inc
+    sed -i 's|ISCOTCH   = -I/usr/include/scotch|ISCOTCH = -I$(current_dir)/../../scotch/scotch/include|g' Makefile.inc
+    sed -i "s|LMETISDIR = /usr/lib|LMETISDIR = \$(current_dir)/../../metis/metis/build/$metis_dir/libmetis|g" Makefile.inc
+    sed -i 's|IMETIS    = -I/usr/include/metis|IMETIS = -I$(current_dir)/../../metis/metis/include|g' Makefile.inc
+    sed -i 's|LAPACK = -llapack|LAPACK = $(current_dir)/../../openblas/OpenBLAS/libopenblas.dll.a|g' Makefile.inc
+    sed -i 's|LIBBLAS = -lblas|LIBBLAS = $(current_dir)/../../openblas/OpenBLAS/libopenblas.dll.a|g' Makefile.inc
+elif [[ "$(uname -s)" = Linux* ]]; then
+    echo "LINUX"
+    sed -i '1s|^|current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))\n|' Makefile.inc 
+    sed -i '1s|^|mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))\n|' Makefile.inc 
+    sed -i 's|LSCOTCHDIR = /usr/lib|LSCOTCHDIR = $(current_dir)/../../scotch/scotch/lib|g' Makefile.inc
+    sed -i 's|ISCOTCH   = -I/usr/include/scotch|ISCOTCH = -I$(current_dir)/../../scotch/scotch/include|g' Makefile.inc
+    sed -i "s|LMETISDIR = /usr/lib|LMETISDIR = \$(current_dir)/../../metis/metis/build/$metis_dir/libmetis|g" Makefile.inc
+    sed -i 's|IMETIS    = -I/usr/include/metis|IMETIS = -I$(current_dir)/../../metis/metis/include|g' Makefile.inc
+    sed -i 's|LAPACK = -llapack|LAPACK = $(current_dir)/../../openblas/OpenBLAS/libopenblas.a|g' Makefile.inc
+    sed -i 's|LIBBLAS = -lblas|LIBBLAS = $(current_dir)/../../openblas/OpenBLAS/libopenblas.a|g' Makefile.inc
+elif [[ "$(uname -s)" = Darwin* ]]; then
+    echo "DARWIN"
+    sed -i '1s|^|current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))\n|' Makefile.inc 
+    sed -i '1s|^|mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))\n|' Makefile.inc 
+    sed -i 's|LSCOTCHDIR = /usr/lib|LSCOTCHDIR = $(current_dir)/../../scotch/scotch/lib|g' Makefile.inc
+    sed -i 's|ISCOTCH   = -I/usr/include/scotch|ISCOTCH = -I$(current_dir)/../../scotch/scotch/include|g' Makefile.inc
+    sed -i "s|LMETISDIR = /usr/lib|LMETISDIR = \$(current_dir)/../../metis/metis/build/$metis_dir/libmetis|g" Makefile.inc
+    sed -i 's|IMETIS    = -I/usr/include/metis|IMETIS = -I$(current_dir)/../../metis/metis/include|g' Makefile.inc
+    sed -i 's|LAPACK = -llapack|LAPACK = $(current_dir)/../../openblas/OpenBLAS/libopenblas.a|g' Makefile.inc
+    sed -i 's|LIBBLAS = -lblas|LIBBLAS = $(current_dir)/../../openblas/OpenBLAS/libopenblas.a|g' Makefile.inc
+
+else
+    echo "NO SYSTEM"
+fi
+
 make
+echo "
+█▀▄▀█ █░░█ █▀▄▀█ █▀▀█ █▀▀ ░ ░   █▀▀█ █▀▀ █▀▀█ █▀▀▄ █░░█
+█░▀░█ █░░█ █░▀░█ █░░█ ▀▀█ ▄ ▄   █▄▄▀ █▀▀ █▄▄█ █░░█ █▄▄█
+▀░░░▀ ░▀▀▀ ▀░░░▀ █▀▀▀ ▀▀▀ ░ █   ▀░▀▀ ▀▀▀ ▀░░▀ ▀▀▀░ ▄▄▄█
+"
+
