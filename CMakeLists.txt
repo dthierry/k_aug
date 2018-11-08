@@ -3,7 +3,22 @@ project(k_aug C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-g -Wall -ansi -pedantic-errors -Wall -W")
+message(STATUS "\nWelcome to k_aug.\n\n I hope you already have the dependencies.\n\n")
 #set( PROJECT_LINK_LIBS amplsolver.a )
+execute_process(COMMAND uname -s OUTPUT_VARIABLE OS)
+
+#MESSAGE( STATUS "OS: " ${OS} )
+execute_process(COMMAND uname -m OUTPUT_VARIABLE AR)
+#MESSAGE( STATUS "AR: " ${AR} )
+#set(newvar ${OS}-${AR})
+#message(STATUS "newvar :" ${newvar})
+string(REGEX REPLACE "\n$" "" OS2 "${OS}")
+string(REGEX REPLACE "\n$" "" AR2 "${AR}")
+set(newvar2 ${OS2}-${AR2})
+message(STATUS "Your current OS and ARCH:" ${newvar2})
+if (${OS} MATCHES "CYGWIN")
+	message(STATUS "CYGWIN DETECTED !!!!!!!!!!!!!!")
+endif (${OS} MATCHES "CYGWIN")
 
 set(k_aug_version_mayor 1)
 set(k_aug_version_minor 0)
@@ -18,10 +33,13 @@ configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
 include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers
         thirdparty/mumps/MUMPS/include thirdparty/mumps/MUMPS/libseq)
 
-link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/Linux-x86_64/libmetis thirdparty/scotch/scotch/lib
+link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis thirdparty/scotch/scotch/lib
         thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
         )
-
+#link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/CYGWIN_NT-6.1-x86_64/libmetis thirdparty/scotch/scotch/lib
+#        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
+#        )
+#link_directories("thirdparty/metis/metis/build/${newvar2}/libmetis")
 if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
     message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
@@ -59,18 +77,13 @@ endif(USE_MC30)
 add_executable(k_aug ${SRC_FILES})
 #add_executable(dot_sens "src/k_aug/dot_driver/dot_driver.c")
 add_executable(dot_sens src/k_aug/dot_driver/dot_driver.c)
-#add_library(amplsolver STATIC IMPORTED)
-#set_target_properties(amplsolver PROPERTIES IMPORTED_LOCATION thirdparty/asl/amplsolver.a)
-
 
 if (USE_MC30)
-    target_link_libraries(k_aug amplsolver m dl openblas gfortran dmumps mumps_common pthread esmumps scotch scotcherr
-            metis pord mpiseq mc30 gfortran)
+    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas)
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
-    target_link_libraries(k_aug amplsolver m dl openblas gfortran dmumps mumps_common pthread esmumps scotch scotcherr
-            metis pord mpiseq mc19 gfortran)
-
+	# CYGWIN: are you kidding me?!
+	target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas)
 endif(USE_MC30)
 
 target_link_libraries(dot_sens amplsolver m dl openblas gfortran)
@@ -82,10 +95,5 @@ set_target_properties( k_aug
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
-#message("${USE_MC30}")
 
-#get_cmake_property(_variableNames VARIABLES)
-#list (SORT _variableNames)
-foreach (var ${SRC_FILES})
-    message("YE " ${SRC_FILES})
-endforeach()
+

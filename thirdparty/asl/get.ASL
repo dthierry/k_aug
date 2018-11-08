@@ -32,17 +32,27 @@ echo "#include <stddef.h>" > temp
 echo "#include <sys/types.h>" >> temp
 cat asl.h >> temp
 mv temp asl.h
+
+if [[ "$(uname -s)" = CYGWIN* ]]; then
+    sed -i 's|a.out|a.exe|g' makefile.u
+    echo "WINDOWS"
+elif [[ "$(uname -s)" = Linux* ]]; then
+    echo "LINUX"
+else
+    echo "NO SYSTEM"
+fi
+
+
+
 make -f makefile.u
 cp amplsolver.a libamplsolver.a
 cd ..
 rm solvers.tgz
 
 echo "
-    ___o .--.
-   /___| |OO|
-  /'   |_|  |_
-       (_    _)
-       | |   \
-       | |oo_/sjw \n\n done "
+█▀▀█ █▀▀ █░░   █▀▀█ █▀▀ █▀▀█ █▀▀▄ █░░█
+█▄▄█ ▀▀█ █░░   █▄▄▀ █▀▀ █▄▄█ █░░█ █▄▄█
+▀░░▀ ▀▀▀ ▀▀▀   ▀░▀▀ ▀▀▀ ▀░░▀ ▀▀▀░ ▄▄▄█
+"
 
 
