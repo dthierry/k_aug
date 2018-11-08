@@ -15,6 +15,17 @@
  * [CMAKE](https://cmake.org/) Version 3.5 or higher.
  * In some systems zlib might be required. For example, in ubuntu one can get it by using `sudo apt install zlib1g-dev`. On a mac `brew install zlib` reportedly works.
  * gcc compilers including gfortran
+ 
+## Requirements [CYGWIN]
+ * cmake
+ * gcc-core
+ * gfortran
+ * g++
+ * git (Use the CYGWIN version. Do not use the windows version!)
+ * make
+ * wget
+ * zlib-devel
+
 
 ## Dependencies
  * [MC19](http://www.hsl.rl.ac.uk/download/MC19/1.0.0/a/) (HSL)
@@ -38,12 +49,14 @@
  3. At the root directory use cmake to generate the makefile e.g. `cmake CMakeLists.txt`
  4. Run `make`
  5. Check the bin directory to find the `k_aug` executable
+ 6. (Windows) add the OpenBLAS directory to the PATH
 
 ## Known issues
  * AMPL can not recognize command line options
  * MUMPS will often try to use multiple cores. It is preferable to turn off this functionallity, set `OMP_NUM_CORES=1` .
+ * Mac os is currently not supported.
  
 So far, hundreds of times tested.
-`k_aug` is part of the NMPC-MHE framework. Written by David Thierry, under BSD 3-Clause license.
+`k_aug` is an essential part of the NMPC-MHE framework(caprese). Written by David Thierry 2017, under BSD 3-Clause license.
 
 
