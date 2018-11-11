@@ -66,13 +66,13 @@ set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
         )
 
 
-if (USE_MC30)
-    file(GLOB SOURCES "src/k_aug/*.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/HSL/*.c")
-    message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
-else(USE_MC30)
+    #if (USE_MC30)
+    #file(GLOB SOURCES "src/k_aug/*.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/HSL/*.c")
+    #message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
+    #else(USE_MC30)
     #file(GLOB SOURCES "src/k_aug/*.c" "src/k_aug/dot_driver/dot_driver.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/interfaces/hsl/*.c")
     #file(SOURCES SRC_FILES)
-endif(USE_MC30)
+    #endif(USE_MC30)
 
 add_executable(k_aug ${SRC_FILES})
 #add_executable(dot_sens "src/k_aug/dot_driver/dot_driver.c")
@@ -86,7 +86,7 @@ else(USE_MC30)
 	target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas)
 endif(USE_MC30)
 
-target_link_libraries(dot_sens amplsolver m dl openblas gfortran)
+target_link_libraries(dot_sens amplsolver m dl gfortran openblas)
 
 set_target_properties( k_aug
         PROPERTIES
