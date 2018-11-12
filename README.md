@@ -19,9 +19,9 @@
 ## Requirements [CYGWIN]
  * cmake
  * gcc-core
- * gfortran
+ * gcc-gfortran(gfortran)
  * g++
- * git (Use the CYGWIN version. Do not use the windows version!)
+ * git (Use the CYGWIN version. DO NOT use the windows version!)
  * make
  * wget
  * zlib-devel

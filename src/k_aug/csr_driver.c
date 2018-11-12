@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
+#include "../../config_kaug.h"
 
 void csr_driver(int nvar, int ncon, int nzW, int nzA,
 	int *nzr_w, int *nzr_a,
@@ -110,32 +110,41 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 			rn[i]++;	
 		}	
 	}
-
+#ifndef PRINT_VERBOSE
 	somefile = fopen("row_start.in", "w");
+#endif
 	(*Kr_strt)[0] = 1;
+#ifndef PRINT_VERBOSE
 	fprintf(somefile, "\t%d\n", (*Kr_strt)[0]);
+#endif
 	sum_rn += rn[0] + 1;
 	
 	for(i=1; i<nvar; i++){
 		(*Kr_strt)[i] = sum_rn;
+#ifndef PRINT_VERBOSE
 		fprintf(somefile, "\t%d\n", (*Kr_strt)[i]);
+#endif
 		sum_rn += rn[i];
 	}
 
 	if(Pardiso_flag){
 		for(i=nvar; i < (ncon + nvar); i++){
 			(*Kr_strt)[i] = sum_rn;
+#ifndef PRINT_VERBOSE
 			fprintf(somefile, "\t%d\n", (*Kr_strt)[i]);
+#endif
 			sum_rn += rn[i];
 		}
 		(*Kr_strt)[(ncon + nvar)] = sum_rn;
+#ifndef PRINT_VERBOSE
 		fprintf(somefile, "\t%d\n", (*Kr_strt)[(ncon + nvar)]);
+#endif
 	}
 	/*else do something when not pardiso*/
-	
 
+#ifndef PRINT_VERBOSE
 	fclose(somefile);
-
+#endif
 	/* If lower triangular*/
 	if(Pardiso_flag){nzK = nzA + nzW + ncon;}
 	else{nzK = nzA + nzW;}
@@ -149,17 +158,23 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 	assert(*K  != NULL);
 
 	k = 0;
+#ifndef PRINT_VERBOSE
 	somefile = fopen("kkt.in", "w");
+#endif
 	for(i=0; i<(nvar + ncon); i++){
 		for(j=0; j<rn[i]; j++){
-		fprintf(somefile, "\t%d\t%d\t%.g\n", i+1, Kcol[i][j], Kij[i][j]);
+#ifndef PRINT_VERBOSE
+            fprintf(somefile, "\t%d\t%d\t%.g\n", i+1, Kcol[i][j], Kij[i][j]);
+#endif
 		(*Kr)[k] = i + 1;
 		(*Kc)[k] = Kcol[i][j];
 		(*K)[k]  = Kij[i][j];
 		k++;
 		}
 	}
+#ifndef PRINT_VERBOSE
 	fclose(somefile);
+#endif
 	
 	assert(k == nzK);
 

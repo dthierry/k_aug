@@ -45,7 +45,7 @@
 
 
 #include "k_aug_data.h"
-#include "config_kaug.h"
+#include "../../config_kaug.h"
 #ifdef USE_MC30
 #include "../HSL/mc30_driver.h"
 #else
@@ -521,6 +521,7 @@ int main(int argc, char **argv){
                             "suffix empty no dcdp declared!\n");
             exit(-1);
         }
+
         somefile = fopen("conorder.txt", "w");
         for(i=0;i<n_con;i++){fprintf(somefile, "%d\n", dcdp->u.i[i]);}
         fclose(somefile);
@@ -712,11 +713,13 @@ int main(int argc, char **argv){
         }
     }
 
+#ifndef PRINT_VERBOSE
     somefile = fopen("primal_dual.txt", "w");
     for(i=0; i<K_nrows; i++){
         fprintf(somefile, "\t%f\n", s_star[i]);
     }
     fclose(somefile);
+#endif
 
     /* */
     /*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
@@ -789,24 +792,37 @@ int main(int argc, char **argv){
 
     fclose(somefile);
 #endif
+#ifndef PRINT_VERBOSE
     somefile = fopen("result_unscaled.txt", "w");
+#endif
     if(no_scale > 0){
 //#ifdef USE_MC30
         for(i=0; i<K_nrows; i++){
             for(j=0; j<n_dof; j++){
                 *(x_+ j * K_nrows + i) = *(x_+ j * K_nrows + i) * exp(S_scale[i]);
+#ifndef PRINT_VERBOSE
                 fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));
+#endif
+
             }
+#ifndef PRINT_VERBOSE
             fprintf(somefile, "\n");
+#endif
         }
 //#endif
     }
+#ifndef PRINT_VERBOSE
     fclose(somefile);
+#endif
 
     if(var_order_suf->u.i){
+        printf("I[K_AUG]...\t[K_AUG_ASL]"
+               "var_order suffix detected. Make sure var_order[i] > 0.\n");
+#ifndef PRINT_VERBOSE
         somefile = fopen("varorder.txt", "w");
         for(i=0; i<n_var; i++){fprintf(somefile, "%d\n", *(var_order_suf->u.i + i));}
         fclose(somefile);
+#endif
         somefile = fopen("dxdp_.dat", "w");
         /*for(i=0; i<n_var; i++){
             if(*(var_order_suf->u.i + i)>0){
@@ -818,7 +834,7 @@ int main(int argc, char **argv){
         }*/
         for(i=0; i<n_vx; i++){
             j = hr_point[i]; /* The row */
-            fprintf(somefile, "%d", j);
+            /*fprintf(somefile, "%d", j);*/
             for(k=0; k<n_dof; k++){fprintf(somefile, "\t%.g", *(x_+ k * K_nrows + j));}
             fprintf(somefile, "\n");
         }

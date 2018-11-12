@@ -52,7 +52,6 @@ int mc19driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
         exit(-1);
     }
 
-    somefile = fopen("dummymatrix.txt", "w");
     /*
     n = 4;
     nz = 8;
@@ -85,11 +84,6 @@ int mc19driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
     adummy[6] = 110000;
     adummy[7] = 4;*/
 
-
-    for(i=0; i<nzdummy; i++){
-        fprintf(somefile, "%d\t\t%d\t\t%.g\n", irndummy[i], icndummy[i], adummy[i]);
-    }
-    fclose(somefile);
 
 
      /* Working array */

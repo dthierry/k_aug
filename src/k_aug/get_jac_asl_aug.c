@@ -128,9 +128,10 @@ int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
     somefile = fopen("anz_p_row.in", "w");
     for(i=0; i<nvar; i++){fprintf(somefile, "%d\n", (*nz_row_a)[i]);}
     fclose(somefile);
+#endif
     free(Jcont);
     free(ttemp_v2);
-
+#ifndef PRINT_VERBOSE
     f_jac = fopen("grad_debug_sorted.in", "w");
     for(i=0; i<j; i++){
         fprintf(f_jac, "%d\t%d\t%.g\n", Arow[i] , Acol[i], Aij[i]);

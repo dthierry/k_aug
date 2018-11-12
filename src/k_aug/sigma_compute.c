@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include "../../config_kaug.h"
 
 #define HUGE_NUMBER 1e300
 
@@ -96,7 +97,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, real *z_L, real *z_U, real *sig
 #endif
     if(j > 0){
         fprintf(stderr, "E[K_AUG]...\t[SIGMA_COMPUTE]"
-                        "Unresolved sigma values, is the mu computation succesful? or is this a square problem?\n"
+                        "Unresolved sigma values, is the mu computation successful? or is this a square problem?\n"
                         "Check the sigma_out file with the PRINT_VERBOSE (cmake) option set to 0\n");
         /*exit(-1);*/
     }

@@ -4,6 +4,7 @@ project(k_aug C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-g -Wall -ansi -pedantic-errors -Wall -W")
 message(STATUS "\nWelcome to k_aug.\n\n I hope you have already compiled the dependencies.\n\n")
+message(STATUS "\nIf you want to have all the debug files generated each time, set PRINT_VERBOSE to 0 in this file.\n")
 #set( PROJECT_LINK_LIBS amplsolver.a )
 execute_process(COMMAND uname -s OUTPUT_VARIABLE OS)
 
@@ -25,7 +26,7 @@ set(k_aug_version_minor 0)
 
 set(USE_PARDISO 0)
 set(USE_MC30 0)
-set(PRINT_VERBOSE 0)
+set(PRINT_VERBOSE 1)
 
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
         "${PROJECT_BINARY_DIR}/config_kaug.h")

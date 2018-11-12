@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "../../config_kaug.h"
 
 typedef struct npdp_coord {
     int row;
@@ -109,15 +110,12 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
     free(help_list);
     free(help_list_order);
 
-
+#ifndef PRINT_VERBOSE
     somefile = fopen("rhs_dcdp", "w");
-
-
     for (i = 0; i < (*n_p); i++) {
         fprintf(somefile, "\t%d\t", (*hr_point)[i]);
     }
     fprintf(somefile, "\n\n");
-
     for (i = 0; i < (nvar + ncon); i++) {
         for (j = 0; j < (*n_p); j++) {
             fprintf(somefile, "\t%f\t", *((*rhs_dcdp) + j * (nvar + ncon) + i));
@@ -125,7 +123,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
         fprintf(somefile, "\n");
     }
     fclose(somefile);
-
+#endif
 
 
     /* order by row, if the var_order suffix was declared*/
