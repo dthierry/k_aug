@@ -37,6 +37,8 @@
  * [MC30](http://www.hsl.rl.ac.uk/catalogue/mc30.html) (HSL) (NOW OPTIONAL)
  * [Pardiso](https://pardiso-project.org/) (NOT SUPPORTED ANYMORE)
 
+## (NEW!) Windows installation video with Cygwin.
+[Link](https://youtu.be/LrBRu8N-Isk)
 
 ## Installation
  1. Be sure to have a steady internet connection. Enter thirdparty directory and run the get.X or help.X scripts in the following order: 
