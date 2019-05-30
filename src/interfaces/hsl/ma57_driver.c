@@ -6,6 +6,8 @@
 #include <assert.h>
 #include "../../k_aug/inertia_strategy.h"
 
+/* TODO: create factorize function
+ * TODO: increase quality of the solution*/
 /*
    extern void ma57id_(double *CNTL, int *ICNTL);
    extern void ma57ad_(int *N, int *NE, int *IRN, int *JCN, int *LKEEP, int *KEEP,
@@ -81,7 +83,8 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
 
     int incx=1; /* for the norm calculation */
     double nrm_x=0, nrm_r=0;
-
+    printf("I[MA57]...\t[]"
+           "***\n");
 
     space_lk = 5 * n + nza + (n > nza ? n:nza) + 42;
     keep = (int *)malloc(sizeof(int) * space_lk);
@@ -129,7 +132,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
         } else {
             j = 0;
             /* analysis */
-            ma57ad_(&n, &nza, ia, ja, &space_lk, keep, iwork, icntl, info, rinfo);
+            /*ma57ad_(&n, &nza, ia, ja, &space_lk, keep, iwork, icntl, info, rinfo);
             if (info[0] != 0) {
                 printf("I[MA57]...\t[ma57bd_]"
                        "ma57ad_: info[0] is not zero; %d \n", info[1 - 1]);
@@ -142,6 +145,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
             ifact = (int *) realloc(ifact, sizeof(int) * lifact);
             lfact_new = lfact;
             lifact_new = lifact;
+             */
             ma57bd_(&n, &nza, a, fact, &lfact, ifact, &lifact, &space_lk, keep, iwork, icntl, cntl, info, rinfo);
         }
         /* update these guys just in case */

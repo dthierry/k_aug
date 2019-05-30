@@ -35,7 +35,8 @@ include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers
         thirdparty/mumps/MUMPS/include thirdparty/mumps/MUMPS/libseq)
 
 link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis thirdparty/scotch/scotch/lib
-        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/hsl/ma57/build/src
+        #thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/hsl/ma57/build/src
+        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/coinhsl/.libs
         )
 #link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/CYGWIN_NT-6.1-x86_64/libmetis thirdparty/scotch/scotch/lib
 #        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
@@ -81,11 +82,13 @@ add_executable(k_aug ${SRC_FILES})
 add_executable(dot_sens src/k_aug/dot_driver/dot_driver.c)
 
 if (USE_MC30)
-    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas ma57)
+    #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas ma57)
+    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas coinhsl)
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
 	# CYGWIN: are you kidding me?!
-    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas ma57)
+    #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas ma57)
+    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas coinhsl)
 endif(USE_MC30)
 
 target_link_libraries(dot_sens amplsolver m dl gfortran openblas)

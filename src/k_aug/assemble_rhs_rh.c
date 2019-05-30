@@ -82,23 +82,23 @@ void assemble_rhs_rh(real **rhs_rh, fint nvar, fint ncon, int *n_dof,
     (*rhs_rh)[(nvar + ncon) * i + (*hr_point)[i]] = 1.0;
   }
   free(help_list);
+    /* this takes a lot of time
+    somefile = fopen("rhs_red_hess", "w");
 
-  somefile = fopen("rhs_red_hess", "w");
-  
-  
-  for(i=0; i < (*n_dof); i++){
-    fprintf(somefile, "\t%d\t", (*hr_point)[i]);
-  }
-  fprintf(somefile, "\n\n");
 
-  for(i=0; i < (nvar+ncon); i++){
-    for(j=0; j < (*n_dof); j++){
-      fprintf(somefile, "\t%f\t", *((*rhs_rh) + j*(nvar+ncon) + i) );
+    for(i=0; i < (*n_dof); i++){
+      fprintf(somefile, "\t%d\t", (*hr_point)[i]);
     }
-  fprintf(somefile, "\n");
-  }
+    fprintf(somefile, "\n\n");
+
+    for(i=0; i < (nvar+ncon); i++){
+      for(j=0; j < (*n_dof); j++){
+        fprintf(somefile, "\t%f\t", *((*rhs_rh) + j*(nvar+ncon) + i) );
+      }
+    fprintf(somefile, "\n");
+    }
 
 
-  fclose(somefile);
-
+    fclose(somefile);
+    */
 }
