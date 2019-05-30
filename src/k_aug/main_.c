@@ -31,6 +31,7 @@
 #include "../../thirdparty/asl/solvers/asl.h"
 
 #include "../interfaces/mumps/mumps_driver.h"
+#include "../interfaces/hsl/ma57_driver.h"
 #include "get_jac_asl_aug.h"
 #include "get_hess_asl_aug.h"
 #include "find_inequalities.h"
@@ -772,8 +773,8 @@ int main(int argc, char **argv){
 
     /* factorize the matrix */
 
-    mumps_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
-                 &inrt_pert, inrt_parms, &inrt_opts, logmu0, ls_opts);
+    ma57_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
+                &inrt_pert, inrt_parms, &inrt_opts, logmu0, ls_opts);
 
     /*x_ = rhs_baksolve;*/
     printf("I[K_AUG]...\t[K_AUG_ASL]"

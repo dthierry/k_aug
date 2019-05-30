@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 #include "../../k_aug/inertia_strategy.h"
+
 /*
    extern void ma57id_(double *CNTL, int *ICNTL);
    extern void ma57ad_(int *N, int *NE, int *IRN, int *JCN, int *LKEEP, int *KEEP,
@@ -36,7 +37,7 @@
 
 */
 
-/* mumps_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
+/* MA57_DRIVER(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
    int nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts, double log10mu, linsol_opts ls_opts)
    */
 
@@ -62,12 +63,10 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     int *keep;
     int *iwork;
     int lfact, lifact;
-    double *fact;
-    int *ifact;
+    double *fact = NULL;
+    int *ifact = NULL;
 
     int lfact_new, lifact_new;
-    double *fact_new;
-    int *ifact_new;
     int ic;
     int job;
 
@@ -76,12 +75,8 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
 
     int lrhs;
 
-    double rdummy[] = {0.0};
-    int idummy[] = {0};
 
     double const residual_ratio_max = 1e-10;
-
-    int nev;
     double *resid;
 
     int incx=1; /* for the norm calculation */
@@ -103,18 +98,55 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     icntl[11-1] = 16;
     icntl[12-1] = 16;
 
+    ma57ad_(&n, &nza, ia, ja, &space_lk, keep, iwork, icntl, info, rinfo);
+    if (info[0] != 0) {
+        printf("I[MA57]...\t[ma57bd_]"
+               "ma57ad_: info[0] is not zero; %d \n", info[1 - 1]);
+        exit(-1);
+    } else {
+        printf("I[MA57]...\t[ma57bd_]"
+               "ma57ad_: Status Ok.\n");
+    }
+
+    printf("I[MA57]...\t[Factorize]"
+           "***\n");
+
+    lfact = info[9 - 1] * 2;
+    lifact = info[10 - 1] * 2;
+    fact = (double *) malloc(sizeof(double) * lfact);
+    ifact = (int *) malloc(sizeof(int) * lifact);
+    lfact_new = lfact;
+    lifact_new = lifact;
+    j = 0;
     for(i=0; i< n*n_rhs; i++){x[i] = b[i];}
     if(inrt_opts->always_perturb_jacobian == 1){fprintf(stderr, "always pert is on before fact\n");}
     for(i=0; i<ls_opts.max_inertia_steps; i++){
         /* factorization */
         if(info[0] == -3 || info[0] == -4) {
-            /*MA57ED(N,IC,KEEP,FACT,LFACT,NEWFAC,LNEW,IFACT,LIFACT,NEWIFC,LINEW,INFO)*/
-            ma57ed_(&n, &ic, keep, fact, &lfact, fact, &lfact, ifact, &lifact, idummy, idummy,	info);
+            /*MA57ED(N,IC,KEEP,FACT,LFACT,NEWFAC,LNEW,IFACT,LIFACT,NEWIFC,LINEW,INFO)
+             * since realloc will copy the old arrays fact and ifact, we can re-use them.*/
+            ma57ed_(&n, &ic, keep, fact, &lfact, fact, &lfact_new, ifact, &lifact, ifact, &lifact_new, info);
         } else {
+            j = 0;
             /* analysis */
             ma57ad_(&n, &nza, ia, ja, &space_lk, keep, iwork, icntl, info, rinfo);
+            if (info[0] != 0) {
+                printf("I[MA57]...\t[ma57bd_]"
+                       "ma57ad_: info[0] is not zero; %d \n", info[1 - 1]);
+                exit(-1);
+            }
+
+            lfact = info[9 - 1] * 2;
+            lifact = info[10 - 1] * 2;
+            fact = (double *) realloc(fact, sizeof(double) * lfact);
+            ifact = (int *) realloc(ifact, sizeof(int) * lifact);
+            lfact_new = lfact;
+            lifact_new = lifact;
             ma57bd_(&n, &nza, a, fact, &lfact, ifact, &lifact, &space_lk, keep, iwork, icntl, cntl, info, rinfo);
         }
+        /* update these guys just in case */
+        lfact = lfact_new;
+        lifact = lifact_new;
         if(info[0] == -3 || info[0] == -4) { /* we need more memory */
             if(info[0] == -3){
                 ic = 0;
@@ -136,23 +168,21 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
             i--;  /* This does not count  for the overall loop */
             j++;
             if (j > ls_opts.max_memory_al_steps) {
-                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]"
                         "Reallocating Memory:Failed\n");
                 exit(-1);
             }
             continue;  /* Try again. */
         }
         else { /* perhaps singular */
-            printf("ERROR! STATUS RETURN: \tINFOG(1)= %d\n\t\t\t\tINFOG(2)= %d\n",
-                    info[0], info[1]);
             if (info[0] == -10){
                 ; /* This one is problematic */
-                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]"
                         "The KKT matrix is numerically singular. Assume delta_c > 0\n");
-                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]"
                         "%d last known inertia\n", info[24-1]);
                 if (inrt_pert->jacobian_perturbed == 1) {
-                    fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                    fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]"
                             "Failure, the KKT matrix has been already perturbed\n");
                     exit(-1);
                 }
@@ -165,7 +195,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
             /*exit(-1);*/
         }
         /* check inertia */
-        printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+        printf("I[K_AUG]...\t[MA57_DRIVER]"
                 "n_neig = %d\n", info[24-1]);
         /* Get the number of negative eigenvalues */
         n_neig = info[24-1];
@@ -176,30 +206,34 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
         if(inertia_status == 0){break;}
 
         if(reduce_pivtol != 0){
-            printf("I[K_AUG]...\t[MUMPS_DRIVER]"
-                    "Asking for better accuracy.\n");
+            printf("pivot tol %f\n", trial_pivtol);
+            printf("I[K_AUG]...\t[MA57_DRIVER]"
+                   "Asking for better accuracy. pivot_tol %f\n", trial_pivtol);
             cntl[1-1] = trial_pivtol;
-            /* Modify pivot tolerance */
-            if(trial_pivtol > ls_opts.pivtol_max){
-                fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+
+            if (trial_pivtol == ls_opts.pivtol_max) {
+                fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]"
                         "Failure, pivot tol is at it maximum.\n");
-                exit(-1);
+                fprintf(stderr, "W[K_AUG]...\t[MA57_DRIVER]"
+                                "Inexact solution is now activated[Warning: results might not be good].\n");
+                cntl[4 - 1] = 1e-08;
             }
-            trial_pivtol = pow(trial_pivtol, 0.5);
+            /* Modify pivot tolerance */
+            trial_pivtol = pow(trial_pivtol, 0.75);
+            trial_pivtol = trial_pivtol < ls_opts.pivtol_max ? trial_pivtol : ls_opts.pivtol_max;
         }
 
     }
-
-
+    printf("I[MA57]...\t[Factorize Success.]"
+           "***\n");
     /**/
     /**/
+    job = 1;
     lwork = n*n_rhs;
     work = (double *)malloc(sizeof(double)*lwork);
     lrhs = n;
-
     /* compute solution */
-    ma57cd_(&job, &n, fact, &lfact, ifact, &lifact,	&n_rhs, b, &lrhs,
-            work, &lwork,	iwork, icntl, info);
+    ma57cd_(&job, &n, fact, &lfact, ifact, &lifact, &n_rhs, b, &lrhs, work, &lwork, iwork, icntl, info);
 
     /*ratiorr = id.rinfog[6-1]; */
     nrm_x = dnrm2_(&n, b, &incx);
@@ -207,23 +241,27 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
         printf("W[MA57]...\t[ma57bd_]"
                "ma57bd_: info[0] is not zero; %d \n\n", info[1-1]);
     }
+    icntl[9 - 1] = 1;
+    job = 1;
+    resid = (double *) malloc(sizeof(double) * n);
     ma57dd_(&job, &n, &nza, a, ia, ja, fact, &lfact, ifact, &lifact, x, b, resid, work, iwork,
             icntl, cntl, info, rinfo);
     /* Residuals computation */
     nrm_r = dnrm2_(&n, resid, &incx);
-    printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+    ratiorr = nrm_r / (nrm_x + nrm_r);
+    printf("I[K_AUG]...\t[MA57_DRIVER]"
            ": Ratio of norm of scaled residuals (reported); %e \n", ratiorr);
 
-    ratiorr = nrm_r/(nrm_x+nrm_r);
+
 
     if(ratiorr > ls_opts.residual_ratio_max){
-        printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+        printf("I[K_AUG]...\t[MA57_DRIVER]"
                ": The norm of residuals is larger than max ratio(computed)\n");
         inaccurateSol = 1;
     }
 
     if(inaccurateSol == 0) {
-        printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+        printf("I[K_AUG]...\t[MA57_DRIVER]"
                "Accuracy at an acceptable level.\n\n");
     }
     /* Attempt to get a better solution. */
@@ -231,10 +269,10 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     if(ls_opts.want_accurate == 1){
         if(inaccurateSol == 1){
             for(i=0; i<ls_opts.max_refinement_steps; i++){
-                printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+                printf("I[K_AUG]...\t[MA57_DRIVER]"
                        ": Attempting to reduce residuals\n\n");
                 if(inrt_pert->jacobian_perturbed == 0) {
-                    printf("W[K_AUG]...\t[MUMPS_DRIVER]"
+                    printf("W[K_AUG]...\t[MA57_DRIVER]"
                            "Attempting to make dc > 0. (Jacobian regularization)\n");
                     inrt_opts->always_perturb_jacobian = 1;
                     inertia_status = inertia_strategy(ia, a, nvar, ncon, n_neig, inrt_pert, inrt_parms, inrt_opts,
@@ -242,12 +280,12 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
                                                       &reduce_pivtol); /*Perform correction*/
                 }
                 else{
-                    printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+                    printf("I[K_AUG]...\t[MA57_DRIVER]"
                            "Asking for better accuracy.\n");
                     cntl[1-1] = trial_pivtol;
                     /* Modify pivot tolerance */
                     if(trial_pivtol > ls_opts.pivtol_max){
-                        fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]"
+                        fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]"
                                         "Failure, pivot tol is at it maximum.\n");
                         exit(-1);
                     }
@@ -266,10 +304,10 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
                 /* compute solution */
                 /*ratiorr = */
 
-                printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+                printf("I[K_AUG]...\t[MA57_DRIVER]"
                        "Accuracy improvement tries %d, Perturbation val %.g, Resitual_ratio %.g.\n", i, trial_pivtol, ratiorr);
                 if(ratiorr < ls_opts.residual_ratio_max){
-                    printf("I[K_AUG]...\t[MUMPS_DRIVER]"
+                    printf("I[K_AUG]...\t[MA57_DRIVER]"
                            "Accuracy at acceptable level.\n\n");
                     break;
                 }
@@ -278,7 +316,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     }
 
     if(ratiorr > ls_opts.residual_ratio_max){
-        fprintf(stderr, "E[K_AUG]...\t[MUMPS_DRIVER]\n\n"
+        fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]\n\n"
                         "\t\tCould not fix the accuracy of the problem.\n"
                         "\t\tTry re-writing the problem or give a different point or change \"max_refinement_steps\"\n"
                         "\t\tWarning: results might be incorrect.\n"
@@ -287,7 +325,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
 
     n_neig = info[24-1];
     if(n_neig==ncon){
-        printf("W[K_AUG]...\t[MUMPS_DRIVER]"
+        printf("W[K_AUG]...\t[MA57_DRIVER]"
                "Inertia check OK neig=%d, (neig == m).\n", n_neig);
     }
 
