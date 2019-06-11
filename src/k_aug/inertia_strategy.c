@@ -14,7 +14,8 @@
 
 
 int
-inertia_strategy(int *row_strt, double *a, int nvar, int ncon, int n_eig, inertia_perts *i_pert, inertia_params i_parm,
+inertia_strategy(const int *row_strt, double *a, int nvar, int ncon, int n_eig, inertia_perts *i_pert,
+                 inertia_params i_parm,
                  inertia_options *i_opts, int *try_n, double log10mu, int *pert_pivot) {
     int j, k;
     double d_w_trial = i_pert->d_w;

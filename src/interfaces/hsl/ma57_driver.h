@@ -27,4 +27,28 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
                  int nza, inertia_perts *inrt_pert, inertia_params inrt_parms,
                  inertia_options *inrt_opts, double log10mu, linsol_opts ls_opts);
 
+int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon, int no_inertia, int nza,
+                   inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts, double log10mu,
+                   linsol_opts ls_opts, double **fact, int *lfact, int **ifact, int *lifact, int *space_lk, int *keep,
+                   int *iwork, int *icntl, double *cntl, int *info, double *rinfo, int *reduce_pivtol,
+                   double *trial_pivtol, fint *n_neig, fint *try_fact);
+
+int ma57_analysis(int *n, int *nza, int *ia, int *ja, int *space_lk, int *keep, int *iwork, int *icntl, int *info,
+                  double *rinfo);
+
+int ma57_compute_ratios(const fint *row_start, double const *a, const fint *ja, fint n,
+                        double *fact,
+                        int *lfact,
+                        int *ifact,
+                        int *lifact,
+                        int *iwork,
+                        int *icntl,
+                        int *info,
+                        double *work,
+                        int *lwork,
+                        fint n_rhs,
+                        double *b,
+                        double *x,
+                        double *resid,
+                        double *ratiorr);
 #endif
