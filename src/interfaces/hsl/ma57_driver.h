@@ -51,4 +51,23 @@ int ma57_compute_ratios(const fint *row_start, double const *a, const fint *ja, 
                         double *x,
                         double *resid,
                         double *ratiorr);
+
+int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja, fint n, int nvar,
+               int ncon, int nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts,
+               double log10mu, linsol_opts ls_opts,
+               double **fact,
+               int *lfact,
+               int **ifact,
+               int *lifact, int *space_lk, int *keep,
+               int *iwork,
+               int *icntl, double *cntl,
+               int *info, double *rinfo,
+               double *work,
+               int *lwork,
+               fint n_rhs,
+               double *b,
+               double *x, double *resid,
+               int *reduce_pivtol, double *trial_pivtol, int *n_neig, fint *try_fact, double *ratiorr);
+
+
 #endif
