@@ -260,17 +260,19 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
             printf("I[K_AUG]...\t[MA57_FACTOR]"
                    "Asking for better accuracy. pivot_tol %f\n", *trial_pivtol);
             cntl[1 - 1] = *trial_pivtol;
-
-            if (*trial_pivtol == ls_opts.pivtol_max) {
+            *trial_pivtol = pow(*trial_pivtol, 0.75);
+            if (*trial_pivtol >= ls_opts.pivtol_max) {
                 fprintf(stderr, "E[K_AUG]...\t[MA57_FACTOR]"
                                 "Failure, pivot tol is at it maximum.\n");
                 fprintf(stderr, "W[K_AUG]...\t[MA57_FACTOR]"
                                 "Inexact solution is now activated[Warning: results might not be good].\n");
-                cntl[4 - 1] = 1e-08;
+                *trial_pivtol = ls_opts.pivtol_max;
+                break;
+                cntl[4 - 1] = 1e-08; /* static pivoting thingy */
             }
             /* Modify pivot tolerance */
-            *trial_pivtol = pow(*trial_pivtol, 0.75);
-            *trial_pivtol = *trial_pivtol < ls_opts.pivtol_max ? *trial_pivtol : ls_opts.pivtol_max;
+
+
         }
 
     }
@@ -382,14 +384,15 @@ int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja,
                 } else {
                     printf("I[K_AUG]...\t[MA57_SOLVE]"
                            "Asking for better accuracy.\n");
+                    *trial_pivtol = pow(*trial_pivtol, 0.5);
                     cntl[1 - 1] = *trial_pivtol;
                     /* Modify pivot tolerance */
                     if (*trial_pivtol > ls_opts.pivtol_max) {
                         fprintf(stderr, "E[K_AUG]...\t[MA57_SOLVE]"
                                         "Failure, pivot tol is at it maximum.\n");
-                        exit(-1);
+                        break;
                     }
-                    *trial_pivtol = pow(*trial_pivtol, 0.5);
+
                 }
 
                 /*
@@ -404,7 +407,6 @@ int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja,
                     printf("ERROR! STATUS RETURN: \tINFOG(1)= %d\n\t\t\t\tINFOG(2)= %d\n",
                            info[0], info[1]);
                     exit(-1);
-                    return 1;
                 }
                 /* compute solution */
                 /*ratiorr = */
@@ -431,7 +433,7 @@ int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja,
                         "\t\tCould not fix the accuracy of the problem.\n"
                         "\t\tTry re-writing the problem or give a different point or change \"max_refinement_steps\"\n"
                         "\t\tWarning: results might be incorrect.\n"
-                        "\t\tCurrent residual ratio %g; Max residual ratio %g.\n\n", ratiorr,
+                        "\t\tCurrent residual ratio %g; Max residual ratio %g.\n\n", *ratiorr,
                 ls_opts.residual_ratio_max);
     }
 
