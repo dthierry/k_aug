@@ -6,8 +6,7 @@
 #include <assert.h>
 #include "../../k_aug/inertia_strategy.h"
 
-/* TODO: create factorize function
- * TODO: increase quality of the solution*/
+
 /*
    extern void ma57id_(double *CNTL, int *ICNTL);
    extern void ma57ad_(int *N, int *NE, int *IRN, int *JCN, int *LKEEP, int *KEEP,

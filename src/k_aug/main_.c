@@ -511,24 +511,21 @@ int main(int argc, char **argv){
     memset(sigma, 0, sizeof(real) * n_var);
 
     /* Check if we do red_hess, deb_kkt or dsdp*/
-    if(deb_kkt>0){
+    if (deb_kkt > 0) {
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
                         "KKT check!\n");
     } else if (dsdp_mode > 0) {
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
                         "dsdp for linear C(x) + I*p = 0 override.\n");
-        if(dcdp->u.r == NULL && dcdp->u.i == NULL){
+        if (dcdp->u.r == NULL && dcdp->u.i == NULL) {
             fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
                             "suffix empty no dcdp declared!\n");
             exit(-1);
         }
-
         somefile = fopen("conorder.txt", "w");
-        for(i=0;i<n_con;i++){fprintf(somefile, "%d\n", dcdp->u.i[i]);}
+        for (i = 0; i < n_con; i++) { fprintf(somefile, "%d\n", dcdp->u.i[i]); }
         fclose(somefile);
-
-    }
-    else if(var_f->u.r == NULL && var_f->u.i == NULL){
+    } else if (var_f->u.r == NULL && var_f->u.i == NULL) {
         fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
                         "suffix empty no n_dof declared!\n");
         exit(-1);
