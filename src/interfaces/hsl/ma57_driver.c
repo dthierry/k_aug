@@ -170,7 +170,7 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
     int inertia_status = 0;
 
 
-    printf("I[MA57]...\t[Factorize]\n");
+    printf("I[MA57]...\t[MA57_FACTOR]\n");
     *lfact = (*lfact < info[9 - 1] * 2) ? info[9 - 1] * 2 : *lfact;
     *lifact = (*lifact < info[10 - 1] * 2) ? info[10 - 1] * 2 : *lifact;
     lfact_new = *lfact;
@@ -183,7 +183,10 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
     assert(*ifact);
 
     j = 0;
-    if (inrt_opts->always_perturb_jacobian == 1) { fprintf(stderr, "always pert is on before fact\n"); }
+    if (inrt_opts->always_perturb_jacobian == 1) {
+        printf("W[MA57]...\t[MA57_FACTOR]"
+               "always_pert_jacobian is on before fact\n");
+    }
     for (i = 0; i < ls_opts.max_inertia_steps; i++) {
         /* factorization */
         if (info[0] == -3 || info[0] == -4) {
@@ -255,9 +258,8 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
         if (inertia_status == 0) { break; }
 
         if (*reduce_pivtol != 0) {
-            printf("pivot tol %f\n", *trial_pivtol);
             printf("I[K_AUG]...\t[MA57_FACTOR]"
-                   "Asking for better accuracy. pivot_tol %f\n", *trial_pivtol);
+                   "Increasing pivtol to fix inertia. pivot_tol %f\n", *trial_pivtol);
             cntl[1 - 1] = *trial_pivtol;
             *trial_pivtol = pow(*trial_pivtol, 0.75);
             if (*trial_pivtol >= ls_opts.pivtol_max) {
@@ -418,7 +420,7 @@ int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja,
                     printf("I[K_AUG]...\t[MA57_SOLVE]"
                            "Accuracy at acceptable level.\n\n");
                     break;
-                } else if ((ratio0 - *ratiorr) / ratio0 < 0.05) {
+                } else if (fabs(ratio0 - *ratiorr) / ratio0 < 0.05) {
                     printf("I[K_AUG]...\t[MA57_SOLVE]"
                            "Accuracy is not improving.\n\n");
                     break;
