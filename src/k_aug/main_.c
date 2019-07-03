@@ -30,7 +30,6 @@
 #include "../../thirdparty/asl/solvers/getstub.h"
 #include "../../thirdparty/asl/solvers/asl.h"
 
-#include "../interfaces/mumps/mumps_driver.h"
 #include "../interfaces/hsl/ma57_driver.h"
 #include "get_jac_asl_aug.h"
 #include "get_hess_asl_aug.h"
