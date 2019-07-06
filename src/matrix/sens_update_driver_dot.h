@@ -11,3 +11,4 @@ extern void dgemv_(char *TRANS, fint *M, fint *N, real *ALPHA, real *A, fint *LD
 void sens_update_driver_dot(fint n_k, fint n_u, real *s_hat_t, real *npdp, real *u_star);
 
 #endif /* SENS_UPDT_DRI */
+
