@@ -33,8 +33,7 @@ configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
 
 include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers)
 
-link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis
-        thirdparty/openblas/OpenBLAS)
+link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis /home/dav0/in_dev_/test_pynumero/miniconda/pkgs/libopenblas-0.3.6-h5a2b251_1/lib /home/dav0/in_dev_/test_pynumero/miniconda/pkgs/libgfortran-ng-7.3.0-hdf63c60_0/lib)
 
 
 ## Please modify this.
@@ -88,10 +87,10 @@ if (USE_MC30)
 else(USE_MC30)
 	# CYGWIN: are you kidding me?!
     #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas ma57)
-    target_link_libraries(k_aug amplsolver m dl gfortran mc19 gfortran openblas coinhsl coinmetis)
+    target_link_libraries(k_aug amplsolver m dl mc19 openblas coinhsl coinmetis gfortran)
 endif(USE_MC30)
 
-target_link_libraries(dot_sens amplsolver m dl gfortran openblas)
+target_link_libraries(dot_sens amplsolver m dl openblas)
 
 set_target_properties( k_aug
         PROPERTIES
