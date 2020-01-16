@@ -43,10 +43,13 @@ inertia_strategy(const int *row_strt, double *a, int nvar, int ncon, int n_eig, 
                "Inertia check successful.\n");
         return 0;
     } else if (n_eig > ncon) {
-        fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"
-                        "Wrong inertia(n_eig > m).\n");
+        printf("W[K_AUG]...\t[INERTIA_STRATEGY]"
+               "Wrong inertia(n_eig > m).\t");
         if (i_pert->d_w_last == 0.0 && (*try_n) == 0) { d_w_trial = i_parm.d_w0; }
-        else if (i_pert->d_w_last == 0.0 && (*try_n) > 0) { d_w_trial = i_parm.kbp * d_w_trial; }
+        else if (i_pert->d_w_last == 0.0 && (*try_n) > 0) { d_w_trial =
+                                                                    i_parm.d_w0 > d_w_trial ? i_parm.d_w0 : i_parm.kbp *
+                                                                                                            d_w_trial;
+        }
         else if (i_pert->d_w_last > 0.0 && (*try_n) > 0) { d_w_trial = i_parm.kp * d_w_trial; }
         else { d_w_trial = (i_parm.dmin > i_parm.km * i_pert->d_w_last) ? i_parm.dmin : i_parm.km * i_pert->d_w_last; }
 
@@ -61,6 +64,7 @@ inertia_strategy(const int *row_strt, double *a, int nvar, int ncon, int n_eig, 
             k = row_strt[j] - 1;
             a[k] += i_pert->d_w; /* Add the difference */
         }
+        printf("d_w = %.10e.\n", i_pert->d_w);
     } else if((n_eig < ncon) || (i_opts->always_perturb_jacobian == 1)){
         if(i_opts->always_perturb_jacobian == 1){
             fprintf(stderr, "W[K_AUG]...\t[INERTIA_STRATEGY]"

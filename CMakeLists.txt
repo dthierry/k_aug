@@ -31,17 +31,17 @@ set(PRINT_VERBOSE 1)
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
         "${PROJECT_BINARY_DIR}/config_kaug.h")
 
-include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers
-        thirdparty/mumps/MUMPS/include thirdparty/mumps/MUMPS/libseq)
+include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers)
 
-link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis thirdparty/scotch/scotch/lib
-        #thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/hsl/ma57/build/src
-        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/coinhsl/.libs
-        )
-#link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/CYGWIN_NT-6.1-x86_64/libmetis thirdparty/scotch/scotch/lib
-#        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
-#        )
-#link_directories("thirdparty/metis/metis/build/${newvar2}/libmetis")
+link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis
+        thirdparty/openblas/OpenBLAS)
+
+
+## Please modify this.
+link_directories(/home/dav0/PycharmProjects/ipopt_van/build/lib)  ## THIS IS YOUR OWN ipopt build lib directory
+## Make sure you have libcoinhsl.so and libcoinmetis.so!!
+
+
 if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
     message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
@@ -62,7 +62,7 @@ set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/sigma_compute.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/suffix_decl_hand.c
         ${PROJECT_SOURCE_DIR}/src/interfaces/hsl/mc19_driver.c
-        ${PROJECT_SOURCE_DIR}/src/interfaces/mumps/mumps_driver.c
+        #${PROJECT_SOURCE_DIR}/src/interfaces/mumps/mumps_driver.c
         ${PROJECT_SOURCE_DIR}/src/interfaces/hsl/ma57_driver.c
         ${PROJECT_SOURCE_DIR}/src/matrix/dsyev_driver.c
         ${PROJECT_SOURCE_DIR}/src/matrix/dpotri_driver.c
@@ -88,7 +88,7 @@ if (USE_MC30)
 else(USE_MC30)
 	# CYGWIN: are you kidding me?!
     #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas ma57)
-    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas coinhsl)
+    target_link_libraries(k_aug amplsolver m dl gfortran mc19 gfortran openblas coinhsl coinmetis)
 endif(USE_MC30)
 
 target_link_libraries(dot_sens amplsolver m dl gfortran openblas)

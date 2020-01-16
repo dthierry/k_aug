@@ -83,6 +83,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
 
     int incx = 1; /* for the norm calculation */
     double nrm_x = 0, nrm_r = 0;
+    int status = 0;
     printf("I[MA57]...\t[]"
            "***\n");
 
@@ -110,17 +111,23 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     ma57_analysis(&n, &nza, ia, ja, &space_lk, keep, iwork, icntl, info, rinfo);
 
 
-    ma57_factorize(row_starts,
-                   a, n,
-                   nvar, ncon, no_inertia,
-                   nza, inrt_pert, inrt_parms, inrt_opts,
-                   log10mu, ls_opts,
-                   &fact, &lfact, &ifact, &lifact, &space_lk,
-                   keep, iwork, icntl, cntl, info, rinfo,
-                   &reduce_pivtol, &trial_pivtol, &n_neig, &try_fact);
+    status = ma57_factorize(row_starts,
+                            a, n,
+                            nvar, ncon, no_inertia,
+                            nza, inrt_pert, inrt_parms, inrt_opts,
+                            log10mu, ls_opts,
+                            &fact, &lfact, &ifact, &lifact, &space_lk,
+                            keep, iwork, icntl, cntl, info, rinfo,
+                            &reduce_pivtol, &trial_pivtol, &n_neig, &try_fact);
 
-    printf("I[MA57]...\t[Factorize Success.]"
-           "***\n");
+    if (status == 0) {
+        printf("I[MA57]...\t[Factorize Success.]"
+               "***\n");
+    } else {
+        printf("E[MA57]...\t[Factorize Failure!!!.]");
+        exit(-1);
+    }
+
     /**/
     /**/
 
@@ -133,6 +140,9 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     if (n_neig == ncon) {
         printf("W[K_AUG]...\t[MA57_DRIVER]"
                "Inertia check OK neig=%d, (neig == m).\n", n_neig);
+    } else {
+        printf("E[MA57]...\t[Inertia check Failure!!!.]");
+        exit(-1);
     }
     /* actually i don't know if i have to reload b or x */
 
@@ -187,7 +197,8 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
         printf("W[MA57]...\t[MA57_FACTOR]"
                "always_pert_jacobian is on before fact\n");
     }
-    for (i = 0; i < ls_opts.max_inertia_steps; i++) {
+    i = 0;
+    while (i < ls_opts.max_inertia_steps) {
         /* factorization */
         if (info[0] == -3 || info[0] == -4) {
             /*MA57ED(N,IC,KEEP,FACT,LFACT,NEWFAC,LNEW,IFACT,LIFACT,NEWIFC,LINEW,INFO)
@@ -255,7 +266,7 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
                                  log10mu,
                                  reduce_pivtol);
 
-        if (inertia_status == 0) { break; }
+        if (inertia_status == 0) { return 0; }
 
         if (*reduce_pivtol != 0) {
             printf("I[K_AUG]...\t[MA57_FACTOR]"
@@ -268,16 +279,18 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
                 fprintf(stderr, "W[K_AUG]...\t[MA57_FACTOR]"
                                 "Inexact solution is now activated[Warning: results might not be good].\n");
                 *trial_pivtol = ls_opts.pivtol_max;
-                break;
+                return 0;
                 cntl[4 - 1] = 1e-08; /* static pivoting thingy */
             }
             /* Modify pivot tolerance */
 
 
         }
-
+        i++;
     }
-    return 0;
+
+
+    return 1;
 }
 
 
