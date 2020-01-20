@@ -83,6 +83,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
 
     int incx = 1; /* for the norm calculation */
     double nrm_x = 0, nrm_r = 0;
+    int status = 0;
     printf("I[MA57]...\t[]"
            "***\n");
 
@@ -110,17 +111,23 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     ma57_analysis(&n, &nza, ia, ja, &space_lk, keep, iwork, icntl, info, rinfo);
 
 
-    ma57_factorize(row_starts,
-                   a, n,
-                   nvar, ncon, no_inertia,
-                   nza, inrt_pert, inrt_parms, inrt_opts,
-                   log10mu, ls_opts,
-                   &fact, &lfact, &ifact, &lifact, &space_lk,
-                   keep, iwork, icntl, cntl, info, rinfo,
-                   &reduce_pivtol, &trial_pivtol, &n_neig, &try_fact);
+    status = ma57_factorize(row_starts,
+                            a, n,
+                            nvar, ncon, no_inertia,
+                            nza, inrt_pert, inrt_parms, inrt_opts,
+                            log10mu, ls_opts,
+                            &fact, &lfact, &ifact, &lifact, &space_lk,
+                            keep, iwork, icntl, cntl, info, rinfo,
+                            &reduce_pivtol, &trial_pivtol, &n_neig, &try_fact);
 
-    printf("I[MA57]...\t[Factorize Success.]"
-           "***\n");
+    if (status == 0) {
+        printf("I[MA57]...\t[Factorize Success.]"
+               "***\n");
+    } else {
+        printf("E[MA57]...\t[Factorize Failure!!!.]");
+        exit(-1);
+    }
+
     /**/
     /**/
 
@@ -133,6 +140,9 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     if (n_neig == ncon) {
         printf("W[K_AUG]...\t[MA57_DRIVER]"
                "Inertia check OK neig=%d, (neig == m).\n", n_neig);
+    } else {
+        printf("E[MA57]...\t[Inertia check Failure!!!.]");
+        exit(-1);
     }
     /* actually i don't know if i have to reload b or x */
 
@@ -170,7 +180,7 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
     int inertia_status = 0;
 
 
-    printf("I[MA57]...\t[Factorize]\n");
+    printf("I[MA57]...\t[MA57_FACTOR]\n");
     *lfact = (*lfact < info[9 - 1] * 2) ? info[9 - 1] * 2 : *lfact;
     *lifact = (*lifact < info[10 - 1] * 2) ? info[10 - 1] * 2 : *lifact;
     lfact_new = *lfact;
@@ -183,8 +193,12 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
     assert(*ifact);
 
     j = 0;
-    if (inrt_opts->always_perturb_jacobian == 1) { fprintf(stderr, "always pert is on before fact\n"); }
-    for (i = 0; i < ls_opts.max_inertia_steps; i++) {
+    if (inrt_opts->always_perturb_jacobian == 1) {
+        printf("W[MA57]...\t[MA57_FACTOR]"
+               "always_pert_jacobian is on before fact\n");
+    }
+    i = 0;
+    while (i < ls_opts.max_inertia_steps) {
         /* factorization */
         if (info[0] == -3 || info[0] == -4) {
             /*MA57ED(N,IC,KEEP,FACT,LFACT,NEWFAC,LNEW,IFACT,LIFACT,NEWIFC,LINEW,INFO)
@@ -252,12 +266,11 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
                                  log10mu,
                                  reduce_pivtol);
 
-        if (inertia_status == 0) { break; }
+        if (inertia_status == 0) { return 0; }
 
         if (*reduce_pivtol != 0) {
-            printf("pivot tol %f\n", *trial_pivtol);
             printf("I[K_AUG]...\t[MA57_FACTOR]"
-                   "Asking for better accuracy. pivot_tol %f\n", *trial_pivtol);
+                   "Increasing pivtol to fix inertia. pivot_tol %f\n", *trial_pivtol);
             cntl[1 - 1] = *trial_pivtol;
             *trial_pivtol = pow(*trial_pivtol, 0.75);
             if (*trial_pivtol >= ls_opts.pivtol_max) {
@@ -266,16 +279,18 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
                 fprintf(stderr, "W[K_AUG]...\t[MA57_FACTOR]"
                                 "Inexact solution is now activated[Warning: results might not be good].\n");
                 *trial_pivtol = ls_opts.pivtol_max;
-                break;
+                return 0;
                 cntl[4 - 1] = 1e-08; /* static pivoting thingy */
             }
             /* Modify pivot tolerance */
 
 
         }
-
+        i++;
     }
-    return 0;
+
+
+    return 1;
 }
 
 
@@ -418,7 +433,7 @@ int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja,
                     printf("I[K_AUG]...\t[MA57_SOLVE]"
                            "Accuracy at acceptable level.\n\n");
                     break;
-                } else if ((ratio0 - *ratiorr) / ratio0 < 0.05) {
+                } else if (fabs(ratio0 - *ratiorr) / ratio0 < 0.05) {
                     printf("I[K_AUG]...\t[MA57_SOLVE]"
                            "Accuracy is not improving.\n\n");
                     break;

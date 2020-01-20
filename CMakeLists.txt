@@ -31,8 +31,16 @@ set(PRINT_VERBOSE 1)
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
         "${PROJECT_BINARY_DIR}/config_kaug.h")
 
-include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers
-        thirdparty/mumps/MUMPS/include thirdparty/mumps/MUMPS/libseq)
+include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers)
+
+link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis /home/dav0/in_dev_/test_pynumero/miniconda/pkgs/libopenblas-0.3.6-h5a2b251_1/lib /home/dav0/in_dev_/test_pynumero/miniconda/pkgs/libgfortran-ng-7.3.0-hdf63c60_0/lib)
+
+
+## Please modify this.
+link_directories(/home/dav0/PycharmProjects/ipopt_van/build/lib)  ## THIS IS YOUR OWN ipopt build lib directory
+## Make sure you have libcoinhsl.so and libcoinmetis.so!!
+
+
 
 link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis thirdparty/scotch/scotch/lib
         #thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/hsl/ma57/build/src
@@ -42,6 +50,7 @@ link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/
 #        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
 #        )
 #link_directories("thirdparty/metis/metis/build/${newvar2}/libmetis")
+
 if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
     message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
@@ -93,6 +102,7 @@ endif(USE_MC30
 
 target_link_libraries(k_aug blas lapack)
 target_link_libraries(dot_sens amplsolver m dl gfortran blas lapack)
+
 
 set_target_properties( k_aug
         PROPERTIES
