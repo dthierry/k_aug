@@ -41,6 +41,16 @@ link_directories(/home/dav0/PycharmProjects/ipopt_van/build/lib)  ## THIS IS YOU
 ## Make sure you have libcoinhsl.so and libcoinmetis.so!!
 
 
+
+link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis thirdparty/scotch/scotch/lib
+        #thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/hsl/ma57/build/src
+        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq /home/dav0/build_ipopt/lib
+        )
+#link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/CYGWIN_NT-6.1-x86_64/libmetis thirdparty/scotch/scotch/lib
+#        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
+#        )
+#link_directories("thirdparty/metis/metis/build/${newvar2}/libmetis")
+
 if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
     message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
@@ -61,7 +71,6 @@ set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/sigma_compute.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/suffix_decl_hand.c
         ${PROJECT_SOURCE_DIR}/src/interfaces/hsl/mc19_driver.c
-        #${PROJECT_SOURCE_DIR}/src/interfaces/mumps/mumps_driver.c
         ${PROJECT_SOURCE_DIR}/src/interfaces/hsl/ma57_driver.c
         ${PROJECT_SOURCE_DIR}/src/matrix/dsyev_driver.c
         ${PROJECT_SOURCE_DIR}/src/matrix/dpotri_driver.c
@@ -87,10 +96,13 @@ if (USE_MC30)
 else(USE_MC30)
 	# CYGWIN: are you kidding me?!
     #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas ma57)
-    target_link_libraries(k_aug amplsolver m dl mc19 openblas coinhsl coinmetis gfortran)
-endif(USE_MC30)
+    target_link_libraries(k_aug amplsolver m dl gfortran pthread mc19 gfortran coinhsl gfortran coinmetis)
+endif(USE_MC30
+	)
 
-target_link_libraries(dot_sens amplsolver m dl openblas)
+target_link_libraries(k_aug blas lapack)
+target_link_libraries(dot_sens amplsolver m dl gfortran blas lapack)
+
 
 set_target_properties( k_aug
         PROPERTIES
