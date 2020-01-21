@@ -58,7 +58,7 @@ Depending on your platform, these are typically named libcoinX.so or libcoinX.dl
  * Mac os is currently supported (I think!).
  
 So far, dozens of times tested.
-![DOZENS!](https://giphy.com/gifs/kSlJtVrqxDYKk/html5)
+![DOZENS!](https://media.giphy.com/media/kSlJtVrqxDYKk/giphy.gif)
 
 `k_aug` is an essential part of the NMPC-MHE framework(caprese). Written by David Thierry 2020, under BSD 3-Clause license.
 
