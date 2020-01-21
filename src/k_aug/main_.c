@@ -27,8 +27,8 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include "../../thirdparty/asl/solvers/getstub.h"
-#include "../../thirdparty/asl/solvers/asl.h"
+#include "getstub.h"
+#include "asl.h"
 
 
 #include "../interfaces/hsl/ma57_driver.h"

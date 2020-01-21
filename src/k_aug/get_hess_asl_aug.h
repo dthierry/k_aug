@@ -1,7 +1,7 @@
 #ifndef HESS_AUG
 #define HESS_AUG
 
-#include "../../thirdparty/asl/solvers/asl.h"
+#include "asl.h"
 
 
 void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,

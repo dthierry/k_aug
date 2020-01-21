@@ -23,7 +23,7 @@
 #ifndef MU_ADJ
 #define MU_ADJ
 
-#include "../../thirdparty/asl/solvers/asl.h"
+#include "asl.h"
 
 void mu_adjust_x(int nvar, double *x, double *lbv, real *zL, real *zU, double log10mu_target, double *logmu0);
 #endif /*MU_ADJ*/
