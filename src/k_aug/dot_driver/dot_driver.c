@@ -20,10 +20,12 @@
 ** @return something
 *******************************************************************************/
 #include "../../../config_kaug.h"
+#define  No_dtoa 1 // I don't know why this is an issue
 #include "asl.h"
-#include "getstub.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "getstub.h"
 #include <time.h>
 #include <assert.h>
 #include <string.h>
