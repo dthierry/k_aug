@@ -16,49 +16,47 @@
  * In some systems zlib might be required. For example, in ubuntu one can get it by using `sudo apt install zlib1g-dev`. On a mac `brew install zlib` reportedly works.
  * gcc compilers including gfortran
  
-## Requirements [CYGWIN]
+## Requirements [CYGWIN 2.900]
  * cmake
  * gcc-core
  * gcc-gfortran(gfortran)
- * g++
- * git (Use the CYGWIN version. DO NOT use the windows version!)
+ * gcc-g++
+ * git
  * make
  * wget
  * zlib-devel
+ * patch
+ * openblas
+ * lapack-devel
+ * pkg-config
 
 
-## Dependencies
+## Dependencies (NEW!)
  * [MC19](http://www.hsl.rl.ac.uk/download/MC19/1.0.0/a/) (HSL)
- * [METIS](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) (Script that downloads and configures is included)
- * [SCOTCH](https://www.labri.fr/perso/pelegrin/scotch/) (Script that downloads and configures is included)
- * [OPENBLAS](https://www.openblas.net/) (Script that downloads and configures is included)
- * [MUMPS](http://mumps.enseeiht.fr/) (Script that downloads and configures is included)
- * [ASL](https://ampl.com/resources/hooking-your-solver-to-ampl/) (Script that downloads and configures is included) 
- * [MC30](http://www.hsl.rl.ac.uk/catalogue/mc30.html) (HSL) (NOW OPTIONAL)
- * [Pardiso](https://pardiso-project.org/) (NOT SUPPORTED ANYMORE)
-
-## (NEW!) Windows installation video with Cygwin.
-[Link](https://youtu.be/LrBRu8N-Isk)
+It is now assumed that Ipopt from the coin-or project has been previously compiled with **HSL**.
+This will enable MA57 as the default linear solver.
+However, it is crucial to verify that the coinor libraries have been generated in standard locations.
+Namely, `/usr/local/lib`, and the libraries include: 
+ * `coinasl`
+ * `coinmetis`
+ * `coinhsl`
+Depending on your platform, these are typically named libcoinX.so or libcoinX.dll.a, where X is equal to asl, metis or hsl.
 
 ## Installation
- 1. Be sure to have a steady internet connection. Enter thirdparty directory and run the get.X or help.X scripts in the following order: 
-    1. `ASL`
-    2. `OpenBlas`
-    3. `Metis`
-    4. `Scotch`
-    5. `Mumps`
- 2. Download and place the .tar.gz file of mc19 into the thirdparty/hsl/mc19 directory and then run `help.mc19`
+ 1. Visit the [Ipopt](https://github.com/coin-or/Ipopt) repository, follow the instructions and make sure it is compiled, with all the thirdparty libraries.
+ 1. Download and place the .tar.gz file of mc19 into the thirdparty/hsl/mc19 directory and then run `help.mc19`
  3. At the root directory use cmake to generate the makefile e.g. `cmake CMakeLists.txt`
  4. Run `make`
  5. Check the bin directory to find the `k_aug` executable
- 6. (Windows) add the OpenBLAS directory to the PATH
+ 6. (Windows) add the LAPACK library directory to the PATH, as well the libcoinX.dll.a files (typically located at /usr/local/lib/)
 
 ## Known issues
  * AMPL can not recognize command line options
- * MUMPS will often try to use multiple cores. It is preferable to turn off this functionallity, set `OMP_NUM_CORES=1` .
- * Mac os is currently not supported.
+ * Mac os is currently supported (I think!).
  
-So far, hundreds of times tested.
-`k_aug` is an essential part of the NMPC-MHE framework(caprese). Written by David Thierry 2017, under BSD 3-Clause license.
+So far, dozens of times tested.
+<iframe src="https://giphy.com/embed/kSlJtVrqxDYKk" width="480" height="271" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/kSlJtVrqxDYKk">via GIPHY</a></p>
+
+`k_aug` is an essential part of the NMPC-MHE framework(caprese). Written by David Thierry 2020, under BSD 3-Clause license.
 
 
