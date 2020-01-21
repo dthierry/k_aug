@@ -13,9 +13,9 @@
 
 ## Requirements
  * [Ipopt](https://github.com/coin-or/Ipopt) Version 3.13.X, with its thirdparty libraries.
- * [CMAKE](https://cmake.org/) Version 3.5 or higher.
  * In some systems zlib might be required. For example, in ubuntu one can get it by using `sudo apt install zlib1g-dev`. On a mac `brew install zlib` reportedly works.
- * gcc compilers including g++, gfortran
+ * `gcc`, `g++`, `gfortran` compilers
+ * `cmake`
  
 ## Requirements [CYGWIN 2.900]
  * cmake
@@ -34,8 +34,9 @@
 
 ## Dependencies (NEW!)
  * [MC19](http://www.hsl.rl.ac.uk/download/MC19/1.0.0/a/) (HSL)
+ 
 It is now assumed that Ipopt from the coin-or project has been previously compiled with **HSL**.
-This will enable MA57 as the default linear solver.
+This will enable **MA57** as the default linear solver.
 However, it is crucial to verify that the coinor libraries have been generated in standard locations.
 Namely, `/usr/local/lib`, and the libraries include: 
 
@@ -47,11 +48,11 @@ Depending on your platform, these are typically named libcoinX.so or libcoinX.dl
 
 ## Installation
  1. Visit the [Ipopt](https://github.com/coin-or/Ipopt) repository, follow the instructions and make sure it is compiled, with all the thirdparty libraries.
- 1. Download and place the .tar.gz file of mc19 into the thirdparty/hsl/mc19 directory and then run `help.mc19`
+ 1. Download and place the `.tar.gz` file of `mc19` into the `thirdparty/hsl/mc19` directory and then run `help.mc19`
  3. At the root directory use cmake to generate the makefile e.g. `cmake CMakeLists.txt`
  4. Run `make`
  5. Check the bin directory to find the `k_aug` executable
- 6. (Windows) add the LAPACK library directory to the PATH, as well the libcoinX.dll.a files (typically located at /usr/local/lib/)
+ 6. (*Windows*) add the LAPACK library directory to the PATH, as well the `libcoinX.dll.a` files (typically located at `/usr/local/lib/`)
 
 ## Known issues
  * AMPL can not recognize command line options
