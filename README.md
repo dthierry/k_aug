@@ -12,9 +12,10 @@
 *k\_aug* is compatible with Pyomo and AMPL via ASL. The main functionality can be used through suffixes. 
 
 ## Requirements
+ * [Ipopt](https://github.com/coin-or/Ipopt) Version 3.13.X, with its thirdparty libraries.
  * [CMAKE](https://cmake.org/) Version 3.5 or higher.
  * In some systems zlib might be required. For example, in ubuntu one can get it by using `sudo apt install zlib1g-dev`. On a mac `brew install zlib` reportedly works.
- * gcc compilers including gfortran
+ * gcc compilers including g++, gfortran
  
 ## Requirements [CYGWIN 2.900]
  * cmake
@@ -37,9 +38,11 @@ It is now assumed that Ipopt from the coin-or project has been previously compil
 This will enable MA57 as the default linear solver.
 However, it is crucial to verify that the coinor libraries have been generated in standard locations.
 Namely, `/usr/local/lib`, and the libraries include: 
+
  * `coinasl`
  * `coinmetis`
  * `coinhsl`
+ 
 Depending on your platform, these are typically named libcoinX.so or libcoinX.dll.a, where X is equal to asl, metis or hsl.
 
 ## Installation
@@ -55,7 +58,7 @@ Depending on your platform, these are typically named libcoinX.so or libcoinX.dl
  * Mac os is currently supported (I think!).
  
 So far, dozens of times tested.
-<iframe src="https://giphy.com/embed/kSlJtVrqxDYKk" width="480" height="271" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/kSlJtVrqxDYKk">via GIPHY</a></p>
+![DOZENS!](https://giphy.com/gifs/kSlJtVrqxDYKk/html5)
 
 `k_aug` is an essential part of the NMPC-MHE framework(caprese). Written by David Thierry 2020, under BSD 3-Clause license.
 
