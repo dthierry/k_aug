@@ -1,7 +1,7 @@
 #ifndef MA57_DRIVER
 #define MA57_DRIVER
 
-#include "../../../thirdparty/asl/solvers/asl.h"
+#include "asl.h"
 #include "../../k_aug/k_aug_data.h"
 
 extern void ma57id_(double *CNTL, int *ICNTL);

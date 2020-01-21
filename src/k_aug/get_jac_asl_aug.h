@@ -1,7 +1,7 @@
 #ifndef GET_JAC_AUG
 #define GET_JAC_AUG
 
-#include "../../thirdparty/asl/solvers/asl.h"
+#include "asl.h"
 
 typedef struct temp_v2{
 	fint c;

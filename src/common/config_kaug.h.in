@@ -11,7 +11,7 @@
 #cmakedefine USE_PARDISO
 #cmakedefine USE_MC30
 #cmakedefine PRINT_VERBOSE
-
+#cmakedefine USE_CYGWIN
 
 
 #endif /* K_AUG_CONFIG_KAUG_H */

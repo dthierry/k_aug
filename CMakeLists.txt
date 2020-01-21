@@ -17,8 +17,12 @@ string(REGEX REPLACE "\n$" "" OS2 "${OS}")
 string(REGEX REPLACE "\n$" "" AR2 "${AR}")
 set(newvar2 ${OS2}-${AR2})
 message(STATUS "Your current OS and ARCH:" ${newvar2})
+message(STATUS "Now k_aug assumes that you have all the coin-or libraries, i.e. coinhsl, coinmetis and coinasl")
+message(STATUS "It is assumed that these libraries are located at /usr/local/lib if not please change the HINTS the CMakeLists.txt")
+
 if (${OS} MATCHES "CYGWIN")
-	message(STATUS "\n\nCYGWIN DETECTED:\n Make sure openblas is in the PATH after compilation")
+	message(STATUS "\n\nCYGWIN DETECTED:\n Make sure LAPACK is in the PATH after compilation")
+  set(USE_CYGWIN 1)
 endif (${OS} MATCHES "CYGWIN")
 
 set(k_aug_version_mayor 1)
@@ -31,25 +35,18 @@ set(PRINT_VERBOSE 1)
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
         "${PROJECT_BINARY_DIR}/config_kaug.h")
 
-include_directories(${PROJECT_BINARY_DIR} thirdparty/asl/solvers)
+include_directories(${PROJECT_BINARY_DIR})
 
-link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis /home/dav0/in_dev_/test_pynumero/miniconda/pkgs/libopenblas-0.3.6-h5a2b251_1/lib /home/dav0/in_dev_/test_pynumero/miniconda/pkgs/libgfortran-ng-7.3.0-hdf63c60_0/lib)
+# coinor stuff
+# PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
+include_directories(/usr/local/include/coin-or/asl)
+find_library(COINASL coinasl HINTS /usr/local/lib)
+find_library(COINHSL coinhsl HINTS /usr/local/lib)
+find_library(COINMETIS coinmetis HINTS /usr/local/lib)
+# openblas/blas stuff
+find_library(BLAS NAMES blas openblas HINTS /usr/lib /usr/local/lib)
+find_library(LAPACK NAMES lapack openblas HINTS /usr/lib /usr/local/lib)
 
-
-## Please modify this.
-link_directories(/home/dav0/PycharmProjects/ipopt_van/build/lib)  ## THIS IS YOUR OWN ipopt build lib directory
-## Make sure you have libcoinhsl.so and libcoinmetis.so!!
-
-
-
-link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/${newvar2}/libmetis thirdparty/scotch/scotch/lib
-        #thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq thirdparty/hsl/ma57/build/src
-        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq /home/dav0/build_ipopt/lib
-        )
-#link_directories(thirdparty/asl/solvers thirdparty/metis/metis/build/CYGWIN_NT-6.1-x86_64/libmetis thirdparty/scotch/scotch/lib
-#        thirdparty/mumps/MUMPS/lib thirdparty/openblas/OpenBLAS thirdparty/mumps/MUMPS/PORD/lib thirdparty/mumps/MUMPS/libseq
-#        )
-#link_directories("thirdparty/metis/metis/build/${newvar2}/libmetis")
 
 if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
@@ -77,31 +74,18 @@ set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
         )
 
 
-    #if (USE_MC30)
-    #file(GLOB SOURCES "src/k_aug/*.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/HSL/*.c")
-    #message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
-    #else(USE_MC30)
-    #file(GLOB SOURCES "src/k_aug/*.c" "src/k_aug/dot_driver/dot_driver.c" "src/matrix/*.c" "src/interfaces/mumps/*.c" "src/interfaces/hsl/*.c")
-    #file(SOURCES SRC_FILES)
-    #endif(USE_MC30)
-
 add_executable(k_aug ${SRC_FILES})
-#add_executable(dot_sens "src/k_aug/dot_driver/dot_driver.c")
 add_executable(dot_sens src/k_aug/dot_driver/dot_driver.c)
-
 if (USE_MC30)
     #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas ma57)
-    target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas coinhsl)
+    target_link_libraries(k_aug mc30 ${COINMETIS} ${COINASL} ${COINHSL} ${BLAS} ${LAPACK} gfortran)
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
-	# CYGWIN: are you kidding me?!
-    #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc19 gfortran openblas ma57)
-    target_link_libraries(k_aug amplsolver m dl gfortran pthread mc19 gfortran coinhsl gfortran coinmetis)
-endif(USE_MC30
-	)
+    target_link_libraries(k_aug mc19 ${COINMETIS} ${COINASL} ${COINHSL} ${BLAS} ${LAPACK} gfortran)
+endif(USE_MC30)
 
-target_link_libraries(k_aug blas lapack)
-target_link_libraries(dot_sens amplsolver m dl gfortran blas lapack)
+
+target_link_libraries(dot_sens ${COINASL} ${BLAS})
 
 
 set_target_properties( k_aug
@@ -111,7 +95,7 @@ set_target_properties( k_aug
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
-message(STATUS "\n\nPlease run make.")
+message(STATUS "\n\nVery cool.\n\n Care for some Jams?\n\n \t\t https://www.youtube.com/watch?v=6GEI3PpXEAo \n\n Please run make.")
 
 
 
