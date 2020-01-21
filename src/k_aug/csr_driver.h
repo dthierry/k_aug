@@ -22,7 +22,7 @@
 #ifndef CSR_DRIVER
 #define CSR_DRIVER
 
-#include "../../thirdparty/asl/solvers/asl.h"
+#include "asl.h"
 
 
 void csr_driver(int nvar, int ncon, int nzW, int nzA,

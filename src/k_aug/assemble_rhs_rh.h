@@ -20,7 +20,7 @@
 *******************************************************************************/
 #ifndef ASSEM_RHSRH
 #define ASSEM_RHSRH
-#include "../../thirdparty/asl/solvers/asl.h"
+#include "asl.h"
 
 void assemble_rhs_rh(real **rhs_rh, fint nvar, fint ncon, int *n_dof, 
   SufDesc *var_f, int **hr_point);

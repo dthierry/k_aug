@@ -20,7 +20,7 @@
 *******************************************************************************/
 #ifndef ASSEM_RHSDCDP
 #define ASSEM_RHSDCDP
-#include "../../thirdparty/asl/solvers/asl.h"
+#include "asl.h"
 
 void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x,
   SufDesc *dcdp, int **hr_point, SufDesc *var_order);

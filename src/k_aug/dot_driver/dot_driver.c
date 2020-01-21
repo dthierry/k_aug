@@ -19,14 +19,21 @@
 ** @param [r] 
 ** @return something
 *******************************************************************************/
-
-#include "../../../thirdparty/asl/solvers/asl.h"
-#include "../../../thirdparty/asl/solvers/getstub.h"
+#include "../../../config_kaug.h"
+#include "asl.h"
+#include "getstub.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
 #include <string.h>
+
+#ifdef USE_CYGWIN
+#define str_to_val(A, B) strtof(A, B)
+#else
+#define str_to_val(A, B) strtod(A, B)
+#endif
+
 
 void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname,
                    double *cpudp);
@@ -327,7 +334,7 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
     for (i = 0; i < _n_dof; i++) {
         for (j = 0; j < n_srow; j++) {
             fscanf(rh_txt, "%s", tl);
-            *(s_hat_T + n_srow * i + j) = strtod(tl, &someptr);
+            *(s_hat_T + n_srow * i + j) = str_to_val(tl, &someptr);
         }
     }
 
@@ -436,7 +443,7 @@ void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *D
     for (i = 0; i < _n_p; i++) {
         for (j = 0; j < n_srow; j++) {
             fscanf(s_txt, "%s", tl);
-            *(s_ + n_srow * i + j) = strtod(tl, &someptr);
+            *(s_ + n_srow * i + j) = str_to_val(tl, &someptr);
             /* Convert to float in a safe-ish way */
         }
     }
