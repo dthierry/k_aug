@@ -20,7 +20,7 @@
 ## Requirements [CYGWIN 2.900]
  * cmake
  * gcc-core
- * gcc-gfortran(gfortran)
+ * gcc-gfortran (gfortran)
  * gcc-g++
  * git
  * make
@@ -33,7 +33,6 @@
 
 
 ## Dependencies (NEW!)
- * [MC19](http://www.hsl.rl.ac.uk/download/MC19/1.0.0/a/) (HSL)
  
 It is now assumed that Ipopt from the coin-or project has been previously compiled with **HSL**.
 This will enable **MA57** as the default linear solver.
@@ -48,11 +47,10 @@ Depending on your platform, these are typically named libcoinX.so or libcoinX.dl
 
 ## Installation
  1. Visit the [Ipopt](https://github.com/coin-or/Ipopt) repository, follow the instructions and make sure it is compiled, with all the thirdparty libraries.
- 1. Download and place the `.tar.gz` file of `mc19` into the `thirdparty/hsl/mc19` directory and then run `help.mc19`
- 3. At the root directory use cmake to generate the makefile e.g. `cmake CMakeLists.txt`
- 4. Run `make`
- 5. Check the bin directory to find the `k_aug` executable
- 6. (*Windows*) add the LAPACK library directory to the PATH, as well the `libcoinX.dll.a` files (typically located at `/usr/local/lib/`)
+ 2. At the root directory use cmake to generate the makefile e.g. `cmake CMakeLists.txt`
+ 3. Run `make`
+ 4. Check the bin directory to find the `k_aug` executable
+ 5. (*Windows*) add the LAPACK library directory to the PATH (*Cygwin* typically `/usr/lib/lapack`, as well the `libcoinX.dll.a` files (typically located at `/usr/local/lib/`)
 
 ## Known issues
  * AMPL can not recognize command line options

@@ -52,7 +52,7 @@ if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
     message("INCLUDE LINK DIRECTORIES MC30 ${USE_MC30}")
 else(USE_MC30)
-    link_directories(thirdparty/hsl/mc19/mc19/src)
+	#link_directories(thirdparty/hsl/mc19/mc19/src)
 endif(USE_MC30)
 
 set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
@@ -81,7 +81,7 @@ if (USE_MC30)
     target_link_libraries(k_aug mc30 ${COINMETIS} ${COINASL} ${COINHSL} ${BLAS} ${LAPACK} gfortran m)
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
-    target_link_libraries(k_aug mc19 ${COINMETIS} ${COINASL} ${COINHSL} ${BLAS} ${LAPACK} gfortran m)
+    target_link_libraries(k_aug ${COINMETIS} ${COINASL} ${COINHSL} ${BLAS} ${LAPACK} gfortran m)
 endif(USE_MC30)
 
 
