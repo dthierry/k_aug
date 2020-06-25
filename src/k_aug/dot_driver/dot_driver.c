@@ -84,15 +84,15 @@ int main(int argc, char **argv) {
 
 
     char ter_msg[] = {"I[[DOT_SENS]]...\t[MAIN]"
-                      "stay чики брики!"};
+                      "!"};
 
-    char _sname[] = {"⚔✠dot_sens✠⚔"};
+    char _sname[] = {"++�dot_sens ++�"};
     clock_t start_c, end_c;
     double cpu_timing;
     time_t timestamp;
     char _chr_timest[15] = "";
     char _file_name_[30] = ""; /*  */
-    char version[] = {"1.0 \'чувак\'"};
+    char version[] = {"1.0 dot_1'"};
     double cpudp = 0;
 
     start_c = clock();
@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
     cpu_timing = (double) (end_c - start_c) / CLOCKS_PER_SEC;
 
     printf("I[[DOT_SENS]]...\t[MAIN]"
-           "дава́й!.\tDone.\n");
+           "bye!.\tDone.\n");
 
     printf("I[[DOT_SENS]]...\t[MAIN]Timing.."
            "%g sec.\n", cpu_timing);

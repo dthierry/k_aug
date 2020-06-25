@@ -29,8 +29,7 @@ set(k_aug_version_mayor 1)
 set(k_aug_version_minor 0)
 
 set(USE_PARDISO 0)
-set(USE_MC30 0)
-set(PRINT_VERBOSE 1)
+set(USE_MC30 0) set(PRINT_VERBOSE 1)
 
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
         "${PROJECT_BINARY_DIR}/config_kaug.h")
@@ -95,7 +94,7 @@ set_target_properties( k_aug
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
-message(STATUS "\n\nVery cool.\n\n Care for some Jams?\n\n \t\t https://www.youtube.com/watch?v=6GEI3PpXEAo \n\n Please run make.")
+message(STATUS "\n\nVery cool.\n\n Please run make.")
 
 
 
