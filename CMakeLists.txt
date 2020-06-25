@@ -77,10 +77,10 @@ add_executable(k_aug ${SRC_FILES})
 add_executable(dot_sens src/k_aug/dot_driver/dot_driver.c)
 if (USE_MC30)
     #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas ma57)
-    target_link_libraries(k_aug mc30 ${COINMETIS} ${COINASL} ${COINHSL} ${BLAS} ${LAPACK} gfortran m)
+    target_link_libraries(k_aug mc30 ${COINASL} ${COINHSL} ${COINMETIS} ${BLAS} ${LAPACK} gfortran m)
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
-    target_link_libraries(k_aug ${COINMETIS} ${COINASL} ${COINHSL} ${BLAS} ${LAPACK} gfortran m)
+	target_link_libraries(k_aug ${COINASL} ${COINHSL} ${COINMETIS} ${BLAS} ${LAPACK} gfortran m)
 endif(USE_MC30)
 
 
