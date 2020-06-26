@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
     char ter_msg[] = {"I[[DOT_SENS]]...\t[MAIN]"
                       "!"};
 
-    char _sname[] = {"++dot_sens++”"};
+    char _sname[] = {"++dot_sens++"};
     clock_t start_c, end_c;
     double cpu_timing;
     time_t timestamp;
