@@ -47,10 +47,10 @@ m.ipopt_zU_in = Suffix(direction=Suffix.EXPORT)
 
 ipopt = SolverFactory('ipopt')
 sipopt = SolverFactory('ipopt_sens')
-kaug = SolverFactory('k_aug', executable="../../bin/k_aug")
+kaug = SolverFactory('k_aug', executable="k_aug")
 #: K_AUG SUFFIXES
 m.dcdp = Suffix(direction=Suffix.EXPORT)  #: the dummy constraints
-# m.DeltaP = Suffix(direction=Suffix.EXPORT)  #:
+m.DeltaP = Suffix(direction=Suffix.EXPORT)  #:
 m.var_order = Suffix(direction=Suffix.EXPORT)  #: Important variables (primal)
 
 m.c1p.set_suffix_value(m.dcdp, 1)
@@ -59,7 +59,8 @@ m.c2p.set_suffix_value(m.dcdp, 2)
 m.x[1].set_suffix_value(m.var_order, 1)
 m.x[2].set_suffix_value(m.var_order, 2)
 # m.x[3].set_suffix_value(m.var_order, 3)  #: we could have all, a subset or none at all
-
+m.c1p.set_suffix_value(m.DeltaP, 0.5)
+m.c2p.set_suffix_value(m.DeltaP, 0.0)
 #: please check the dsdp_in_.in file generated !
 #: please check the dxdp_.dat file generated if var_order was set!
 
@@ -68,9 +69,19 @@ with open('ipopt.opt', 'w') as f:
     f.close()
 
 ipopt.solve(m, tee=True)
+with open("myfile.txt", "w") as f:
+    for i in m.component_objects(Var):
+        i.display(ostream=f)
+
 m.ipopt_zL_in.update(m.ipopt_zL_out)  #: important!
 m.ipopt_zU_in.update(m.ipopt_zU_out)  #: important!
 #: k_aug
 kaug.options['dsdp_mode'] = ""  #: sensitivity mode!
 kaug.solve(m, tee=True)
+dotsens = SolverFactory("dot_sens")
+dotsens.options["dsdp_mode"] = ""
+dotsens.solve(m, tee=True)
 
+with open("myfile.txt", "a") as f:
+    for i in m.component_objects(Var):
+        i.display(ostream=f)
