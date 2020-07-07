@@ -443,7 +443,7 @@ int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja,
     }
 
     if (*ratiorr > ls_opts.residual_ratio_max) {
-        fprintf(stderr, "E[K_AUG]...\t[MA57_DRIVER]\n\n"
+        fprintf(stderr, "W[K_AUG]...\t[MA57_DRIVER]\n\n"
                         "\t\tCould not fix the accuracy of the problem.\n"
                         "\t\tTry re-writing the problem or give a different point or change \"max_refinement_steps\"\n"
                         "\t\tWarning: results might be incorrect.\n"
