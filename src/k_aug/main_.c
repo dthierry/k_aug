@@ -63,13 +63,18 @@ static int n_rhs = 0;
 static int l_over = 0;
 static I_Known l_over_kw = {1, &l_over};
 
+/* Option
+ * Option Description */
 static char _comp_inv[] = {"compute_inv"}; /* The actual reduced hessian */
 static char _comp_inv_verb[] = {"Compute the inv(inv(red_hess)) i.e. the Red. Hess"};
+
 static char _dbg_kkt[] = {"deb_kkt"};
 static char _dbg_kkt_verb[] = {"Override dof checking, for debugging purposes"};
+
 static char _dot_pr_f[] = {"dot_prod"};
 static char _dsdpmode[] = {"dsdp_mode"};
 static char _dsdp_mode_nverb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
+
 static char name1[] = {"smth"};
 static char _e_eval[] = {"eig_rh"};
 static char _n_rhsopt_[] = {"n_rhs"};
@@ -77,6 +82,9 @@ static char _no_barrieropt_[] = {"no_barrier"};
 static char _no_lambdaopt_[] = {"no_lambda"};
 static char _no_scaleopt_[]  = {"no_scale"};
 static char _not_zero[] = {"not_zero"};
+
+static char _print_kkt[] = {"print_kkt"};
+static char _print_kkt_noverb[] = {"Prints the contents of the kkt matrix in a file."};
 
 static char _square_override[] = {"square_problem"};
 static char _square_override_noverb[] = {"If nvar = neq, assume there are no bounds and sigma = 0"};
@@ -112,6 +120,9 @@ static I_Known dsdp_mode_kw = {1, &dsdp_mode};
 static int no_inertia = 0;
 static I_Known no_inertia_kw = {1, &no_inertia};
 
+static int print_kkt = 0;
+static I_Known print_kkt_kw = {1, &print_kkt};
+
 static int square_override = 0;
 static I_Known square_override_kw = {1, &square_override};
 
@@ -130,7 +141,8 @@ static keyword keywds[] = {
         KW(_no_lambdaopt_ , IK_val, &l_over_kw, _no_lambdaopt_),
         KW(_no_scaleopt_ , IK_val, &nscale_kw, _no_scaleopt_),
         KW(_not_zero , D_val, &not_zero, _not_zero),
-        KW(name1 , IK_val, &dumm_kw, name1),
+        KW(_print_kkt, IK_val, &print_kkt_kw, _print_kkt_noverb),
+        KW(name1 , IK_val, &dumm_kw, name1),  /* This does not do anything */
         KW(_square_override, IK_val, &square_override_kw, _square_override_noverb),
         KW(_target_log10mu , D_val, &log10mu, _target_log10mu_verb),
 };
@@ -678,10 +690,18 @@ int main(int argc, char **argv){
                Wrow, Wcol, Wij, Arow, Acol, Aij,
                &Krow, &Kcol, &Kij, &Kr_strt);
 
+
+
     K_nrows = n_var + n_con; /* Number of rows of the KKT matrix (no ineq) */
     nzK = nzA + nzW + n_con; /* NZ in the kkt matrix (for pardiso, yes)*/
     assert(Krow != NULL);
     ev_as_kkt_c = clock();
+
+    if(print_kkt){
+        for(k=0; k<nzK; k++){printf("%d\t%d\t%.g\n", Krow[k], Kcol[k], Kij[k]);}
+        exit(-1);
+    }
+
 
     S_scale = (real *)calloc(sizeof(real), K_nrows);
 
@@ -769,7 +789,8 @@ int main(int argc, char **argv){
     }
 
     /* factorize the matrix */
-
+    /* mumps_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
+                 &inrt_pert, inrt_parms, &inrt_opts, logmu0, ls_opts); */
     ma57_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
                 &inrt_pert, inrt_parms, &inrt_opts, logmu0, ls_opts);
 
