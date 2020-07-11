@@ -521,7 +521,9 @@ int main(int argc, char **argv){
 
     sigma = (real *)malloc(sizeof(real) * n_var);
     memset(sigma, 0, sizeof(real) * n_var);
-
+    if (print_kkt){
+        printf("yes I hear you %d\n", print_kkt);
+    }
     /* Check if we do red_hess, deb_kkt or dsdp*/
     if (deb_kkt > 0) {
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
@@ -537,11 +539,17 @@ int main(int argc, char **argv){
         somefile = fopen("conorder.txt", "w");
         for (i = 0; i < n_con; i++) { fprintf(somefile, "%d\n", dcdp->u.i[i]); }
         fclose(somefile);
+    } else if (print_kkt) {
+        printf("W[k_aug]...\t[k_aug_asl]"
+               "printing kkt matrix.\n");
     } else if (var_f->u.r == NULL && var_f->u.i == NULL) {
+        printf("W[k_aug]...\t[k_aug_asl]"
+               "DEFAULT mode!.\n");
         fprintf(stderr, "E[K_AUG]...\t[K_AUG_ASL]"
                         "suffix empty no n_dof declared!\n");
         exit(-1);
     }
+
 
     if(!square_override) {
         compute_sigma(asl, n_var, x, z_L, z_U, sigma, logmu0);
@@ -698,8 +706,32 @@ int main(int argc, char **argv){
     ev_as_kkt_c = clock();
 
     if(print_kkt){
-        for(k=0; k<nzK; k++){printf("%d\t%d\t%.g\n", Krow[k], Kcol[k], Kij[k]);}
-        exit(-1);
+        somefile = fopen("kkt_print.txt", "w");
+        for(k=0; k<nzK; k++){fprintf(somefile, "%d\t%d\t%.g\n", Krow[k], Kcol[k], Kij[k]);}
+        fclose(somefile);
+        solve_result_num = 0;
+        write_sol(ter_msg, x, lambda, &Oinfo);
+        ASL_free(&asl);
+        free(c_flag);
+        free(z_L);
+        free(z_U);
+        free(sigma);
+        free(Acol);
+        free(Arow);
+        free(Aij);
+        free(Wcol);
+        free(Wrow);
+        free(Wij);
+        free(nz_row_a);
+        free(nz_row_w);
+        free(md_off_w);
+        for(i=0; i<(int)n_r_suff; i++){
+            free(reg_suffix_name[i]);
+        }
+        free(reg_suffix_name);
+        free(suf_ptr);
+
+        return 0;
     }
 
 

@@ -8,9 +8,9 @@ message(STATUS "\nIf you want to have all the debug files generated each time, s
 #set( PROJECT_LINK_LIBS amplsolver.a )
 execute_process(COMMAND uname -s OUTPUT_VARIABLE OS)
 
-#MESSAGE( STATUS "OS: " ${OS} )
+MESSAGE( STATUS "OS: " ${OS} )
 execute_process(COMMAND uname -m OUTPUT_VARIABLE AR)
-#MESSAGE( STATUS "AR: " ${AR} )
+MESSAGE( STATUS "AR: " ${AR} )
 #set(newvar ${OS}-${AR})
 #message(STATUS "newvar :" ${newvar})
 string(REGEX REPLACE "\n$" "" OS2 "${OS}")
@@ -39,7 +39,7 @@ include_directories(${PROJECT_BINARY_DIR})
 
 # coinor stuff
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
-include_directories(/usr/local/include/coin-or/asl)
+include_directories(/usr/local/include/coin-or/asl /cygdrive/c/Users/david/in_dev_/asl/src/solvers /cygdrive/c/Users/david/in_dev_/asl/build/include)
 find_library(COINASL coinasl HINTS /usr/local/lib)
 find_library(COINHSL coinhsl HINTS /usr/local/lib)
 find_library(COINMETIS coinmetis HINTS /usr/local/lib)
