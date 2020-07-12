@@ -1,4 +1,4 @@
-#include "config_kaug.h"
+#include "../../config_kaug.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>

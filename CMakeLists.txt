@@ -20,10 +20,31 @@ message(STATUS "Your current OS and ARCH:" ${newvar2})
 message(STATUS "Now k_aug assumes that you have all the coin-or libraries, i.e. coinhsl, coinmetis and coinasl")
 message(STATUS "It is assumed that these libraries are located at /usr/local/lib if not please change the HINTS the CMakeLists.txt")
 
+
+set(libaslname "coinasl")
+set(libhslname "coinhsl")
+set(libmetisname "coinmetis")
+set(libblasname "openblas")
+set(liblapackname "openblas")
+
 if (${OS} MATCHES "CYGWIN")
 	message(STATUS "\n\nCYGWIN DETECTED:\n Make sure LAPACK is in the PATH after compilation")
   set(USE_CYGWIN 1)
+    elseif(${OS} MATCHES "MINGW64")
+    message(STATUS "\n\nMINGW64 DECTECTED (This is still experimental)")
+    message(STATUS "Make sure the library names are consistent")  # !
+    set(libaslname "libcoinasl.dll.a")
+    set(libhslname "libcoinhsl.dll.a")
+    set(libmetisname "libmetis.dll.a")
+    set(libblasname "libblas.dll.a")
+    set(liblapackname "liblapack.dll.a")
 endif (${OS} MATCHES "CYGWIN")
+
+message(STATUS "\nWe are looking for the library: " ${libaslname})
+message(STATUS "\nWe are looking for the library: " ${libhslname})
+message(STATUS "\nWe are looking for the library: " ${libmetisname})
+message(STATUS "\nWe are looking for the library: " ${libblasname})
+message(STATUS "\nWe are looking for the library: " ${liblapackname})
 
 set(k_aug_version_mayor 1)
 set(k_aug_version_minor 0)
@@ -40,13 +61,19 @@ include_directories(${PROJECT_BINARY_DIR})
 # coinor stuff
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
 include_directories(/usr/local/include/coin-or/asl /cygdrive/c/Users/david/in_dev_/asl/src/solvers /cygdrive/c/Users/david/in_dev_/asl/build/include)
-find_library(COINASL coinasl HINTS /usr/local/lib)
-find_library(COINHSL coinhsl HINTS /usr/local/lib)
-find_library(COINMETIS coinmetis HINTS /usr/local/lib)
+find_library(COINASL ${libaslname} HINTS /usr/local/lib)
+find_library(COINHSL ${libhslname} HINTS /usr/local/lib)
+find_library(COINMETIS ${libmetisname} HINTS /usr/local/lib)
 # openblas/blas stuff
-find_library(BLAS NAMES blas openblas HINTS /usr/lib /usr/local/lib)
-find_library(LAPACK NAMES lapack openblas HINTS /usr/lib /usr/local/lib)
+find_library(BLAS NAMES blas ${libblasname} HINTS /usr/lib /usr/local/lib)
+find_library(LAPACK NAMES lapack ${liblapackname} HINTS /usr/lib /usr/local/lib)
 
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+message(STATUS "\n\n\nThe include directories must have getstub.h and asl.h!!!\n\n\n")
+foreach(dir ${dirs})
+    message(STATUS "Including directory='${dir}'")
+endforeach()
 
 if (USE_MC30)
     link_directories(thirdparty/hsl/mc30/mc30/src)
@@ -95,7 +122,7 @@ set_target_properties( k_aug
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
 
-message(STATUS "\n\nVery cool.\n\n Please run make.")
+message(STATUS "\n\nIf no errors were found.\n\n Please run make.")
 
 
 

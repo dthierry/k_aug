@@ -1,7 +1,7 @@
 //
 // Created by dav0 on 5/2/18.
 //
-#include "config_kaug.h"
+#include "../../../config_kaug.h"
 #include "mc19_driver.h"
 #include <string.h>
 #include <stdio.h>
