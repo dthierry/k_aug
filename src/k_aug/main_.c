@@ -3,9 +3,9 @@
 */
 
 
-/* @source kmatrix_b0.c
-** beta 0
-** April 18th, 2017
+/* @source main_.c
+**
+** July 15th, 2020
 ** @author: David Thierry (dmolinat@andrew.cmu) dav0@lb2016-1
 
 ********************************************************************************
@@ -164,7 +164,7 @@ int main(int argc, char **argv){
     int i, j, k;
     int n_dof=0;
     int n_vx=0; /* variable of interest for dxdp*/
-    int nnzw; /* let's try this */
+    fint nnzw; /* let's try this */
     real *x=NULL, *lambda=NULL;
     char *s=NULL;
     SufDesc *var_f=NULL;

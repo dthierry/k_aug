@@ -37,10 +37,10 @@
 #endif
 
 
-void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname,
+void dsdp_strategy(ASL *asl, fint n_srow, fint nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname,
                    double *cpudp);
 
-void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2, const char *fname, double *cpudp);
+void npdp_strategy(ASL *asl, fint n_srow, fint nvar, SufDesc *suf1, SufDesc *suf2, const char *fname, double *cpudp);
 
 extern void
 dgemv_(char *TRANS, fint *M, fint *N, real *ALPHA, real *A, fint *LDA, real *X, fint *INCX, real *BETA, real *Y,
@@ -62,8 +62,8 @@ static Option_Info Oinfo;
 int main(int argc, char **argv) {
     ASL *asl;
 
-    int nvar, ncon;
-    int n_srow;
+    fint nvar, ncon;
+    fint n_srow;
 
     char *s = NULL;
     FILE *f, *f_out;
@@ -275,19 +275,19 @@ int main(int argc, char **argv) {
 
 }
 
-void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2, const char *fname,
+void npdp_strategy(ASL *asl, fint n_srow, fint nvar, SufDesc *suf1, SufDesc *suf2, const char *fname,
                    double *cpudp) {
-    int i, j, _n_dof, ncon = (n_srow - nvar), *u_arr = NULL;
+    fint i, j, _n_dof, ncon = (n_srow - nvar), *u_arr = NULL;
     double *npdp = NULL, *u_star = NULL, *u_star0 = NULL;
     FILE *rh_txt = NULL, *f_out = NULL;
     double *s_hat_T = NULL;
 
     char t = 'T';
     double ALPHA = -1.0; /*This guy requires a minus here. */
-    /*int LDA = 10;*/
-    int INCX = 1;
+    /*fint LDA = 10;*/
+    fint INCX = 1;
     double BETA = 1.0;
-    int INCY = 1;
+    fint INCY = 1;
     char *tl, *someptr = NULL;
     clock_t startd, endd;
 
@@ -301,8 +301,8 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
         *(npdp + nvar + i) = suf2->u.r[i];
     }
 
-    u_arr = (int *) malloc(sizeof(int) * nvar); /* This guy points to the E^T s*. To the required rows to be precise */
-    memset(u_arr, 0, sizeof(int) * nvar);
+    u_arr = (fint *) malloc(sizeof(fint) * nvar); /* This guy points to the E^T s*. To the required rows to be precise */
+    memset(u_arr, 0, sizeof(fint) * nvar);
     _n_dof = 0; /* count_dof */
     for (i = 0; i < nvar; i++) {
         if (*((suf1->u.i) + i) != 0) {
@@ -366,18 +366,18 @@ void npdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *suf1, SufDesc *suf2,
     free(tl);
 }
 
-void dsdp_strategy(ASL *asl, int n_srow, int nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname,
+void dsdp_strategy(ASL *asl, fint n_srow, fint nvar, SufDesc *dcdp_suf, SufDesc *DeltaP_suf, const char *fname,
                    double *cpudp) {
-    int i, j, _n_p = 0, ncon = (n_srow - nvar), temp;
+    fint i, j, _n_p = 0, ncon = (n_srow - nvar), temp;
     double *dpvect = NULL, *s_star0 = NULL, *s_star = NULL;
     FILE *s_txt = NULL, *f_out = NULL;
     double *s_ = NULL;
     char t = 'N';
     double ALPHA = 1.0;
-    /*int LDA = 10;*/
-    int INCX = 1;
+    /*fint LDA = 10;*/
+    fint INCX = 1;
     double BETA = 1.0;
-    int INCY = 1;
+    fint INCY = 1;
     char *tl, *someptr;
     clock_t startd, endd;
 

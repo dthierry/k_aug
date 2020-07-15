@@ -8,27 +8,27 @@
 
 
 /*
-   extern void ma57id_(double *CNTL, int *ICNTL);
-   extern void ma57ad_(int *N, int *NE, int *IRN, int *JCN, int *LKEEP, int *KEEP,
-   int *IWORK, int *ICNTL, int *INFO, double *RINFO);
-   extern void ma57bd_(int *N, int *NE, double *A, double *FACT, int *LFACT,
-   int *IFACT, int *LIFACT, int *LKEEP, int *KEEP, int *IWORK, int *ICNTL,
-   double *CNTL, int *INFO, double *RINFO);
-   extern void ma57cd_(int *JOB, int *N, double *FACT, int *LFACT, int *IFACT,
-   int *LIFACT,	int *NRHS, double *RHS, int *LRHS, double *WORK, int *LWORK,
-   int *IWORK, int *ICNTL, int *INFO);
-   extern void ma57dd_(int *JOB, int *N, int *NE, double *A, int *IRN, int *JCN,
-   double *FACT, int *LFACT, int *IFACT, int *LIFACT, double *RHS, double *X,
-   double *RESID, double *WORK, int *IWORK, int *ICNTL, double *CNTL,
-   int *INFO, double *RINFO);
-   extern void ma57ed_(int *N, int *IC, int *KEEP, double *FACT, int *LFACT,
-   double *NEWFAC, int *LNEW, int	*IFACT, int *LIFACT, int *NEWIFC, int *LINEW,
-   int *INFO);*/
+   extern void ma57id_(double *CNTL, fint *ICNTL);
+   extern void ma57ad_(fint *N, fint *NE, fint *IRN, fint *JCN, fint *LKEEP, fint *KEEP,
+   fint *IWORK, fint *ICNTL, fint *INFO, double *RINFO);
+   extern void ma57bd_(fint *N, fint *NE, double *A, double *FACT, fint *LFACT,
+   fint *IFACT, fint *LIFACT, fint *LKEEP, fint *KEEP, fint *IWORK, fint *ICNTL,
+   double *CNTL, fint *INFO, double *RINFO);
+   extern void ma57cd_(fint *JOB, fint *N, double *FACT, fint *LFACT, fint *IFACT,
+   fint *LIFACT,	fint *NRHS, double *RHS, fint *LRHS, double *WORK, fint *LWORK,
+   fint *IWORK, fint *ICNTL, fint *INFO);
+   extern void ma57dd_(fint *JOB, fint *N, fint *NE, double *A, fint *IRN, fint *JCN,
+   double *FACT, fint *LFACT, fint *IFACT, fint *LIFACT, double *RHS, double *X,
+   double *RESID, double *WORK, fint *IWORK, fint *ICNTL, double *CNTL,
+   fint *INFO, double *RINFO);
+   extern void ma57ed_(fint *N, fint *IC, fint *KEEP, double *FACT, fint *LFACT,
+   double *NEWFAC, fint *LNEW, fint	*IFACT, fint *LIFACT, fint *NEWIFC, fint *LINEW,
+   fint *INFO);*/
 
 /*
-   int main(void){
-   int irn[] = {1, 2};
-   int jrn[] = {1, 2};
+   fint main(void){
+   fint irn[] = {1, 2};
+   fint jrn[] = {1, 2};
    double a[] = {1.0, 1.0};
    double b[] = {1.999999, 2.9e-1};
    double x[] = {0, 0};
@@ -38,69 +38,69 @@
 
 */
 
-/* MA57_DRIVER(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar, int ncon, int no_inertia,
-   int nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts, double log10mu, linsol_opts ls_opts)
+/* MA57_DRIVER(fint *row_starts, fint *ia, fint *ja, double *a, fint n, fint n_rhs, double *b, double *x, fint nvar, fint ncon, fint no_inertia,
+   fint nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts, double log10mu, linsol_opts ls_opts)
    */
 
-void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_rhs, double *b, double *x, int nvar,
-                 int ncon, int no_inertia,
-                 int nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts,
+void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, fint n_rhs, double *b, double *x, fint nvar,
+                 fint ncon, fint no_inertia,
+                 fint nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts,
                  double log10mu, linsol_opts ls_opts) {
 
     double cntl[5];
-    int icntl[20];
-    int info[40];
+    fint icntl[20];
+    fint info[40];
     double rinfo[20];
 
-    int i, j;
+    fint i, j;
 
-    int n_neig = 0;
-    int inertia_status = 1;
-    int reduce_pivtol;
-    int try_fact = 0;
+    fint n_neig = 0;
+    fint inertia_status = 1;
+    fint reduce_pivtol;
+    fint try_fact = 0;
     double trial_pivtol = ls_opts.pivot_tol0;
     double ratiorr = 0.0;
-    int inaccurateSol = 0;
+    fint inaccurateSol = 0;
 
-    int space_lk; /* for lkeep */
-    int *keep;
-    int *iwork;
-    int lfact = 0, lifact = 0;
+    fint space_lk; /* for lkeep */
+    fint *keep;
+    fint *iwork;
+    fint lfact = 0, lifact = 0;
     double *fact = NULL;
-    int *ifact = NULL;
+    fint *ifact = NULL;
 
 
-    int job;
+    fint job;
 
     double *work;
-    int lwork;
+    fint lwork;
 
-    int lrhs;
+    fint lrhs;
 
 
     double const residual_ratio_max = 1e-10;
     double *resid = NULL;
 
-    int incx = 1; /* for the norm calculation */
+    fint incx = 1; /* for the norm calculation */
     double nrm_x = 0, nrm_r = 0;
-    int status = 0;
+    fint status = 0;
     printf("I[MA57]...\t[]"
            "***\n");
 
     space_lk = 5 * n + nza + (n > nza ? n : nza) + 42;
     lwork = n * n_rhs;
 
-    keep = (int *) malloc(sizeof(int) * space_lk);
-    iwork = (int *) malloc(sizeof(int) * 5 * n);
+    keep = (fint *) malloc(sizeof(fint) * space_lk);
+    iwork = (fint *) malloc(sizeof(fint) * 5 * n);
     resid = (double *) malloc(sizeof(double) * n);  /* the residuals */
     work = (double *) malloc(sizeof(double) * lwork);
     assert(keep);
     assert(iwork);
     assert(resid);
     assert(work);
-    memset(keep, 0, sizeof(int) * space_lk);
+    memset(keep, 0, sizeof(fint) * space_lk);
     memset(cntl, 0, sizeof(double) * 5);
-    memset(icntl, 0, sizeof(int) * 20);
+    memset(icntl, 0, sizeof(fint) * 20);
 
     ma57id_(cntl, icntl);
 
@@ -154,7 +154,7 @@ void ma57_driver(fint *row_starts, fint *ia, fint *ja, double *a, fint n, int n_
     free(resid);
 }
 
-int ma57_analysis(int *n, int *nza, int *ia, int *ja, int *space_lk, int *keep, int *iwork, int *icntl, int *info,
+fint ma57_analysis(fint *n, fint *nza, fint *ia, fint *ja, fint *space_lk, fint *keep, fint *iwork, fint *icntl, fint *info,
                   double *rinfo) {
     ma57ad_(n, nza, ia, ja, space_lk, keep, iwork, icntl, info, rinfo);
     if (info[0] != 0) {
@@ -169,15 +169,15 @@ int ma57_analysis(int *n, int *nza, int *ia, int *ja, int *space_lk, int *keep, 
 
 }
 
-int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon, int no_inertia, int nza,
+fint ma57_factorize(const fint *row_starts, double *a, fint n, fint nvar, fint ncon, fint no_inertia, fint nza,
                    inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts, double log10mu,
-                   linsol_opts ls_opts, double **fact, int *lfact, int **ifact, int *lifact, int *space_lk, int *keep,
-                   int *iwork, int *icntl, double *cntl, int *info, double *rinfo, int *reduce_pivtol,
+                   linsol_opts ls_opts, double **fact, fint *lfact, fint **ifact, fint *lifact, fint *space_lk, fint *keep,
+                   fint *iwork, fint *icntl, double *cntl, fint *info, double *rinfo, fint *reduce_pivtol,
                    double *trial_pivtol, fint *n_neig, fint *try_fact) {
-    int i, j;
-    int lfact_new = *lfact, lifact_new = *lifact;
-    int ic = 0;
-    int inertia_status = 0;
+    fint i, j;
+    fint lfact_new = *lfact, lifact_new = *lifact;
+    fint ic = 0;
+    fint inertia_status = 0;
 
 
     printf("I[MA57]...\t[MA57_FACTOR]\n");
@@ -188,7 +188,7 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
     //if (*lifact < info[10 - 1] * 2){*lifact = info[10 - 1] * 2;}
     /* there is no way to know if fact and ifact have the appropriate size */
     *fact = (double *) (!*fact ? malloc(sizeof(double) * *lfact) : realloc(*fact, sizeof(double) * *lfact));
-    *ifact = (int *) (!*ifact ? malloc(sizeof(int) * *lifact) : realloc(*ifact, sizeof(int) * *lifact));
+    *ifact = (fint *) (!*ifact ? malloc(sizeof(fint) * *lifact) : realloc(*ifact, sizeof(fint) * *lifact));
     assert(*fact);
     assert(*ifact);
 
@@ -220,7 +220,7 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
             } else if (info[0] == -4) {
                 ic = 1;
                 lifact_new = info[18 - 1];
-                *ifact = (int *) realloc(*ifact, sizeof(int) * lifact_new);
+                *ifact = (fint *) realloc(*ifact, sizeof(fint) * lifact_new);
                 assert(*ifact);
             } else {
                 fprintf(stderr, "E[K_AUG]...\t[MA57_FACTOR]"
@@ -294,23 +294,23 @@ int ma57_factorize(const fint *row_starts, double *a, fint n, int nvar, int ncon
 }
 
 
-int ma57_compute_ratios(const fint *row_start, const double *a, const fint *ja, fint n,
+fint ma57_compute_ratios(const fint *row_start, const double *a, const fint *ja, fint n,
                         double *fact,
-                        int *lfact,
-                        int *ifact,
-                        int *lifact,
-                        int *iwork,
-                        int *icntl,
-                        int *info,
+                        fint *lfact,
+                        fint *ifact,
+                        fint *lifact,
+                        fint *iwork,
+                        fint *icntl,
+                        fint *info,
                         double *work,
-                        int *lwork,
+                        fint *lwork,
                         fint n_rhs,
                         double *b,
                         double *x, double *resid,
                         double *ratiorr) {
-    int i, k;
-    int job = 1;
-    int incx = 1;
+    fint i, k;
+    fint job = 1;
+    fint incx = 1;
     double nrm_x = 1., nrm_r = 1.;
     for (i = 0; i < n * n_rhs; i++) {
         x[i] = b[i];
@@ -341,26 +341,26 @@ int ma57_compute_ratios(const fint *row_start, const double *a, const fint *ja, 
 }
 
 
-int ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja, fint n, int nvar,
-               int ncon, int nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts,
+fint ma57_solve(const fint *row_start, double *a, const fint *ia, const fint *ja, fint n, fint nvar,
+               fint ncon, fint nza, inertia_perts *inrt_pert, inertia_params inrt_parms, inertia_options *inrt_opts,
                double log10mu, linsol_opts ls_opts,
                double **fact,
-               int *lfact,
-               int **ifact,
-               int *lifact, int *space_lk, int *keep,
-               int *iwork,
-               int *icntl, double *cntl,
-               int *info, double *rinfo,
+               fint *lfact,
+               fint **ifact,
+               fint *lifact, fint *space_lk, fint *keep,
+               fint *iwork,
+               fint *icntl, double *cntl,
+               fint *info, double *rinfo,
                double *work,
-               int *lwork,
+               fint *lwork,
                fint n_rhs,
                double *b,
                double *x, double *resid,
-               int *reduce_pivtol, double *trial_pivtol, int *n_neig, fint *try_fact, double *ratiorr) {
+               fint *reduce_pivtol, double *trial_pivtol, fint *n_neig, fint *try_fact, double *ratiorr) {
 
-    int inertia_status;
-    int inaccurateSol = 0;
-    int i, j;
+    fint inertia_status;
+    fint inaccurateSol = 0;
+    fint i, j;
     double ratio0; /* reference ratio */
 
     ma57_compute_ratios(row_start, a, ja, n, *fact, lfact, *ifact, lifact, iwork, icntl, info, work, lwork, n_rhs, b, x,
