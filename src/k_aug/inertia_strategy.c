@@ -13,11 +13,11 @@
 
 
 
-int
-inertia_strategy(const int *row_strt, double *a, int nvar, int ncon, int n_eig, inertia_perts *i_pert,
+fint
+inertia_strategy(const fint *row_strt, double *a, fint nvar, fint ncon, fint n_eig, inertia_perts *i_pert,
                  inertia_params i_parm,
-                 inertia_options *i_opts, int *try_n, double log10mu, int *pert_pivot) {
-    int j, k;
+                 inertia_options *i_opts, fint *try_n, double log10mu, fint *pert_pivot) {
+    fint j, k;
     double d_w_trial = i_pert->d_w;
     char *dummy;
     (*pert_pivot) = 0; /* Initialize this little guy always. */

@@ -62,7 +62,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 	assert(Kcol != NULL);
 	assert(Kij  != NULL);
 	
-	*Kr_strt = (int *)malloc(sizeof(int *) * (nvar+ncon+1));
+	*Kr_strt = (fint *)malloc(sizeof(int *) * (nvar+ncon+1));
 	assert(*Kr_strt != NULL);
 	
 	

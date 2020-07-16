@@ -1,7 +1,7 @@
 //
 // Created by dav0 on 5/2/18.
 //
-#include "config_kaug.h"
+#include "../../../config_kaug.h"
 #include "mc19_driver.h"
 #include <string.h>
 #include <stdio.h>
@@ -12,7 +12,7 @@ int mc19driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
     double *w=NULL, *adummy=NULL;
     /* These guys must be single precision!! */
     float *r=NULL, *c=NULL;
-    int i, j=0, nzdummy = 0;
+    fint i, j=0, nzdummy = 0;
     fint *irndummy=NULL, *icndummy=NULL;
     FILE *somefile=NULL;
 

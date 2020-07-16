@@ -3,7 +3,7 @@
 	GET NUMBER OF NZ BY ROW ** done
 	NEED TO PASS NVAR & NCON ** done
 	*/
-#include "config_kaug.h"
+#include "../../config_kaug.h"
 #include "get_jac_asl_aug.h"
 #include <stdio.h>
 #include <stdlib.h>
