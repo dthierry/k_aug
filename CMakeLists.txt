@@ -63,7 +63,7 @@ include_directories(${PROJECT_BINARY_DIR})
 # coinor stuff
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
 include_directories(/usr/local/include/coin-or/asl /cygdrive/c/Users/david/in_dev_/asl/src/solvers /cygdrive/c/Users/david/in_dev_/asl/build/include)
-find_library(COINASL ${libaslname} HINTS /usr/local/lib)
+find_library(COINASL NAMES asl ${libaslname} HINTS /usr/local/lib)
 find_library(COINHSL ${libhslname} HINTS /usr/local/lib)
 find_library(COINMETIS ${libmetisname} HINTS /usr/local/lib)
 # openblas/blas stuff
