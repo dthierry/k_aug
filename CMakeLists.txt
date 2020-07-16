@@ -26,6 +26,7 @@ set(libhslname "coinhsl")
 set(libmetisname "coinmetis")
 set(libblasname "openblas")
 set(liblapackname "openblas")
+set(LDL "dl")
 
 if (${OS} MATCHES "CYGWIN")
 	message(STATUS "\n\nCYGWIN DETECTED:\n Make sure LAPACK is in the PATH after compilation")
@@ -38,6 +39,7 @@ if (${OS} MATCHES "CYGWIN")
     set(libmetisname "libmetis.dll.a")
     set(libblasname "libblas.dll.a")
     set(liblapackname "liblapack.dll.a")
+    set(LDL "")
 endif (${OS} MATCHES "CYGWIN")
 
 message(STATUS "\nWe are looking for the library: " ${libaslname})
@@ -105,14 +107,14 @@ add_executable(k_aug ${SRC_FILES})
 add_executable(dot_sens src/k_aug/dot_driver/dot_driver.c)
 if (USE_MC30)
     #target_link_libraries(k_aug amplsolver m dl gfortran dmumps mumps_common pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas ma57)
-    target_link_libraries(k_aug mc30 ${COINASL} ${COINHSL} ${COINMETIS}  ${LAPACK} ${BLAS} gfortran m dl)
+    target_link_libraries(k_aug mc30 ${COINASL} ${COINHSL} ${COINMETIS}  ${LAPACK} ${BLAS} gfortran m ${LDL})
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
-	target_link_libraries(k_aug ${COINASL} ${COINHSL} ${COINMETIS}  ${LAPACK} ${BLAS} gfortran m dl)
+	target_link_libraries(k_aug ${COINASL} ${COINHSL} ${COINMETIS}  ${LAPACK} ${BLAS} gfortran m ${LDL})
 endif(USE_MC30)
 
 
-target_link_libraries(dot_sens ${COINASL} ${BLAS} gfortran m dl)
+target_link_libraries(dot_sens ${COINASL} ${BLAS} gfortran m ${LDL})
 
 
 set_target_properties( k_aug
