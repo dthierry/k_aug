@@ -52,6 +52,20 @@ Depending on your platform, these are typically named libcoinX.so or libcoinX.dl
  4. Check the bin directory to find the `k_aug` executable
  5. (*Windows*) add the LAPACK library directory to the PATH (*Cygwin* typically `/usr/lib/lapack`, as well the `libcoinX.dll.a` files (typically located at `/usr/local/lib/`)
 
+## Installation (Mac OS X)
+ 1. Install IPOPT with the HSL libraries e.g. MA57. Please follow the instructions from the [documentation](https://coin-or.github.io/Ipopt/INSTALL.html)
+
+Normally this will generate libraries in the `/usr/local/lib`, these are named `libcoinX.dylib` where X=asl,hsl, etc.
+
+ 2. Find out where libgfortran.dylib is located, tipically `/usr/local/Cellar/gcc/`... or `/usr/local/opt/gcc/lib/gcc/X/lib`.
+Note that this will depend on the version of Mac OS X, gcc, etc.
+
+ 3. Put the location of gfortran in the line `80` of the `CMakeLists.txt` **after** `HINTS`.
+
+ 4. If you have libraries with different names other than `libcoinX.dylib` or different locations, make sure these are reflected in the lines `73-80` of the `CMakeLists.txt` file.
+ 5. Run `cmake .`, then `make` if successful, find your executables in the `bin` directory.
+ 6. Enjoy.
+
 ## Known issues
  * AMPL can not recognize command line options
  * Mac os is currently supported (I think!).
