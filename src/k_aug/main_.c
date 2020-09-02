@@ -464,7 +464,7 @@ int main(int argc, char **argv){
 
     if(!(suf_zL->u.r)){
         fprintf(stderr, "W[K_AUG_ASL]...\t[K_AUG_ASL]"
-                        "No ipopt_zL_out suffix declared, setting zL = 0.\n");
+                        "No ipopt_zL_in suffix declared, setting zL = 0.\n");
     }
     else{
         for(i=0; i< n_var; i++){
@@ -473,7 +473,7 @@ int main(int argc, char **argv){
     }
     if(!(suf_zU->u.r)){
         fprintf(stderr, "W[K_AUG_ASL]...\t[K_AUG_ASL]"
-                        "No ipopt_zU_out suffix declared, setting zU = 0.\n");
+                        "No ipopt_zU_in suffix declared, setting zU = 0.\n");
     }
     else{
         for(i=0; i< n_var; i++){
