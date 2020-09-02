@@ -317,7 +317,7 @@ fint ma57_compute_ratios(const fint *row_start, const double *a, const fint *ja,
     }
     printf("I[MA57]...\t[MA57_RATIO]\n");
     ma57cd_(&job, &n, fact, lfact, ifact, lifact, &n_rhs, x, &n, work, lwork, iwork, icntl, info);
-    nrm_x = dnrm2_(&n, b, &incx);
+    nrm_x = dnrm2_(&n, x, &incx);
 
     if (info[0] != 0) {
         printf("W[MA57]...\t[ma57bd_]"
@@ -329,7 +329,7 @@ fint ma57_compute_ratios(const fint *row_start, const double *a, const fint *ja,
     for (i = 0; i < n; i++) {
         for (k = row_start[i] - 1; k < row_start[i + 1] - 1; k++) {
             // printf("%d\t%d\t%d\n", i, k, ja[k]);
-            resid[i] += a[k] * b[ja[k] - 1];
+            resid[i] += a[k] * x[ja[k] - 1];
         }
         resid[i] -= b[i];
     }
