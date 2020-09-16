@@ -34,7 +34,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, real *z_L, real *z_U, real *sig
     int i, j=0;
     real sl=0, su=0;
     double machine_epsi = DBL_EPSILON;
-    /*FILE *s_file; */
+    FILE *s_file;
     /*
     if(!(suf_zL->u.r)){
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
