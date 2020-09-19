@@ -111,7 +111,7 @@ void assemble_rhs_dcdp(real **rhs_dcdp, fint nvar, fint ncon, int *n_p, int *n_x
     free(help_list_order);
 
 #ifndef PRINT_VERBOSE
-    somefile = fopen("rhs_dcdp", "w");
+    somefile = fopen("./kaug_debug/rhs_dcdp", "w");
     for (i = 0; i < (*n_p); i++) {
         fprintf(somefile, "\t%d\t", (*hr_point)[i]);
     }

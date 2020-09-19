@@ -100,7 +100,7 @@ int mc19driver(fint n, fint nz, real *a, fint *irn, fint *icn, real *s){
     }
 
 #ifndef PRINT_VERBOSE
-    somefile = fopen("mc19_results.txt", "w");
+    somefile = fopen("./kaug_debug/mc19_results.txt", "w");
     for(i=0; i<n; i++){
         if(r[i] > 1e+4 || c[i] > 1e+4){
             printf("Warning: Scaling factor is too large.\n");

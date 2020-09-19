@@ -86,7 +86,7 @@ void compute_sigma(ASL *asl, fint nvar, real *x, real *z_L, real *z_U, real *sig
     }
 
 #ifndef PRINT_VERBOSE
-    s_file = fopen("sigma_out", "w");
+    s_file = fopen("./kaug_debug/sigma_out", "w");
     fprintf(s_file, "%s\t%s\t%s\t%s\t%s\t%s\t\t%s\n",
             "i", "z_L[i]", "z_U[i]", "LUv[2*i]", "x[i]", "LUv[2*i+1]", "sigma[i]");
     for(i=0; i<nvar; i++){

@@ -41,7 +41,7 @@ m.red_hessian = Suffix(direction=Suffix.EXPORT)
 m.x[2].set_suffix_value(m.red_hessian, 1)
 m.x[3].set_suffix_value(m.red_hessian, 2)
 ipopt = SolverFactory('ipopt')
-sipopt = SolverFactory('ipopt_sens')
+#sipopt = SolverFactory('ipopt_sens')
 
 kaug = SolverFactory('k_aug')
 #: K_AUG SUFFIXES
@@ -68,7 +68,7 @@ with open('ipopt.opt', 'w') as f:
     f.write('rh_eigendecomp yes\n')
     f.close()
 #: Solve
-sipopt.solve(m, tee=True)
+#sipopt.solve(m, tee=True)
 with open('ipopt.opt', 'w') as f:
     f.close()
 
@@ -80,4 +80,4 @@ m.ipopt_zU_in.update(m.ipopt_zU_out)
 #: k_aug
 print('k_aug \n\n\n')
 m.write('problem.nl', format=ProblemFormat.nl)
-
+kaug.solve(m, tee=True)

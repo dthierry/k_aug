@@ -76,7 +76,7 @@ set(k_aug_version_minor 0)
 
 set(USE_PARDISO 0)
 set(USE_MC30 0)
-set(PRINT_VERBOSE 1)
+set(PRINT_VERBOSE 0)
  
 
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
@@ -88,18 +88,16 @@ include_directories(${PROJECT_BINARY_DIR})
 
 # coinor stuff
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
-include_directories(/usr/local/include/coin-or/asl)
-find_library(COINASL NAMES asl ${libaslname} HINTS /usr/local/lib REQUIRED)
-find_library(COINHSL ${libhslname} HINTS /usr/local/lib REQUIRED)
-find_library(COINMETIS NAMES metis ${libmetisname} HINTS /usr/local/lib
-/usr/local/opt/metis/lib/ REQUIRED)
+include_directories(/usr/local/include/coin-or/asl /home/David/Ipopt/build/include/coin/ThirdParty)
+find_library(COINASL NAMES asl ${libaslname} HINTS /home/David/Ipopt/build/lib REQUIRED)
+find_library(COINHSL ${libhslname} HINTS /home/David/Ipopt/build/lib REQUIRED)
+find_library(COINMETIS NAMES metis ${libmetisname} HINTS /home/David/Ipopt/build/lib REQUIRED)
+
 # openblas/blas stuff
-find_library(BLAS NAMES blas ${libblasname} HINTS /usr/lib /usr/local/lib
-REQUIRED)
-find_library(LAPACK NAMES lapack ${liblapackname} HINTS /usr/lib
+find_library(BLAS NAMES blas ${libblasname} HINTS /home/David/Ipopt/build/lib REQUIRED)
+find_library(LAPACK NAMES lapack ${liblapackname} HINTS /home/David/Ipopt/build/lib
 /usr/local/lib REQUIRED)
-find_library(GFORTRAN names gfortran HINTS /usr/local/opt/gcc/lib/gcc/10
-REQUIRED)  #: ATTENTION MAC OS X USERS!
+find_library(GFORTRAN names gfortran REQUIRED)  #: ATTENTION MAC OS X USERS!
  
 
  
@@ -129,6 +127,7 @@ set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/csr_driver.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/dot_driver.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/find_inequalities.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/get_grad_f.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/get_jac_asl_aug.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/get_hess_asl_aug.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/inertia_strategy.c

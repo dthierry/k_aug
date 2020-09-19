@@ -59,7 +59,7 @@ int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
         exit(-1);
     }
 #ifndef PRINT_VERBOSE
-    f_jac = fopen("jacobi_debug.in", "w");
+    f_jac = fopen("./kaug_debug/jacobi_debug.in", "w");
     /* for analysis with mc58 */
     fprintf(f_jac, "%d\t%d\t%d\n", ncon, nvar, nzc_);
 #endif
@@ -125,14 +125,14 @@ int get_jac_asl_aug(ASL *asl, real *x, fint *Acol, fint *Arow, real *Aij,
     fclose(f_jac);
 #endif
 #ifndef PRINT_VERBOSE
-    somefile = fopen("anz_p_row.in", "w");
+    somefile = fopen("./kaug_debug/anz_p_row.in", "w");
     for(i=0; i<nvar; i++){fprintf(somefile, "%d\n", (*nz_row_a)[i]);}
     fclose(somefile);
 #endif
     free(Jcont);
     free(ttemp_v2);
 #ifndef PRINT_VERBOSE
-    f_jac = fopen("grad_debug_sorted.in", "w");
+    f_jac = fopen("./kaug_debug/grad_debug_sorted.in", "w");
     for(i=0; i<j; i++){
         fprintf(f_jac, "%d\t%d\t%.g\n", Arow[i] , Acol[i], Aij[i]);
     }
