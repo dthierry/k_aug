@@ -75,7 +75,6 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
     (*nz_row_w) = (int *)calloc(sizeof(int), nvar);
 #ifndef PRINT_VERBOSE
     f_hess = fopen("./kaug_debug/hess_debug.in", "w");
-    printf("oh no\n!");
 #endif
     k = 0;
     (*missing_nz) = 0;

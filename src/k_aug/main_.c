@@ -758,6 +758,11 @@ int main(int argc, char **argv){
         free(nz_row_a);
         free(nz_row_w);
         free(md_off_w);
+        free(Krow);
+        free(Kcol);
+        free(Kij);
+        free(Kr_strt);
+
         for(i=0; i<(int)n_r_suff; i++){
             free(reg_suffix_name[i]);
         }
