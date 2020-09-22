@@ -29,7 +29,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include "getstub.h"
 #include "asl.h"
 
@@ -699,7 +698,7 @@ int main(int argc, char **argv){
         }
         free(reg_suffix_name);
         free(suf_ptr);
-
+        /* Execution should end here, no memory leaks */
         return 0;}
     nzA = nzc;
     nzW = nnzw + miss_nz_w;
@@ -720,14 +719,23 @@ int main(int argc, char **argv){
     if(print_kkt){
         if (stat("./GJH", &st) == -1){
             mkdir("./GJH",0700);
+            printf("I[K_AUG]...\t[K_AUG_ASL]"
+                   "New folder created ./GJH !...\n");
         }
         gf = (real *)calloc(sizeof(real), n_var);
         get_grad_f(asl, x, n_var, gf, &nerror);
 
-        somefile = fopen("./GJH/gradient_print.txt", "w");
+        somefile = fopen("./GJH/gradient_f_print.txt", "w");
         for(k=0; k<n_var; k++){fprintf(somefile, "%.g\n", gf[k]);}
         fclose(somefile);
 
+        somefile = fopen("./GJH/A_print.txt", "w");
+        for(k=0; k<n_var; k++){fprintf(somefile, "%d\t%d\t%.g\n", Arow[k], Acol[k], Aij[k]);}
+        fclose(somefile);
+
+        somefile = fopen("./GJH/H_print.txt", "w");
+        for(k=0; k<nzW; k++){fprintf(somefile, "%d\t%d\t%.g\n", Wrow[k], Wcol[k], Wij[k]);}
+        fclose(somefile);
 
         somefile = fopen("./GJH/kkt_print.txt", "w");
         for(k=0; k<nzK; k++){fprintf(somefile, "%d\t%d\t%.g\n", Krow[k], Kcol[k], Kij[k]);}
