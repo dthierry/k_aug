@@ -88,26 +88,22 @@ include_directories(${PROJECT_BINARY_DIR})
 
 # coinor stuff
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
-include_directories(/usr/local/include/coin-or/asl /home/David/Ipopt/build/include/coin/ThirdParty)
-find_library(COINASL NAMES asl ${libaslname} HINTS /home/David/Ipopt/build/lib REQUIRED)
-find_library(COINHSL ${libhslname} HINTS /home/David/Ipopt/build/lib REQUIRED)
-find_library(COINMETIS NAMES metis ${libmetisname} HINTS /home/David/Ipopt/build/lib REQUIRED)
+include_directories(/usr/local/include/coin-or/asl )  #: Add location of asl.h getstub.h
+find_library(COINASL NAMES asl ${libaslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
+find_library(COINHSL ${libhslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
+find_library(COINMETIS NAMES metis ${libmetisname} HINTS /usr/local/lib REQUIRED)  #: Add hints
 
 # openblas/blas stuff
-find_library(BLAS NAMES blas ${libblasname} HINTS /home/David/Ipopt/build/lib REQUIRED)
-find_library(LAPACK NAMES lapack ${liblapackname} HINTS /home/David/Ipopt/build/lib
-/usr/local/lib REQUIRED)
-find_library(GFORTRAN names gfortran REQUIRED)  #: ATTENTION MAC OS X USERS!
- 
+find_library(BLAS NAMES blas ${libblasname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
+find_library(LAPACK NAMES lapack ${liblapackname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
+#: libgfortran
+find_library(GFORTRAN names gfortran /usr/local/opt/gcc/lib/gcc/10 REQUIRED)  #: Sometimes on macOS /usr/local/opt/gcc/lib/gcc/10
+#: Sometimes on linux /usr/lib/gcc/x86_64-linux-gnu/X otherwise /usr/lib/gcc/arch-os/VERSION
 
- 
+message(STATUS "\n\n'")
 
- 
-
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY
-INCLUDE_DIRECTORIES)
-message(STATUS "\n\n\nThe include directories must have getstub.h, arith.h,
-and asl.h!!!\n\n\n")
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+message(STATUS "\n\n\nThe include directories must have getstub.h, arith.h, and asl.h!!!\n\n\n")
 foreach(dir ${dirs})
     message(STATUS "Including directory='${dir}'")
 endforeach()
@@ -156,8 +152,6 @@ else(USE_MC30)
 target_link_libraries(k_aug ${COINASL} ${COINHSL} ${COINMETIS}  ${LAPACK}
 ${BLAS} ${GFORTRAN} m ${LDL})
 endif(USE_MC30)
- 
-
  
 
 target_link_libraries(dot_sens ${COINASL} ${BLAS} ${GFORTRAN} m ${LDL})
