@@ -41,6 +41,7 @@ m.red_hessian = Suffix(direction=Suffix.EXPORT)
 m.x[2].set_suffix_value(m.red_hessian, 1)
 m.x[3].set_suffix_value(m.red_hessian, 2)
 ipopt = SolverFactory('ipopt')
+
 #sipopt = SolverFactory('ipopt_sens')
 
 kaug = SolverFactory('k_aug')
@@ -51,7 +52,7 @@ m.rh_name = Suffix(direction=Suffix.IMPORT)  #: SUFFIX FOR K_AUG AS WELL
 #: be sure to declare the suffix value (order)
 m.x[2].set_suffix_value(m.dof_v, 1)
 m.x[3].set_suffix_value(m.dof_v, 1)
-
+#: number of dof_v has to be less or equal than m_equality constraints
 
 m.npdp = Suffix(direction=Suffix.EXPORT)
 m.c1.set_suffix_value(m.npdp, 1)
@@ -68,11 +69,13 @@ with open('ipopt.opt', 'w') as f:
     f.write('rh_eigendecomp yes\n')
     f.close()
 #: Solve
+
 #sipopt.solve(m, tee=True)
+
 with open('ipopt.opt', 'w') as f:
     f.close()
 
-ipopt.solve(m, tee=True)
+ipopt.solve(m, tee=True)  #: Do not skip this solve!
 
 m.ipopt_zL_in.update(m.ipopt_zL_out)
 m.ipopt_zU_in.update(m.ipopt_zU_out)
@@ -80,4 +83,6 @@ m.ipopt_zU_in.update(m.ipopt_zU_out)
 #: k_aug
 print('k_aug \n\n\n')
 m.write('problem.nl', format=ProblemFormat.nl)
-kaug.solve(m, tee=True)
+kaug.solve(m, tee=True)  #: always call k_aug AFTER ipopt.
+#: please check inv_.in for the inverse of the RH
+#: check result_red_hess.txt for the actual RH
