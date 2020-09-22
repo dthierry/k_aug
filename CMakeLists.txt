@@ -76,7 +76,7 @@ set(k_aug_version_minor 0)
 
 set(USE_PARDISO 0)
 set(USE_MC30 0)
-set(PRINT_VERBOSE 1)
+set(PRINT_VERBOSE 0)
  
 
 configure_file("${PROJECT_SOURCE_DIR}/src/common/config_kaug.h.in"
@@ -88,28 +88,22 @@ include_directories(${PROJECT_BINARY_DIR})
 
 # coinor stuff
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
-include_directories(/usr/local/include/coin-or/asl)
-find_library(COINASL NAMES asl ${libaslname} HINTS /usr/local/lib REQUIRED)
-find_library(COINHSL ${libhslname} HINTS /usr/local/lib REQUIRED)
-find_library(COINMETIS NAMES metis ${libmetisname} HINTS /usr/local/lib
-/usr/local/opt/metis/lib/ REQUIRED)
+include_directories(/usr/local/include/coin-or/asl )  #: Add location of asl.h getstub.h
+find_library(COINASL NAMES asl ${libaslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
+find_library(COINHSL ${libhslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
+find_library(COINMETIS NAMES metis ${libmetisname} HINTS /usr/local/lib REQUIRED)  #: Add hints
+
 # openblas/blas stuff
-find_library(BLAS NAMES blas ${libblasname} HINTS /usr/lib /usr/local/lib
-REQUIRED)
-find_library(LAPACK NAMES lapack ${liblapackname} HINTS /usr/lib
-/usr/local/lib REQUIRED)
-find_library(GFORTRAN names gfortran HINTS /usr/local/opt/gcc/lib/gcc/10
-REQUIRED)  #: ATTENTION MAC OS X USERS!
- 
+find_library(BLAS NAMES blas ${libblasname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
+find_library(LAPACK NAMES lapack ${liblapackname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
+#: libgfortran
+find_library(GFORTRAN names gfortran /usr/local/opt/gcc/lib/gcc/10 REQUIRED)  #: Sometimes on macOS /usr/local/opt/gcc/lib/gcc/10
+#: Sometimes on linux /usr/lib/gcc/x86_64-linux-gnu/X otherwise /usr/lib/gcc/arch-os/VERSION
 
- 
+message(STATUS "\n\n'")
 
- 
-
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY
-INCLUDE_DIRECTORIES)
-message(STATUS "\n\n\nThe include directories must have getstub.h, arith.h,
-and asl.h!!!\n\n\n")
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+message(STATUS "\n\n\nThe include directories must have getstub.h, arith.h, and asl.h!!!\n\n\n")
 foreach(dir ${dirs})
     message(STATUS "Including directory='${dir}'")
 endforeach()
@@ -129,6 +123,7 @@ set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/csr_driver.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/dot_driver.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/find_inequalities.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/get_grad_f.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/get_jac_asl_aug.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/get_hess_asl_aug.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/inertia_strategy.c
@@ -157,8 +152,6 @@ else(USE_MC30)
 target_link_libraries(k_aug ${COINASL} ${COINHSL} ${COINMETIS}  ${LAPACK}
 ${BLAS} ${GFORTRAN} m ${LDL})
 endif(USE_MC30)
- 
-
  
 
 target_link_libraries(dot_sens ${COINASL} ${BLAS} ${GFORTRAN} m ${LDL})

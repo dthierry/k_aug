@@ -27,6 +27,8 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "getstub.h"
 #include "asl.h"
 
@@ -34,6 +36,7 @@
 #include "../interfaces/hsl/ma57_driver.h"
 #include "get_jac_asl_aug.h"
 #include "get_hess_asl_aug.h"
+#include "get_grad_f.h"
 #include "find_inequalities.h"
 #include "assemble_rhs_rh.h"
 #include "assemble_rhs_dcdp.h"
@@ -201,7 +204,8 @@ int main(int argc, char **argv){
 
     real *x_=NULL;
     real *dp_=NULL;
-    /*real *gf= NULL; */
+    real *gf = NULL;
+
     real *s_star = NULL;
     int *c_flag=NULL;
     char **rhs_name=NULL;
@@ -244,6 +248,7 @@ int main(int argc, char **argv){
     char WantModifiedJac = 0;
     int *vModJac = NULL, *cModJac = NULL;
     double logmu0;
+    struct stat st;
 
     /* inertia data-structures */
     inertia_params inrt_parms;
@@ -304,7 +309,13 @@ int main(int argc, char **argv){
     Oinfo.n_badopts = 0;
     Oinfo.option_echo = 0;
     Oinfo.nnl = 0;
-
+#ifndef PRINT_VERBOSE
+    if (stat("./kaug_debug", &st) == -1){
+        printf("I[K_AUG]...\t[K_AUG_ASL]Creating kaug_debug folder\n");
+        mkdir("./kaug_debug", 0700);
+        /* mode 0700 */
+    }
+#endif
     /* The memory allocation for asl data structure */
     asl = ASL_alloc(ASL_read_pfgh);
 
@@ -502,7 +513,7 @@ int main(int argc, char **argv){
     strcat(_file_name_, ".in");
     fprintf(stderr, "I[K_AUG]...\t[K_AUG_ASL] Filename for dot_sens %s\n", _file_name_);
 #ifndef PRINT_VERBOSE
-    somefile = fopen("primal0.txt", "w");
+    somefile = fopen("./kaug_debug/primal0.txt", "w");
     for(i=0; i< n_var; i++){
         fprintf(somefile, "%.g\n", x[i]);
     }
@@ -514,7 +525,7 @@ int main(int argc, char **argv){
     }
 
 #ifndef PRINT_VERBOSE
-    somefile = fopen("primal1.txt", "w");
+    somefile = fopen("./kaug_debug/primal1.txt", "w");
     for(i=0; i< n_var; i++){fprintf(somefile, "%.g\n", x[i]);}
     fclose(somefile);
 #endif
@@ -687,7 +698,7 @@ int main(int argc, char **argv){
         }
         free(reg_suffix_name);
         free(suf_ptr);
-
+        /* Execution should end here, no memory leaks */
         return 0;}
     nzA = nzc;
     nzW = nnzw + miss_nz_w;
@@ -706,12 +717,34 @@ int main(int argc, char **argv){
     ev_as_kkt_c = clock();
 
     if(print_kkt){
-        somefile = fopen("kkt_print.txt", "w");
+        if (stat("./GJH", &st) == -1){
+            mkdir("./GJH",0700);
+            printf("I[K_AUG]...\t[K_AUG_ASL]"
+                   "New folder created ./GJH !...\n");
+        }
+        gf = (real *)calloc(sizeof(real), n_var);
+        get_grad_f(asl, x, n_var, gf, &nerror);
+
+        somefile = fopen("./GJH/gradient_f_print.txt", "w");
+        for(k=0; k<n_var; k++){fprintf(somefile, "%.g\n", gf[k]);}
+        fclose(somefile);
+
+        somefile = fopen("./GJH/A_print.txt", "w");
+        for(k=0; k<n_var; k++){fprintf(somefile, "%d\t%d\t%.g\n", Arow[k], Acol[k], Aij[k]);}
+        fclose(somefile);
+
+        somefile = fopen("./GJH/H_print.txt", "w");
+        for(k=0; k<nzW; k++){fprintf(somefile, "%d\t%d\t%.g\n", Wrow[k], Wcol[k], Wij[k]);}
+        fclose(somefile);
+
+        somefile = fopen("./GJH/kkt_print.txt", "w");
         for(k=0; k<nzK; k++){fprintf(somefile, "%d\t%d\t%.g\n", Krow[k], Kcol[k], Kij[k]);}
         fclose(somefile);
         solve_result_num = 0;
         write_sol(ter_msg, x, lambda, &Oinfo);
+
         ASL_free(&asl);
+        free(gf);
         free(c_flag);
         free(z_L);
         free(z_U);
@@ -725,6 +758,11 @@ int main(int argc, char **argv){
         free(nz_row_a);
         free(nz_row_w);
         free(md_off_w);
+        free(Krow);
+        free(Kcol);
+        free(Kij);
+        free(Kr_strt);
+
         for(i=0; i<(int)n_r_suff; i++){
             free(reg_suffix_name[i]);
         }
@@ -764,7 +802,7 @@ int main(int argc, char **argv){
     }
 
 #ifndef PRINT_VERBOSE
-    somefile = fopen("primal_dual.txt", "w");
+    somefile = fopen("./kaug_debug/primal_dual.txt", "w");
     for(i=0; i<K_nrows; i++){
         fprintf(somefile, "\t%f\n", s_star[i]);
     }
@@ -802,8 +840,8 @@ int main(int argc, char **argv){
             }
         }
 #ifndef PRINT_VERBOSE
-        f = fopen("scale_facts.txt", "w");
-        somefile = fopen("rhs_sens_scaled", "w");
+        f = fopen("./kaug_debug/scale_facts.txt", "w");
+        somefile = fopen("./kaug_debug/rhs_sens_scaled", "w");
         for(j=0; j < K_nrows; j++){
             for(i=0; i < n_dof; i++){
                 fprintf(f, "%.g\n", S_scale[j]);
@@ -832,7 +870,7 @@ int main(int argc, char **argv){
     fact_kkt_c = clock();
 
 #ifndef PRINT_VERBOSE
-    somefile = fopen("result_lin_sol.txt", "w");
+    somefile = fopen("./kaug_debug/result_lin_sol.txt", "w");
     for(i=0; i<K_nrows; i++){
         fprintf(somefile, "\t%d", i);
         for(j=0; j<n_dof; j++){
@@ -844,7 +882,7 @@ int main(int argc, char **argv){
     fclose(somefile);
 #endif
 #ifndef PRINT_VERBOSE
-    somefile = fopen("result_unscaled.txt", "w");
+    somefile = fopen("./kaug_debug/result_unscaled.txt", "w");
 #endif
     if(no_scale > 0){
 //#ifdef USE_MC30
@@ -870,11 +908,11 @@ int main(int argc, char **argv){
         printf("I[K_AUG]...\t[K_AUG_ASL]"
                "var_order suffix detected. Make sure var_order[i] > 0.\n");
 #ifndef PRINT_VERBOSE
-        somefile = fopen("varorder.txt", "w");
+        somefile = fopen("./kaug_debug/varorder.txt", "w");
         for(i=0; i<n_var; i++){fprintf(somefile, "%d\n", *(var_order_suf->u.i + i));}
         fclose(somefile);
 #endif
-        somefile = fopen("dxdp_.dat", "w");
+        somefile = fopen("./kaug_debug/dxdp_.dat", "w");
         /*for(i=0; i<n_var; i++){
             if(*(var_order_suf->u.i + i)>0){
                 fprintf(somefile, "%d", i);
@@ -919,7 +957,7 @@ int main(int argc, char **argv){
         }
         fclose(somefile);
 #ifndef PRINT_VERBOSE
-        somefile = fopen("sigma_super_basic.txt", "w");
+        somefile = fopen("./kaug_debug/sigma_super_basic.txt", "w");
         for(i=0; i<n_dof; i++){
             j = hr_point[i];
             fprintf(somefile, "%d\t%d\t%.g\t%.g\t%.g\t%.g\t%.g\t\t%f\n",
@@ -927,7 +965,7 @@ int main(int argc, char **argv){
         }
         fclose(somefile);
 
-        somefile = fopen("zx.txt", "w");
+        somefile = fopen("./kaug_debug/zx.txt", "w");
         for(i=0; i<n_dof; i++){
             j = hr_point[i];
             fprintf(somefile, "%d\t%d\t%.g\t%.g\n",
@@ -957,7 +995,7 @@ int main(int argc, char **argv){
 
 
 #ifndef PRINT_VERBOSE
-    somefile = fopen("result_primal_dual.txt", "w");
+    somefile = fopen("./kaug_debug/result_primal_dual.txt", "w");
     for(i=0; i<K_nrows; i++){
         fprintf(somefile, "\t%f\n", s_star[i]);
     }

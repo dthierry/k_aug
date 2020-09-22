@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "get_hess_asl_aug.h"
 
 
@@ -71,7 +74,7 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
     (*md_off_w) = (int *)calloc(sizeof(int), nvar);
     (*nz_row_w) = (int *)calloc(sizeof(int), nvar);
 #ifndef PRINT_VERBOSE
-    f_hess = fopen("hess_debug.in", "w");
+    f_hess = fopen("./kaug_debug/hess_debug.in", "w");
 #endif
     k = 0;
     (*missing_nz) = 0;
@@ -162,12 +165,12 @@ void get_hess_asl_aug(ASL *asl, real *x, fint **Wcol, fint **Wrow, real **Wij,
     printf("missing_nz %d\n", missing_nz);*/
     assert(k-1 <= ((*n_nz_w) + nvar));
 #ifndef PRINT_VERBOSE
-    f_hess = fopen("md_positions.in", "w");
+    f_hess = fopen("./kaug_debug/md_positions.in", "w");
     for(i=0; i< nvar; i++){
         fprintf(f_hess, "i %d\t%d\n", i, (*md_off_w)[i]);
     }
     fclose(f_hess);
-    f_hess = fopen("nz_per_row.in", "w");
+    f_hess = fopen("./kaug_debug/nz_per_row.in", "w");
     for(i=0; i< nvar; i++){
         fprintf(f_hess, "i %d\t%d\n", i, (*nz_row_w)[i]);
     }

@@ -5,8 +5,8 @@
 /*#include "asl.h" */
 
 /* not really necessary, just for consistency */
-void get_grad_f(ASL *asl, real *x, int nvar, real *gf, fint *nerror){
-	gf = (real *)malloc(sizeof(real) * nvar);
+void get_grad_f(ASL *asl, real *x, fint nvar, real *gf, fint *nerror){
+//	gf = (real *)malloc(sizeof(real) * nvar);
 
 	objgrd(0, x, gf, nerror);
 
@@ -15,6 +15,6 @@ void get_grad_f(ASL *asl, real *x, int nvar, real *gf, fint *nerror){
 	/*} */
 
 
-	free(gf);
+//	free(gf);
 	/*> tfw no gf */
 }

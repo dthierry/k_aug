@@ -111,7 +111,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 		}	
 	}
 #ifndef PRINT_VERBOSE
-	somefile = fopen("row_start.in", "w");
+	somefile = fopen("./kaug_debug/row_start.in", "w");
 #endif
 	(*Kr_strt)[0] = 1;
 #ifndef PRINT_VERBOSE
@@ -159,7 +159,7 @@ void csr_driver(int nvar, int ncon, int nzW, int nzA,
 
 	k = 0;
 #ifndef PRINT_VERBOSE
-	somefile = fopen("kkt.in", "w");
+	somefile = fopen("./kaug_debug/kkt.in", "w");
 #endif
 	for(i=0; i<(nvar + ncon); i++){
 		for(j=0; j<rn[i]; j++){
