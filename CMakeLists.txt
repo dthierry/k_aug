@@ -37,7 +37,7 @@ set(libmetisname "coinmetis")
 set(libblasname "openblas")
 set(liblapackname "openblas")
 set(LDL "dl")
- 
+set(QUADMATH "")
 
 if (${OS} MATCHES "CYGWIN")
 message(STATUS "\n\nCYGWIN DETECTED:\n Make sure LAPACK is in the PATH after
@@ -46,12 +46,14 @@ compilation")
     elseif(${OS} MATCHES "MINGW64")
     message(STATUS "\n\nMINGW64 DECTECTED (This is still experimental)")
     message(STATUS "Make sure the library names are consistent")  # !
+    set(USE_MINGW64 1)
     set(libaslname "libcoinasl.dll.a")
     set(libhslname "libcoinhsl.dll.a")
     set(libmetisname "libmetis.dll.a")
     set(libblasname "libblas.dll.a")
     set(liblapackname "liblapack.dll.a")
     set(LDL "")
+    set(QUADMATH "quadmath")
     elseif(${OS} MATCHES "Darwin")
    message(STATUS "\n\nYou are trying to compile k_aug in Mac OS X")
    message(STATUS "\n\nMake sure the libgfortran.dylib is available in a
@@ -103,7 +105,8 @@ find_library(GFORTRAN names gfortran HINTS /usr/local/opt/gcc/lib/gcc/10 REQUIRE
 message(STATUS "\n\n'")
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-message(STATUS "\n\n\nThe include directories must have getstub.h, arith.h, and asl.h!!!\n\n\n")
+message(STATUS
+        "\n\n\nThe include directories must have getstub.h, arith.h, and asl.h!!!\n\n\n")
 foreach(dir ${dirs})
     message(STATUS "Including directory='${dir}'")
 endforeach()
@@ -146,15 +149,15 @@ if (USE_MC30)
     #pthread esmumps scotch scotcherr metis pord mpiseq mc30 gfortran openblas
     #ma57)
     target_link_libraries(k_aug mc30 ${COINASL} ${COINHSL} ${COINMETIS}
-${LAPACK} ${BLAS} ${GFORTRAN} m ${LDL})
+${LAPACK} ${BLAS} ${GFORTRAN} ${QUADMATH} m ${LDL})
     message("LINKING MC30 ${USE_MC30}")
 else(USE_MC30)
 target_link_libraries(k_aug ${COINASL} ${COINHSL} ${COINMETIS}  ${LAPACK}
-${BLAS} ${GFORTRAN} m ${LDL})
+${BLAS} ${GFORTRAN} ${QUADMATH} m ${LDL})
 endif(USE_MC30)
  
 
-target_link_libraries(dot_sens ${COINASL} ${BLAS} ${GFORTRAN} m ${LDL})
+target_link_libraries(dot_sens ${COINASL} ${BLAS} ${GFORTRAN} ${QUADMATH} m ${LDL})
  
 
  

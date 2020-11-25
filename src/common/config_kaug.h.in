@@ -12,6 +12,7 @@
 #cmakedefine USE_MC30
 #cmakedefine PRINT_VERBOSE
 #cmakedefine USE_CYGWIN
+#cmakedefine USE_MINGW64
 
 
 #endif /* K_AUG_CONFIG_KAUG_H */

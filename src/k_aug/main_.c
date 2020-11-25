@@ -312,8 +312,12 @@ int main(int argc, char **argv){
 #ifndef PRINT_VERBOSE
     if (stat("./kaug_debug", &st) == -1){
         printf("I[K_AUG]...\t[K_AUG_ASL]Creating kaug_debug folder\n");
+#ifndef USE_MINGW64
         mkdir("./kaug_debug", 0700);
-        /* mode 0700 */
+#else
+        mkdir("./kaug_debug");
+        /* David: For some reason MINGW uses this signature */
+#endif
     }
 #endif
     /* The memory allocation for asl data structure */
@@ -718,7 +722,11 @@ int main(int argc, char **argv){
 
     if(print_kkt){
         if (stat("./GJH", &st) == -1){
-            mkdir("./GJH",0700);
+#ifndef USE_MINGW64
+            mkdir("./GJH", 0700);
+#else
+            mkdir("./GJH");
+#endif
             printf("I[K_AUG]...\t[K_AUG_ASL]"
                    "New folder created ./GJH !...\n");
         }
