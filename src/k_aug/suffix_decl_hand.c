@@ -1,23 +1,10 @@
+/// @file suffix_decl_hand.c
 /* @source suffix_handler.c
 ** beta 01
 ** May 26th, 2017
 ** @author: David Thierry (dmolinat@andrew.cmu) dav0@lb2016-1
 
-********************************************************************************
 
-@fun_name ********************************************
-**
-** Description
-** Description
-**
-** @param [r] 
-** @param [r] 
-** @param [r] 
-** @param [r] 
-** @param [r] 
-** @param [r] 
-** @param [r] 
-** @return something
 *******************************************************************************/
 #include "suffix_decl_hand.h"
 
@@ -29,7 +16,11 @@
 void suffix_decl_hand(SufDecl *suf_ptr, char **ptr_name, char **rhs_name, unsigned n_reg_suf, int n_rhs){
   static char sword[] = "rhs_";  
   int i;
-  
+  /*
+   * ASL uses this struct to convey the information of the suffixes.
+   * In k_aug I have to declare them and then read their values.
+   * This is how we do it.
+   */
   /* First (Reg) suffixes */
   suf_ptr->name = ptr_name[0];
   suf_ptr->table = 0;
@@ -59,7 +50,6 @@ void suffix_decl_hand(SufDecl *suf_ptr, char **ptr_name, char **rhs_name, unsign
   (suf_ptr + 4)->nextra = 0;
 
   /* dcdp */
-
   (suf_ptr + 5)->name = ptr_name[5];
   (suf_ptr + 5)->table = 0;
   (suf_ptr + 5)->kind = ASL_Sufkind_con;
