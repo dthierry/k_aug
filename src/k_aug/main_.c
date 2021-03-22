@@ -738,7 +738,7 @@ int main(int argc, char **argv){
         fclose(somefile);
 
         somefile = fopen("./GJH/A_print.txt", "w");
-        for(k=0; k<n_var; k++){fprintf(somefile, "%d\t%d\t%.g\n", Arow[k], Acol[k], Aij[k]);}
+        for(k=0; k<nzA; k++){fprintf(somefile, "%d\t%d\t%.g\n", Arow[k], Acol[k], Aij[k]);}
         fclose(somefile);
 
         somefile = fopen("./GJH/H_print.txt", "w");
