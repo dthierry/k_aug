@@ -92,7 +92,7 @@ include_directories(${PROJECT_BINARY_DIR})
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
 include_directories(/usr/local/include/coin-or/asl )  #: Add location of asl.h getstub.h
 find_library(COINASL NAMES asl ${libaslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
-find_library(COINHSL ${libhslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
+find_library(COINHSL NAMES ${libhslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
 find_library(COINMETIS NAMES metis ${libmetisname} HINTS /usr/local/lib REQUIRED)  #: Add hints
 
 # openblas/blas stuff
