@@ -99,7 +99,7 @@ find_library(COINMETIS NAMES metis ${libmetisname} HINTS /usr/local/lib REQUIRED
 find_library(BLAS NAMES blas ${libblasname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
 find_library(LAPACK NAMES lapack ${liblapackname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
 #: libgfortran
-find_library(GFORTRAN names gfortran HINTS /usr/local/opt/gcc/lib/gcc/10 REQUIRED)  #: Sometimes on macOS /usr/local/opt/gcc/lib/gcc/10
+find_library(GFORTRAN NAMES gfortran HINTS /usr/local/opt/gcc/lib/gcc/10 REQUIRED)  #: Sometimes on macOS /usr/local/opt/gcc/lib/gcc/10
 #: Sometimes on linux /usr/lib/gcc/x86_64-linux-gnu/X otherwise /usr/lib/gcc/arch-os/VERSION
 
 message(STATUS "\n\n'")
