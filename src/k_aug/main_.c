@@ -151,7 +151,7 @@ static keyword keywds[] = {
 };
 
 
-static char banner[] = {"K_AUG 0.1.0 \n\n"};
+static char banner[] = {"K_AUG 0.1.0\n\n"};
 static char _k_[] = {"k_aug"};
 static char _k_o_[] = {"k_aug_options"};
 static Option_Info Oinfo;
