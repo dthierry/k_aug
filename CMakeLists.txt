@@ -126,6 +126,7 @@ set(SRC_FILES ${PROJECT_SOURCE_DIR}/src/k_aug/main_.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/csr_driver.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/dot_driver.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/find_inequalities.c
+        ${PROJECT_SOURCE_DIR}/src/k_aug/get_grad_f.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/get_jac_asl_aug.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/get_hess_asl_aug.c
         ${PROJECT_SOURCE_DIR}/src/k_aug/inertia_strategy.c
