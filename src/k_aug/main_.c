@@ -150,10 +150,11 @@ static keyword keywds[] = {
 };
 
 
-static char banner[] = {"[K_AUG] written by D.Thierry @2018, Part of the IDAES PSE framework\n"
+static char banner[] = {"[K_AUG] 0.1.0, Part of the IDAES PSE framework\n"
                         "Please visit https://idaes.org/\n"};
 static char sc_k_[] = {"k_aug"};
 static char sc_k_o_[] = {"k_aug_options"};
+
 static Option_Info Oinfo;
 
 
@@ -515,7 +516,7 @@ int main(int argc, char **argv){
 
     if(!(suf_zL->u.r)){
         fprintf(stderr, "W[K_AUG_ASL]...\t[K_AUG_ASL]"
-                        "No ipopt_zL_out suffix declared, setting zL = 0.\n");
+                        "No ipopt_zL_in suffix declared, setting zL = 0.\n");
     }
     else{
         for(i=0; i< n_var; i++){
@@ -524,7 +525,7 @@ int main(int argc, char **argv){
     }
     if(!(suf_zU->u.r)){
         fprintf(stderr, "W[K_AUG_ASL]...\t[K_AUG_ASL]"
-                        "No ipopt_zU_out suffix declared, setting zU = 0.\n");
+                        "No ipopt_zU_in suffix declared, setting zU = 0.\n");
     }
     else{
         for(i=0; i< n_var; i++){
@@ -801,7 +802,7 @@ int main(int argc, char **argv){
         fclose(somefile);
 
         somefile = fopen("./GJH/A_print.txt", "w");
-        for(k=0; k<n_var; k++){fprintf(somefile, "%d\t%d\t%.g\n", Arow[k], Acol[k], Aij[k]);}
+        for(k=0; k<nzA; k++){fprintf(somefile, "%d\t%d\t%.g\n", Arow[k], Acol[k], Aij[k]);}
         fclose(somefile);
 
         somefile = fopen("./GJH/H_print.txt", "w");

@@ -92,14 +92,14 @@ include_directories(${PROJECT_BINARY_DIR})
 # PLEASE MAKE SURE THIS ARE IN THE CORRECT DIRECTORY
 include_directories(/usr/local/include/coin-or/asl )  #: Add location of asl.h getstub.h
 find_library(COINASL NAMES asl ${libaslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
-find_library(COINHSL ${libhslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
+find_library(COINHSL NAMES ${libhslname} HINTS /usr/local/lib REQUIRED)  #: Add hints
 find_library(COINMETIS NAMES metis ${libmetisname} HINTS /usr/local/lib REQUIRED)  #: Add hints
 
 # openblas/blas stuff
 find_library(BLAS NAMES blas ${libblasname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
 find_library(LAPACK NAMES lapack ${liblapackname} HINTS /usr/lib /usr/local/lib REQUIRED)  #: Add hints
 #: libgfortran
-find_library(GFORTRAN names gfortran HINTS /usr/local/opt/gcc/lib/gcc/10 REQUIRED)  #: Sometimes on macOS /usr/local/opt/gcc/lib/gcc/10
+find_library(GFORTRAN NAMES gfortran HINTS /usr/local/opt/gcc/lib/gcc/10 REQUIRED)  #: Sometimes on macOS /usr/local/opt/gcc/lib/gcc/10
 #: Sometimes on linux /usr/lib/gcc/x86_64-linux-gnu/X otherwise /usr/lib/gcc/arch-os/VERSION
 
 message(STATUS "\n\n'")
