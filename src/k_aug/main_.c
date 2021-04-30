@@ -1,26 +1,13 @@
+///  @file main_.c
+
 /*
- * Created by dav0 on 4/19/18.
+ * Created by David Thierry on 4/19/18.
+ * @author: David Thierry (dmolinat@andrew.cmu) dav0@lb2016-1
+ * Contributors: Flemming Holtorf, Michael Short, Robby Parker, Janghao Park
+ * 2/24/2021: @dthierry, I've created some new comments.
 */
 
 
-/* @source main_.c
-**
-** July 15th, 2020
-** @author: David Thierry (dmolinat@andrew.cmu) dav0@lb2016-1
-
-********************************************************************************
-
-@main ********************************************
-**
-** Reads nl file, allocates data structures, calls assembling funcs
-** ToDo:
-** Need to implement rhs and red hess in a single program
-** Write program that takes suffixes from dot_prod calculation and performs the
-** Sensitivity step.
-** @param [r] stub
-** @param [r] KWs
-** @@
-*******************************************************************************/
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -57,47 +44,57 @@
 #endif
 
 #define NUM_REG_SUF 8
-/* experimental! */
 
-static double not_zero = 1.84e-04;
+
+static double not_zero = 1.84e-04;  ///< Parameter used to print warning about active bounds (initial value).
+
+static int n_rhs = 0;   ///< We used to have to manually set the number of rhs, not anymore. This is useless now.
+static real log10mu = -11.0;
+
+/* Available keyword options
+ * Option Description */
+static char sc_comp_inv[] = {"compute_inv"}; /* The actual Reduced Hessian */
+static char sc_comp_inv_verb[] = {"Compute the inv(inv(red_hess)) i.e. the Red. Hess"};
+
+static char sc_dbg_kkt[] = {"deb_kkt"}; /* Debugging */
+static char sc_dbg_kkt_verb[] = {"Override dof checking, for debugging purposes"};
+
+static char sc_dot_pr_f[] = {"dot_prod"}; /* No use now. */
+static char sc_dsdpmode[] = {"dsdp_mode"};  /* Like in sipopt. */
+static char sc_dsdp_mode_nverb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
+
+static char name1[] = {"smth"};  /* Nothing here */
+
+static char sc_e_eval[] = {"eig_rh"};
+static char sc_e_eval_verb[] = {"Compute the eigenvalues of the inv of red_hessian"};
+
+static char sc_n_rhsopt_[] = {"n_rhs"};  /* No use now. */
+static char sc_no_barrieropt_[] = {"no_barrier"};  /* Skips adding sigma_i in the Hessian block of the KKT */
+static char sc_no_lambdaopt_[] = {"no_lambda"};
+static char sc_no_scaleopt_[]  = {"no_scale"};  /* Skips the scaling of the KKT */
+static char sc_not_zero[] = {"not_zero"};  /* Use this to change some warnings */
+
+static char sc_print_kkt[] = {"print_kkt"};  /* Useful if you want the kkt matrix and so forth. */
+static char sc_print_kkt_noverb[] = {"Prints the contents of the kkt matrix in a file."};
+
+static char sc_square_override[] = {"square_problem"};  /* Do not compute sigmas */
+static char sc_square_override_noverb[] = {"If nvar = neq, assume there are no bounds and sigma = 0"};
+
+static char sc_no_inertia[] = {"no_inertia"};
+static char sc_no_inertia_verb[] = {"Skip inertia correction"};
+
+static char sc_target_log10mu[] = {"target_log10mu"};
+static char sc_target_log10mu_verb[] = {"Target value for log10mu"};
+
+/*
+ * Initialization of some numeric types of optional values.
+ */
+
 static int dumm = 1;
 static I_Known dumm_kw = {2, &dumm};
-static int n_rhs = 0;
+
 static int l_over = 0;
 static I_Known l_over_kw = {1, &l_over};
-
-/* Option
- * Option Description */
-static char _comp_inv[] = {"compute_inv"}; /* The actual reduced hessian */
-static char _comp_inv_verb[] = {"Compute the inv(inv(red_hess)) i.e. the Red. Hess"};
-
-static char _dbg_kkt[] = {"deb_kkt"};
-static char _dbg_kkt_verb[] = {"Override dof checking, for debugging purposes"};
-
-static char _dot_pr_f[] = {"dot_prod"};
-static char _dsdpmode[] = {"dsdp_mode"};
-static char _dsdp_mode_nverb[] = {"Compute the dsdp for constraints of kind C(x) - P = 0 (linear P)"};
-
-static char name1[] = {"smth"};
-static char _e_eval[] = {"eig_rh"};
-static char _n_rhsopt_[] = {"n_rhs"};
-static char _no_barrieropt_[] = {"no_barrier"};
-static char _no_lambdaopt_[] = {"no_lambda"};
-static char _no_scaleopt_[]  = {"no_scale"};
-static char _not_zero[] = {"not_zero"};
-
-static char _print_kkt[] = {"print_kkt"};
-static char _print_kkt_noverb[] = {"Prints the contents of the kkt matrix in a file."};
-
-static char _square_override[] = {"square_problem"};
-static char _square_override_noverb[] = {"If nvar = neq, assume there are no bounds and sigma = 0"};
-
-static char _no_inertia[] = {"no_inertia"};
-static char _no_inertia_verb[] = {"Skip inertia correction"};
-
-static real log10mu = -11.0;
-static char _target_log10mu[] = {"target_log10mu"};
-static char _target_log10mu_verb[] = {"Target value for log10mu"};
 
 static int deb_kkt = 0;
 static I_Known deb_kkt_kw = {1, &deb_kkt};
@@ -131,60 +128,73 @@ static I_Known square_override_kw = {1, &square_override};
 
 /*static char dof_v[] = {"dof_v"};*/
 
-/* keywords, they must be in alphabetical order! */
+/*
+ * keywords, they must be in alphabetical order!
+ * */
 static keyword keywds[] = {
-        KW(_comp_inv, IK_val, &comp_inv_kw, _comp_inv_verb),
-        KW(_dbg_kkt, IK_val, &deb_kkt_kw, _dbg_kkt_verb),
-        KW(_dot_pr_f, IK_val, &dot_p_kw, _dot_pr_f),
-        KW(_dsdpmode, IK_val, &dsdp_mode_kw, _dsdp_mode_nverb),
-        KW(_e_eval, IK_val, &e_eval_kw, _e_eval),
-        KW(_n_rhsopt_ , I_val, &n_rhs, _n_rhsopt_),
-        KW(_no_barrieropt_ , IK_val, &nbarrier_kw, _no_barrieropt_),
-        KW(_no_inertia, IK_val, &no_inertia_kw, _no_inertia_verb),
-        KW(_no_lambdaopt_ , IK_val, &l_over_kw, _no_lambdaopt_),
-        KW(_no_scaleopt_ , IK_val, &nscale_kw, _no_scaleopt_),
-        KW(_not_zero , D_val, &not_zero, _not_zero),
-        KW(_print_kkt, IK_val, &print_kkt_kw, _print_kkt_noverb),
+        KW(sc_comp_inv, IK_val, &comp_inv_kw, sc_comp_inv_verb),
+        KW(sc_dbg_kkt, IK_val, &deb_kkt_kw, sc_dbg_kkt_verb),
+        KW(sc_dot_pr_f, IK_val, &dot_p_kw, sc_dot_pr_f),
+        KW(sc_dsdpmode, IK_val, &dsdp_mode_kw, sc_dsdp_mode_nverb),
+        KW(sc_e_eval, IK_val, &e_eval_kw, sc_e_eval_verb),
+        KW(sc_n_rhsopt_ , I_val, &n_rhs, sc_n_rhsopt_),
+        KW(sc_no_barrieropt_ , IK_val, &nbarrier_kw, sc_no_barrieropt_),
+        KW(sc_no_inertia, IK_val, &no_inertia_kw, sc_no_inertia_verb),
+        KW(sc_no_lambdaopt_ , IK_val, &l_over_kw, sc_no_lambdaopt_),
+        KW(sc_no_scaleopt_ , IK_val, &nscale_kw, sc_no_scaleopt_),
+        KW(sc_not_zero , D_val, &not_zero, sc_not_zero),
+        KW(sc_print_kkt, IK_val, &print_kkt_kw, sc_print_kkt_noverb),
         KW(name1 , IK_val, &dumm_kw, name1),  /* This does not do anything */
-        KW(_square_override, IK_val, &square_override_kw, _square_override_noverb),
-        KW(_target_log10mu , D_val, &log10mu, _target_log10mu_verb),
+        KW(sc_square_override, IK_val, &square_override_kw, sc_square_override_noverb),
+        KW(sc_target_log10mu , D_val, &log10mu, sc_target_log10mu_verb),
 };
 
 
-static char banner[] = {"K_AUG 0.1.0\n\n"};
-static char _k_[] = {"k_aug"};
-static char _k_o_[] = {"k_aug_options"};
+static char banner[] = {"[K_AUG] 0.1.0, Part of the IDAES PSE framework\n"
+                        "Please visit https://idaes.org/\n"};
+static char sc_k_[] = {"k_aug"};
+static char sc_k_o_[] = {"k_aug_options"};
+
 static Option_Info Oinfo;
 
 
 
-
+/**
+ * Main function, Reads nl file, allocates data structures, calls assembling funcs.
+ * @param argc Typically the .nl file followed by the options.
+ * @param argv
+ * @return
+ */
 int main(int argc, char **argv){
     ASL *asl;
     FILE *f;
 
-    /* SufDesc *some_suffix; */
+    /*
+     * Sometimes we use ASL's types, sometimes native types.
+     * */
     int i, j, k;
     int n_dof=0;
     int n_vx=0; /* variable of interest for dxdp*/
     fint nnzw; /* let's try this */
     real *x=NULL, *lambda=NULL;
     char *s=NULL;
+    /*
+     * ASL's SufDesc *some_suffix;
+     */
     SufDesc *var_f=NULL;
-
     SufDesc *suf_zL = NULL;
     SufDesc	*suf_zU = NULL;
     SufDesc *f_timestamp = NULL;
     SufDesc *dcdp = NULL;
-
     SufDesc *var_order_suf = NULL;
     SufDesc *con_order_suf = NULL;
-
-    real *z_L=NULL, *z_U=NULL, *sigma=NULL;
-
     SufDesc **rhs_ptr=NULL;
     SufDecl *suf_ptr=NULL;
 
+    /*
+     * These are all ASL's types. Hopefully ASL is always configured correctly.
+     */
+    real *z_L=NULL, *z_U=NULL, *sigma=NULL;
     fint *Acol=NULL, *Arow=NULL;
     real *Aij=NULL;
     fint *Wcol=NULL, *Wrow=NULL;
@@ -193,20 +203,15 @@ int main(int argc, char **argv){
     real *Kij=NULL;
     fint *Kr_strt=NULL;
     fint K_nrows;
-
     real *S_scale=NULL;
-
     fint nzK;
-
     fint *Wc_t=NULL, *Wr_t=NULL;
     real *Wi_t=NULL;
-
-
     real *x_=NULL;
     real *dp_=NULL;
     real *gf = NULL;
-
     real *s_star = NULL;
+
     int *c_flag=NULL;
     char **rhs_name=NULL;
     char **reg_suffix_name=NULL;
@@ -221,16 +226,20 @@ int main(int argc, char **argv){
 
     FILE *somefile;
     fint nerror;
+
     int nzW, nzA;
     int *hr_point = NULL;
-
     int *positions_rh = NULL;
 
     char ter_msg[] = {"I[K_AUG]...[K_AUG_ASL]"
                       "All done."};
 
     unsigned n_r_suff = NUM_REG_SUF;
-    /* Suffixes names. Add new suffixes names here */
+
+    /*
+     * Suffixes names. Add new suffixes names here.
+     * I decided to just use a sequence of _sfx_X for no good reason.
+     */
     char _sfx_1[] = {"dof_v"};
     char _sfx_2[] = {"rh_name"};
     char _sfx_3[] = {"ipopt_zL_in"};
@@ -239,6 +248,7 @@ int main(int argc, char **argv){
     char _sfx_6[] = {"dcdp"};
     char _sfx_7[] = {"var_order"};
     char _sfx_8[] = {"con_order"};
+
     int _is_not_irh_pdf=1;
     clock_t start_c, ev_as_kkt_c, fact_kkt_c, total_c;
     double ev_as_time, fact_time, overall_time;
@@ -250,12 +260,20 @@ int main(int argc, char **argv){
     double logmu0;
     struct stat st;
 
-    /* inertia data-structures */
+    /*
+     * Inertia data-structures
+     */
     inertia_params inrt_parms;
     inertia_options inrt_opts;
     inertia_perts inrt_pert;
     linsol_opts ls_opts;
+    /*
+     * Instability made me do this.
+     */
     putenv("OMP_NUM_THREADS=1");
+    /*
+     * Inertia parameters, Inspired by ipopt's parameters.
+     */
     inrt_parms.dmin = 10e-20;
     inrt_parms.dmax = 10e+40;
     inrt_parms.d_w0 = 1e-08;
@@ -287,10 +305,12 @@ int main(int argc, char **argv){
     ls_opts.pivot_tol0 = 1e-06;
     ls_opts.pivtol_max = 0.5;
 
-
-    Oinfo.sname = _k_;
+    /*
+     * ASL stuff.
+     */
+    Oinfo.sname = sc_k_;
     Oinfo.bsname = banner;
-    Oinfo.opname = _k_o_;
+    Oinfo.opname = sc_k_o_;
     Oinfo.keywds = keywds;
     Oinfo.n_keywds = nkeywds;
     Oinfo.flags = 0;
@@ -309,6 +329,10 @@ int main(int argc, char **argv){
     Oinfo.n_badopts = 0;
     Oinfo.option_echo = 0;
     Oinfo.nnl = 0;
+
+    /*
+     * In case an user wants to get the debug files
+     */
 #ifndef PRINT_VERBOSE
     if (stat("./kaug_debug", &st) == -1){
         printf("I[K_AUG]...\t[K_AUG_ASL]Creating kaug_debug folder\n");
@@ -322,8 +346,11 @@ int main(int argc, char **argv){
 #endif
     /* The memory allocation for asl data structure */
     asl = ASL_alloc(ASL_read_pfgh);
-
+    /*
+     * THE Read.
+     */
     s = getstops(argv, &Oinfo);
+
 
     if (!s) {
         printf("W[K_AUG]...\t[K_AUG_ASL]"
@@ -332,12 +359,12 @@ int main(int argc, char **argv){
     }
     else {
         printf("I[K_AUG]...\t[K_AUG_ASL]"
-               "File read succesfull\n");
+               "File read successfully.\n");
     }
 
     if (n_rhs == 0){
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]"
-                        "No n_rhs declared\n");
+                        "No n_rhs declared.\n");
     }
 
     if (no_inertia){
@@ -358,7 +385,9 @@ int main(int argc, char **argv){
     }
 
 
-    /* Allocate suffix names (regular)*/
+    /*
+     * Allocate suffix names (regular)
+     */
     reg_suffix_name =   (char **)malloc(sizeof(char *) * n_r_suff);
     for(i=0; i < (int)n_r_suff; i++){
         reg_suffix_name[i] = (char *)malloc(sizeof(char) * 16 );
@@ -379,8 +408,11 @@ int main(int argc, char **argv){
         rhs_name = (char **)malloc(sizeof(char *)*n_rhs);
         for(i=0; i<n_rhs; i++){
             rhs_name[i] = (char *)malloc(sizeof(char) * 32); /* 32 bit long digit;
-			 why not?*/
+			 */
         }
+        /*
+         * Declaration of suffixes
+         */
         suffix_decl_hand(suf_ptr, reg_suffix_name, rhs_name, n_r_suff, n_rhs);
     }
     else{
@@ -389,17 +421,14 @@ int main(int argc, char **argv){
     }
 
 
-    printf("I[K_AUG]...\t[K_AUG_ASL]"
-           "Number of Right hand sides %d\n", n_rhs);
-
-
-
     /* Declare suffixes */
     if(n_rhs > 0){suf_declare(suf_ptr, (n_rhs + n_r_suff));}
     else{suf_declare(suf_ptr, n_r_suff);}
 
 
-    /* dhis bit setups ASL components e.g. n_var, n_con, etc. */
+    /*
+     * This bit setups ASL components e.g. n_var, n_con, etc.
+     */
     f = jac0dim(s, (fint)strlen(s));
 
 
@@ -433,16 +462,20 @@ int main(int argc, char **argv){
                             "KKT check!\n");
         }
     }
-
-
+    /*
+     * Primal-Dual Values
+     */
     x 		 = X0  = M1alloc(n_var*sizeof(real));
     lambda = pi0 = M1alloc(n_con*sizeof(real));
     obj_no = 0;
-    /* need to do part of changing sign for y */
+
 
     pfgh_read(f, ASL_findgroups);
 
-    /* NEED TO FIX THIS	*/
+    /*
+     * In case we don't declare the multipliers.
+     * Would this create a memory leak? This is pretty old section.
+     */
     if(lambda==NULL && l_over == 0){
         printf("E[K_AUG]...\t[K_AUG_ASL]"
                "Constraint Multipliers not declared(suffix dual), abort\n");
@@ -459,6 +492,9 @@ int main(int argc, char **argv){
         exit(-1);
     }
 
+    /*
+     * Get the values of suffixes.
+     */
     var_f = suf_get(reg_suffix_name[0], ASL_Sufkind_var);
 
     suf_zL = suf_get(reg_suffix_name[2], ASL_Sufkind_var| ASL_Sufkind_real);
@@ -472,6 +508,7 @@ int main(int argc, char **argv){
 
     z_L = (real *)malloc(sizeof(real) * n_var);
     z_U = (real *)malloc(sizeof(real) * n_var);
+
 
     memset(z_L, 0, sizeof(real) * n_var);
     memset(z_U, 0, sizeof(real) * n_var);
@@ -516,6 +553,11 @@ int main(int argc, char **argv){
     strcat(_file_name_, _chr_timest);
     strcat(_file_name_, ".in");
     fprintf(stderr, "I[K_AUG]...\t[K_AUG_ASL] Filename for dot_sens %s\n", _file_name_);
+
+    /*
+     * This directives print some debugging files.
+     */
+
 #ifndef PRINT_VERBOSE
     somefile = fopen("./kaug_debug/primal0.txt", "w");
     for(i=0; i< n_var; i++){
@@ -523,6 +565,11 @@ int main(int argc, char **argv){
     }
     fclose(somefile);
 #endif
+    /*
+     * Use the mu value to correct the slack/multipliers.
+     * This should be connected somehow to Ipopt, (which I have tested through suffixes).
+     * We need to incorporate those changes to the ipopt/asl interface.
+     */
     logmu0 = log10mu;
     if (!square_override){
         mu_adjust_x(n_var, x, LUv, z_L, z_U, log10mu, &logmu0);
@@ -533,7 +580,9 @@ int main(int argc, char **argv){
     for(i=0; i< n_var; i++){fprintf(somefile, "%.g\n", x[i]);}
     fclose(somefile);
 #endif
-
+    /*
+     * sigma_i = z_i/x_i
+     */
     sigma = (real *)malloc(sizeof(real) * n_var);
     memset(sigma, 0, sizeof(real) * n_var);
     if (print_kkt){
@@ -565,13 +614,15 @@ int main(int argc, char **argv){
         exit(-1);
     }
 
-
+    /*
+     * Actually compute sigma
+     */
     if(!square_override) {
         compute_sigma(asl, n_var, x, z_L, z_U, sigma, logmu0);
     }
 
 
-    /* Is this gonna work? */
+    /* todo: This will leak memory. */
     if(n_rhs > 1){
         rhs_ptr = (SufDesc **)malloc(sizeof(SufDesc *) * n_rhs);
         for(i=0; i < n_rhs; i++){
@@ -586,7 +637,9 @@ int main(int argc, char **argv){
 
     c_flag = (int *)malloc(sizeof(int) * n_con); /* Flags for ineq or equalities*/
 
-    /*constraints flags */
+    /*
+     * Constraints flags
+     */
     find_ineq_con(n_con, LUrhs, c_flag); /* Find the inequality constraints */
 
     /* Row and column for the triplet format A matrix */
@@ -595,13 +648,15 @@ int main(int argc, char **argv){
     Arow = (fint *)malloc(sizeof(fint)*nzc);
     Aij  = (real *)malloc(sizeof(real)*nzc);
 
-    /* TO DO:
-    assemble csr or coordinate: UPDATE, not necesary.
-     */
+
     nerror = 0;
     printf("I[K_AUG]...\t[K_AUG_ASL]"
            "Nonzeroes in the sparse Jacobian %d\n", nzc);
 
+
+    /*
+     * Ask for the J and H values
+     */
     get_jac_asl_aug (asl, x, Acol, Arow, Aij, n_var, n_con, nzc, &nerror, &nz_row_a);
     get_hess_asl_aug(asl, x, &Wcol, &Wrow, &Wij, n_var, n_con, n_obj,
                      &nnzw, lambda, &nerror, &nz_row_w, &md_off_w, &miss_nz_w);
@@ -616,6 +671,12 @@ int main(int argc, char **argv){
         printf("I[K_AUG]...\t[K_AUG_ASL]"
                "Barrier term added.\n");
     }
+    /*
+     * Sometimes we wanted to do wacky stuff with the matrices.
+     * E.g., get a permuted Jacobian or even partition it.
+     * This was where we were doing this.
+     * Not relevant for most users anyway.
+     */
     if(deb_kkt > 0){
         if(var_order_suf->u.i != NULL && con_order_suf->u.i != NULL){
             WantModifiedJac = 1;
@@ -648,7 +709,6 @@ int main(int argc, char **argv){
             for(i=0; i<n_con; i++){fprintf(somefile, "%d\n",*(cModJac + i));}
             fclose(somefile);
         }
-
 
         if(WantModifiedJac > 0){
             printf("I[K_AUG]...\t[K_AUG_ASL]"
@@ -708,11 +768,12 @@ int main(int argc, char **argv){
     nzW = nnzw + miss_nz_w;
     /* Recomputed number of nz in the Hessian-of-Lagrangian */
 
-
+    /*
+     * Generate the data structure for K
+     */
     csr_driver(n_var, n_con, nzW, nzA, nz_row_w, nz_row_a,
                Wrow, Wcol, Wij, Arow, Acol, Aij,
                &Krow, &Kcol, &Kij, &Kr_strt);
-
 
 
     K_nrows = n_var + n_con; /* Number of rows of the KKT matrix (no ineq) */
@@ -720,10 +781,13 @@ int main(int argc, char **argv){
     assert(Krow != NULL);
     ev_as_kkt_c = clock();
 
+    /*
+     * I got asked to do this. Print the matrices to files.
+     */
     if(print_kkt){
         if (stat("./GJH", &st) == -1){
 #ifndef USE_MINGW64
-            mkdir("./GJH", 0700);
+            mkdir("./GJH", 0700); /* Some versions of MINGW have a different signature :S */
 #else
             mkdir("./GJH");
 #endif
@@ -776,13 +840,18 @@ int main(int argc, char **argv){
         }
         free(reg_suffix_name);
         free(suf_ptr);
-
+        /*
+         * No memory leaks.
+         */
         return 0;
     }
 
 
     S_scale = (real *)calloc(sizeof(real), K_nrows);
 
+    /*
+     * MC30 should not even be used anymore.
+     */
 #ifdef USE_MC30
     printf("I[K_AUG]...\t[K_AUG_ASL]"
            "MC30 scaling...\n");
@@ -817,10 +886,10 @@ int main(int argc, char **argv){
     fclose(somefile);
 #endif
 
-    /* */
-    /*assemble_rhsds(n_rhs, K_nrows, rhs_baksolve, dp_, n_var, n_con, rhs_ptr); */
-    /* problem: all stuff associated with n_dof
-       solution: use it again for dsdp*/
+    /*
+     * This is where we assemble the rhs. Note that There are no derivatives in the RHS only 1's and 0's
+     */
+    /* problem: all stuff associated with n_dof, solution: use it again for dsdp*/
     if (dsdp_mode > 0) {
         assemble_rhs_dcdp(&rhs_baksolve, n_var, n_con, &n_dof, &n_vx, dcdp, &hr_point, var_order_suf);
     }
@@ -830,11 +899,11 @@ int main(int argc, char **argv){
 
     x_           = (real *)calloc(K_nrows * (n_dof), sizeof(real));
     positions_rh = (int *)malloc(n_var * sizeof(int));
-    /*for(i=0; i<n_dof; i++){
-        printf("i %d, hr %d\n", i, hr_point[i]);
-    }*/
 
-    /* scale matrix & rhs*/
+
+    /*
+     * Scale matrix & rhs
+     */
     if(no_scale > 0){
 //#ifdef USE_MC30
         for(i=0; i< nzK; i++){
@@ -866,7 +935,9 @@ int main(int argc, char **argv){
                         "The scaling has been skipped. \n");
     }
 
-    /* factorize the matrix */
+    /* Factorize the matrix
+     * I want to dynamically load different solvers, there should be a generic solver interface.
+     */
     /* mumps_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
                  &inrt_pert, inrt_parms, &inrt_opts, logmu0, ls_opts); */
     ma57_driver(Kr_strt, Krow, Kcol, Kij, K_nrows, n_dof, rhs_baksolve, x_, n_var, n_con, no_inertia, nzK,
@@ -877,6 +948,9 @@ int main(int argc, char **argv){
            "Linear solver done. \n");
     fact_kkt_c = clock();
 
+    /*
+     * Only for debugging.
+     */
 #ifndef PRINT_VERBOSE
     somefile = fopen("./kaug_debug/result_lin_sol.txt", "w");
     for(i=0; i<K_nrows; i++){
@@ -886,7 +960,6 @@ int main(int argc, char **argv){
         }
         fprintf(somefile, "\n");
     }
-
     fclose(somefile);
 #endif
 #ifndef PRINT_VERBOSE
@@ -921,14 +994,7 @@ int main(int argc, char **argv){
         fclose(somefile);
 #endif
         somefile = fopen("./kaug_debug/dxdp_.dat", "w");
-        /*for(i=0; i<n_var; i++){
-            if(*(var_order_suf->u.i + i)>0){
-                fprintf(somefile, "%d", i);
-                for(j=0; j<n_dof; j++){fprintf(somefile, "\t%f", *(x_+ j * K_nrows + i));}
-                fprintf(somefile, "\n");
-            }
 
-        }*/
         for(i=0; i<n_vx; i++){
             j = hr_point[i]; /* The row */
             /*fprintf(somefile, "%d", j);*/
@@ -981,6 +1047,9 @@ int main(int argc, char **argv){
         }
         fclose(somefile);
 #endif
+        /*
+         * Get some file with results
+         */
         somefile = fopen("result_red_hess.txt", "w");
         /* fprintf(somefile, "\t%.g", *(x_+ j * K_nrows + hr_point[i])); */
         for(i=0; i<n_dof; i++){
@@ -1010,6 +1079,9 @@ int main(int argc, char **argv){
     fclose(somefile);
 #endif
 
+    /*
+     * Write the permutation of the RedHess
+     */
     suf_iput(reg_suffix_name[1], ASL_Sufkind_var, positions_rh);
 
     if(dot_prod_f != 0){
@@ -1018,7 +1090,9 @@ int main(int argc, char **argv){
     }
     solve_result_num = 0;
 
-
+    /*
+     * Write back
+     */
     write_sol(ter_msg, s_star, s_star + n_var, &Oinfo);
 
 
@@ -1026,12 +1100,19 @@ int main(int argc, char **argv){
     if(eig_rh_eval>0){
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]""Evaluating the eigenvalues of the solution matrix. \n");
         _is_not_irh_pdf = dsyev_driver(n_dof, x_, K_nrows, hr_point);}
+    /*
+     * Evaluate the inverse of RedHessian.
+     * Note this has been proven unreliable if you have too many bounds active.
+     * We need to figure out something better.
+     */
     if(comp_inv_ > 0){
         fprintf(stderr, "W[K_AUG]...\t[K_AUG_ASL]""Evaluating the inverse of the solution matrix. \n");
         dpotri_driver(n_dof, x_, K_nrows, hr_point, _chr_timest);}
 
     total_c = clock();
-
+    /*
+     * Quick estimate of our computation time.
+     */
     ev_as_time = (double) (ev_as_kkt_c-start_c) / CLOCKS_PER_SEC;
     fact_time = (double) (fact_kkt_c-start_c) / CLOCKS_PER_SEC;
     overall_time = (double) (total_c - start_c) / CLOCKS_PER_SEC;
@@ -1043,9 +1124,16 @@ int main(int argc, char **argv){
     } else {
         somefile = fopen("timings_k_aug.txt", "a");
     }
+    /*
+     * Get some nice statistics.
+     */
     fprintf(somefile, "%d\t%g\t%g\t%g\n", n_var, ev_as_time, fact_time, overall_time);
     fclose(somefile);
-    /*exit(0);*/
+
+    /*
+     * Deallocate all pointers.
+     */
+
     free(positions_rh);
     for(i=0; i<(int)n_r_suff; i++){
         free(reg_suffix_name[i]);
@@ -1087,5 +1175,8 @@ int main(int argc, char **argv){
     free(Kij);
     free(Kr_strt);
     free(rhs_ptr);
+    /*
+     * Goodbye.
+     */
     return 0;
 }
