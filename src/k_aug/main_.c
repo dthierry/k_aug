@@ -993,7 +993,7 @@ int main(int argc, char **argv){
         for(i=0; i<n_var; i++){fprintf(somefile, "%d\n", *(var_order_suf->u.i + i));}
         fclose(somefile);
 #endif
-        somefile = fopen("./kaug_debug/dxdp_.dat", "w");
+        somefile = fopen("./dxdp_.dat", "w");
 
         for(i=0; i<n_vx; i++){
             j = hr_point[i]; /* The row */
